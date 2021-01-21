@@ -80,6 +80,9 @@ awaitable<void> proxy_server::_listener()
 		_new_proxy_handler.reset(new http_proxy_handler(
 			_breakpoint_manager, _display_filter, _client));
 		//std::cout << "waiting to accept\n";
+
+
+		//此处有一些问题，得到的socket全都是一个io_context的
 		_new_proxy_conn.reset(new connection<http_proxy_handler>(
 			co_await _acceptor.async_accept(use_awaitable)
 			, _new_proxy_handler));

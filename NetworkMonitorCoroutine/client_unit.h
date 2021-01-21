@@ -29,9 +29,11 @@ public:
 
 	void _error_handler(boost::system::error_code ec);
 
-	awaitable<bool> send_request(const string& host,const string& data, shared_ptr<string> result);
+	awaitable<connection_behaviour> read_chunked_data(shared_ptr<string> result);
 
-	awaitable<bool> send_request_ssl(const string& host, const string& data, shared_ptr<string> result);
+	awaitable<connection_behaviour> send_request(const string& host,const string& data, shared_ptr<string> result);
+
+	awaitable<connection_behaviour> send_request_ssl(const string& host, const string& data, shared_ptr<string> result);
 
 	
 

@@ -28,7 +28,7 @@ using boost::asio::ip::tcp;
 #include "proxy_server.h"
 
 /*未完成的部分:
-* client_unit::send_request
+* 
 * client_unit::send_request_ssl
 * 
 * proxy_handler::handle_handshake
@@ -43,7 +43,7 @@ auto_trust_ca
 * 
 * 
 */
-
+// client_unit send request 改成 connection:close 一直尝试读取，读一点写一点，直到读到eof
 
 /*
 程序入口点

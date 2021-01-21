@@ -77,7 +77,7 @@ string get_header_value(
 	return "";
 }
 
-proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _whole_request)
+proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _whole_request,size_t& split_pos)
 {
 	using namespace proxy_server;
 	size_t header_end_pos = _whole_request->find("\r\n\r\n");
@@ -121,8 +121,13 @@ proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _
 			if ((*temp_vec_ptr)[2].size() != 0)
 				return integrity_status::failed;
 			size_t body_length = hex2decimal((*temp_vec_ptr)[0].c_str());
-			if ((*temp_vec_ptr)[1].size() == body_length)
-				return integrity_status::success;
+			if ((*temp_vec_ptr)[1].size() == body_length) {
+				if (body_length == 0)
+					return integrity_status::success;
+				else
+					return integrity_status::wait_chunked;
+			}
+				
 
 			return integrity_status::failed;
 

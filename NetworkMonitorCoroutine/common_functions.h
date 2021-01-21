@@ -51,9 +51,10 @@ string get_header_value(
 string get_header_value(
     const shared_ptr<vector<string>>& header_field, const string& header_name);
 
-proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _whole_request);
+proxy_server::integrity_status _http_integrity_check(
+    const shared_ptr<string>& _whole_request,  size_t& split_pos);
 
-static const char hex_char[] {"0123456789ABCDEF----------"};
+static const char hex_char[] {"0123456789ABCDEF"};
 shared_ptr<string> memory2hex_string(const shared_ptr<string>& data);
 
 }

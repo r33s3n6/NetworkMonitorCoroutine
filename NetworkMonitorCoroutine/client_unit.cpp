@@ -37,13 +37,91 @@ void client_unit::_error_handler(boost::system::error_code ec) {
 }
 
 
+
+awaitable<connection_behaviour> client_unit::read_chunked_data(shared_ptr<string> result) {
+
+	//just copy, 可以把read单独提出来我觉得
+	boost::system::error_code ec;
+	try
+	{
+
+		while (true) {
+			std::size_t bytes_transferred = co_await _socket->async_read_some(
+				boost::asio::buffer(_buffer),
+				boost::asio::redirect_error(use_awaitable, ec));
+			if (ec) {
+				if (ec != boost::asio::error::eof) {
+					_error_handler(ec);
+					throw std::runtime_error("read failed");
+				}
+			}
+
+			//_whole_response->append(_buffer.data(), bytes_transferred);
+			result->append(_buffer.data(), bytes_transferred);
+
+			integrity_status _status;
+			size_t split_pos = 0;
+			_status = _http_integrity_check(result, split_pos);
+
+
+
+			connection_behaviour ret = respond_and_keep_alive;
+
+			switch (_status) {
+			case integrity_status::success:
+				ret = respond_and_keep_alive;
+				break;
+
+			case integrity_status::failed:
+
+				ret = respond_and_close;
+				break;
+
+			case integrity_status::wait_chunked:
+
+				ret = respond_and_keep_reading;
+				break;
+			case integrity_status::wait:
+				if (ec == boost::asio::error::eof) {
+					_error_handler(ec);
+					throw std::runtime_error("response integrity check failed");
+				}
+				else {
+					continue;
+				}
+				break;
+			default:
+				_error_handler(ec);
+				throw std::runtime_error("response integrity check failed");
+			}
+
+			if (!CLIENT_UNIT_KEEP_ALIVE && ret != respond_and_keep_reading)
+				_socket_close();
+
+			co_return ret;
+
+
+
+		}
+
+	}
+	catch (const std::exception&)
+	{
+
+		_socket_close();
+		co_return  respond_and_close;
+	}
+
+}
+
+
 //return if it is successful
-awaitable<bool> client_unit::send_request(const string& host,
+awaitable<connection_behaviour> client_unit::send_request(const string& host,
 	const string& data, shared_ptr<string> result)
 {
 
 	if (host.size() == 0)
-		co_return false;
+		co_return respond_and_close;
 
 	
 	boost::system::error_code ec;
@@ -93,7 +171,7 @@ awaitable<bool> client_unit::send_request(const string& host,
 
 		if (ec) {
 			_error_handler(ec);
-			co_return false;
+			co_return respond_and_close;
 		}
 
 
@@ -104,7 +182,7 @@ awaitable<bool> client_unit::send_request(const string& host,
 
 		if (ec) {
 			_error_handler(ec);
-			co_return false;
+			co_return respond_and_close;
 		}
 
 		
@@ -120,7 +198,7 @@ awaitable<bool> client_unit::send_request(const string& host,
 
 	if (ec) {
 		_error_handler(ec);
-		co_return false;
+		co_return respond_and_close;
 	}
 
 	
@@ -142,21 +220,27 @@ awaitable<bool> client_unit::send_request(const string& host,
 
 			//_whole_response->append(_buffer.data(), bytes_transferred);
 			result->append(_buffer.data(), bytes_transferred);
+
 			integrity_status _status;
 
 			_status = _http_integrity_check(result);
 
 
 
-			bool ret = false;
+			connection_behaviour ret = respond_and_keep_alive;
 
 			switch (_status) {
 			case integrity_status::success:
-				ret= true;
+				ret = respond_and_keep_alive;
 				break;
 			case integrity_status::failed:
 
-				ret= false;
+				ret = respond_and_close;
+				break;
+
+			case integrity_status::wait_chunked:
+
+				ret = respond_and_keep_reading;
 				break;
 			case integrity_status::wait:
 				if (ec == boost::asio::error::eof) {
@@ -172,10 +256,10 @@ awaitable<bool> client_unit::send_request(const string& host,
 				throw std::runtime_error("response integrity check failed");
 			}
 
-			if (!CLIENT_UNIT_KEEP_ALIVE)
+			if (!CLIENT_UNIT_KEEP_ALIVE && ret!= respond_and_keep_reading)
 				_socket_close();
 
-			co_return true;
+			co_return ret;
 
 
 
@@ -186,20 +270,20 @@ awaitable<bool> client_unit::send_request(const string& host,
 	{
 
 		_socket_close();
-		co_return false;
+		co_return  respond_and_close;;
 	}
 
 
 
 	*result = error_response::error404;
-	co_return false;
+	co_return  respond_and_close;;
 }
 
-awaitable<bool> client_unit::send_request_ssl(const string& host,
+awaitable<connection_behaviour> client_unit::send_request_ssl(const string& host,
 	const string& data, shared_ptr<string> result)
 {
 	*result = error_response::error404;
-	co_return false;
+	co_return respond_and_close;
 }
 
 void client_unit::_socket_close()
