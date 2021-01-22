@@ -60,7 +60,7 @@ private:
 
 	boost::asio::io_context& _io_context;
 
-	typedef shared_ptr<connection<http_proxy_handler>> proxy_conn_ptr;
+	typedef shared_ptr<connection> proxy_conn_ptr;
 
 	proxy_conn_ptr _new_proxy_conn;
 

@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace std;
 namespace common {
-
+	using namespace proxy_server;
 
 
 shared_ptr<vector<string>> string_split(const string& str, const string& pattern) {
@@ -77,10 +77,14 @@ string get_header_value(
 	return "";
 }
 
-proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _whole_request,size_t& split_pos)
+
+//仅仅根据头的信息分割报文，无法对内容完整性做出任何保证
+proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& http_data,size_t& split_pos)
 {
 	using namespace proxy_server;
-	size_t header_end_pos = _whole_request->find("\r\n\r\n");
+
+	split_pos = http_data->size();
+	size_t header_end_pos = http_data->find("\r\n\r\n");
 	// check header integrity
 	if (header_end_pos == string::npos) {//header not complete
 		return integrity_status::wait;
@@ -89,12 +93,12 @@ proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _
 
 	//determine body length
 	size_t _request_length = 0;
-	size_t length_pos = _whole_request->find("Content-Length:");
-	size_t encoding_type_pos = _whole_request->find("Transfer-Encoding:");
+	size_t length_pos = http_data->find("Content-Length:");
+	size_t encoding_type_pos = http_data->find("Transfer-Encoding:");
 
-	if (length_pos != string::npos) {// body exists
+	if (length_pos != string::npos) {// Content-Length exists
 		for (int i = 0; i < 63; i++) {
-			char _temp = (*_whole_request)[length_pos + 15 + i];
+			char _temp = (*http_data)[length_pos + 15 + i];
 			if (_temp <= '9' &&
 				_temp >= '0') {
 				_request_length *= 10;
@@ -104,62 +108,84 @@ proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& _
 				break;
 		}
 	}
-	else if (encoding_type_pos != string::npos) {
-		size_t _end = _whole_request->find("\r\n", encoding_type_pos);
-		string t = _whole_request->substr(encoding_type_pos, _end - encoding_type_pos);
-		if (t.find("chunked") != string::npos) {//分块传输
+	else if (encoding_type_pos != string::npos) { // Transfer-Encoding exists
+		size_t _end = http_data->find("\r\n", encoding_type_pos);
+		string t = http_data->substr(encoding_type_pos, _end - encoding_type_pos);
+		if (t.find("chunked") != string::npos) {//
+			split_pos = header_end_pos + 4;
+			return integrity_status::chunked;
+		}//else _request_length has been set to 0 by default
 
-			string _body = _whole_request->substr(header_end_pos + 4,
-				_whole_request->size() - (header_end_pos + 4));
-			auto temp_vec_ptr = string_split(_body, "\r\n");
-			if (temp_vec_ptr->size() < 3) {
-				return integrity_status::wait;
-			}
-			else if (temp_vec_ptr->size() > 3) {
-				return integrity_status::failed;
-			}
-			if ((*temp_vec_ptr)[2].size() != 0)
-				return integrity_status::failed;
-			size_t body_length = hex2decimal((*temp_vec_ptr)[0].c_str());
-			if ((*temp_vec_ptr)[1].size() == body_length) {
-				if (body_length == 0)
-					return integrity_status::success;
-				else
-					return integrity_status::wait_chunked;
-			}
-				
-
-			return integrity_status::failed;
-
-		}
-
-	}
+	}//else _request_length has been set to 0 by default
 
 	//now _request_length is properly set
 
 	//check whole request integrity
-	if ((_whole_request->size() - (header_end_pos + 4)) == _request_length) {
-		//body integrity assured
-		return integrity_status::success;
+	if ((http_data->size() - (header_end_pos + 4)) < _request_length) {
+		//request not complete
+		
+		return integrity_status::wait;
+	}
+	else{//几乎是完整的
+		split_pos = _request_length + header_end_pos + 4; //若正好为size() 则正好完整，已在外部判断
+		return integrity_status::intact;
+	}
+
+
+	// unexpected behaviour, return broken
+	return integrity_status::broken;
+}
+
+
+proxy_server::integrity_status _chunked_integrity_check(const shared_ptr<string>& http_data, size_t& split_pos)
+{
+	using namespace proxy_server;
+
+	/*
+* 结构
+* [HEADER1]\r\n
+* [HEADER2]\r\n
+* \r\n
+* [HEX_NUM]\r\n
+* [DATA]\r\n
+*/
+	split_pos = http_data->size();
+
+	size_t _chunk_length_end_pos =
+		http_data->find("\r\n");
+
+	if (_chunk_length_end_pos == string::npos)
+		return integrity_status::wait_chunked;
+
+	//get length
+	size_t body_length = hex2decimal(http_data->substr(0, _chunk_length_end_pos).c_str());
+
+	size_t body_end_pos = _chunk_length_end_pos + 2 + body_length + 2;
+
+	split_pos = body_end_pos;//正好最后一个\r\n的后面一位
+
+	if (http_data->size() < body_end_pos)
+		return integrity_status::wait_chunked;
+
+	//此时可能正好是一个完整的message，也有可能后面连缀着下一个报文的一些东西
+	//因此先检查这个报文的完整性
+	if ((*http_data)[body_end_pos - 2] == '\r' &&
+		(*http_data)[body_end_pos - 1] == '\n') {//这个报文完整
+		if (body_length == 0)
+			return integrity_status::intact;//the last chunked message
+		else
+			return integrity_status::chunked;
+
 	}
 	else {
-		//request not complete
-
-		//no body
-		if (_request_length == 0) {//此时后面多出了一些字符，此处直接返回错误
-
-			return integrity_status::failed;
-		}
-		else {
-			//body not complete
-			return integrity_status::wait;
-		}
-
+		return integrity_status::broken;
 	}
 
-	// unexpected behaviour, return failed
-	return integrity_status::failed;
+	// unexpected behaviour, return broken
+	return integrity_status::broken;
+
 }
+
 
 
 shared_ptr<string> memory2hex_string(const shared_ptr<string>& data)
@@ -178,6 +204,34 @@ shared_ptr<string> memory2hex_string(const shared_ptr<string>& data)
 	
 
 	return res;
+}
+
+request_type _get_request_type(const string& data)
+{
+	switch (data[0]) {
+	case 'G'://get
+		return request_type::_GET;
+	case 'O'://options
+		return request_type::_OPTIONS;
+	case 'P'://post/put
+		if (data[1] == 'O')
+			return request_type::_POST;
+		else
+			return request_type::_PUT;
+	case 'H'://head
+		return request_type::_HEAD;
+	case 'D'://delete
+		return request_type::_DELETE;
+	case 'T'://trace
+		return request_type::_TRACE;
+	case 'C'://connect
+		return request_type::_CONNECT;
+	default:
+		return request_type::_GET;
+	}
+
+
+	return request_type::_GET;
 }
 
 

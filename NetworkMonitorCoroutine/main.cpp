@@ -29,6 +29,9 @@ using boost::asio::ip::tcp;
 
 /*未完成的部分:
 * 
+* logging 类
+* 
+* 
 * client_unit::send_request_ssl
 * 
 * proxy_handler::handle_handshake

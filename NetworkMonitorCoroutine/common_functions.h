@@ -54,7 +54,11 @@ string get_header_value(
 proxy_server::integrity_status _http_integrity_check(
     const shared_ptr<string>& _whole_request,  size_t& split_pos);
 
+proxy_server::integrity_status _chunked_integrity_check(const shared_ptr<string>& http_data, size_t& split_pos);
+
 static const char hex_char[] {"0123456789ABCDEF"};
 shared_ptr<string> memory2hex_string(const shared_ptr<string>& data);
+
+proxy_server::request_type _get_request_type(const string& data);
 
 }

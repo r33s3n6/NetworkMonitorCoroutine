@@ -30,8 +30,10 @@ public:
 	int display(const shared_ptr<string>& req_data);
 
 	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//里面要显示出来
-	void update_display(int id, const shared_ptr<string>& rsp_data);
-	awaitable<int> display_breakpoint_rsp(shared_ptr<string> req_data, shared_ptr<string> rsp_data, int update_id);
+	void update_display_req(int id, const shared_ptr<string>& req_data);
+	void update_display_rsp(int id, const shared_ptr<string>& rsp_data);
+	void update_display_error(int id, const shared_ptr<string>& rsp_data);
+	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);
 
 	//里面要显示出来
 };

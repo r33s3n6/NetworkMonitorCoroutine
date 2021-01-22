@@ -58,6 +58,7 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 	_acceptor.bind(endpoint);
 	_acceptor.listen();
 
+	//ignore the error reported by intellisense
 	co_spawn(_io_context, _listener(), detached);
 
 }
@@ -82,10 +83,11 @@ awaitable<void> proxy_server::_listener()
 		//std::cout << "waiting to accept\n";
 
 
-		//此处有一些问题，得到的socket全都是一个io_context的
-		_new_proxy_conn.reset(new connection<http_proxy_handler>(
+		//TODO:此处有一些问题，得到的socket全都是一个io_context的
+		_new_proxy_conn.reset(new connection(
 			co_await _acceptor.async_accept(use_awaitable)
 			, _new_proxy_handler));
+		//co_await _acceptor.async_accept(temp_io_context,use_awaitable)
 
 		_new_proxy_conn->start();
 

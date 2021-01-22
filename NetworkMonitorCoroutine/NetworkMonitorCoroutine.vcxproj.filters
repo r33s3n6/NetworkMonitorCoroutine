@@ -45,6 +45,9 @@
     <ClCompile Include="certificate_manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="connection.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="breakpoint_manager.h">

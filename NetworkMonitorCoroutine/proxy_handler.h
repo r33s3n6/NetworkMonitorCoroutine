@@ -30,20 +30,6 @@ namespace proxy_server{
 	using boost::asio::use_awaitable;
 	namespace this_coro = boost::asio::this_coro;
 
-
-typedef enum {
-	_OPTIONS,
-	_HEAD,
-	_GET,
-	_POST,
-	_PUT,
-	_DELETE,
-	_TRACE,
-	_CONNECT //https 单独处理
-} request_type;
-
-
-
 class http_proxy_handler
 {
 public:
@@ -53,43 +39,21 @@ public:
 	http_proxy_handler(breakpoint_manager& bp_mgr,
 		display_filter& disp_fil, shared_ptr<client_unit> _client);
 
-
-
-	awaitable<connection_behaviour> send_message(shared_ptr<string> msg);
-
-	awaitable<connection_behaviour> receive_message(shared_ptr<string> rsp);
-
-
-	awaitable<connection_behaviour> receive_remaining_chunked(shared_ptr<string> result,bool _with_ssl);
-
-	awaitable<connection_behaviour> send_remaining_chunked(shared_ptr<string> _whole_request, bool _with_ssl);
-
-	awaitable<connection_behaviour> handle_request(shared_ptr<string> data, shared_ptr<string> result, bool _with_ssl);
-
-	
-	awaitable<connection_behaviour> handle_handshake(shared_ptr<string> data, shared_ptr<string> result);
-	connection_behaviour handle_error(shared_ptr<string> result, bool _with_ssl);
-
-
 	//unified entrypoint
+	awaitable<connection_behaviour> send_message(shared_ptr<string> msg,bool with_ssl,
+		bool force_old_conn = false); //最后一个参数用于chunked data，如果旧连接丢失就直接失败
 
-	
+	//receive 不需要指定是否使用旧连接，因为断开直接失败
+	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
+		bool with_ssl);
+
+	connection_behaviour handle_error(shared_ptr<string> result);
+
 
 private:
-	shared_ptr<string> _ssl_encrypt(const shared_ptr<string>& data);
-	shared_ptr<string> _ssl_decrypt(const shared_ptr<string>& data);
 
-	void _ssl_encrypt(const shared_ptr<string>& data, shared_ptr<string> result);
-
-	awaitable<connection_behaviour> handle_request_http(shared_ptr<string> data, shared_ptr<string> result);
-	awaitable<connection_behaviour> handle_request_as_tunnel(shared_ptr<string> data, shared_ptr<string> result);
-
-	awaitable<connection_behaviour> _handle_request(shared_ptr<string> data, shared_ptr<string> result, connection_behaviour _behaviour);
-
-	request_type _get_request_type(const string& data);
 
 	bool _process_header(shared_ptr<string> data, shared_ptr<string> result);
-
 
 	breakpoint_manager& _breakpoint_manager;
 	display_filter& _display_filter;
@@ -98,10 +62,7 @@ private:
 	shared_ptr<string> host;
 
 
-
-
-
-
+	int _update_id = -2;
 
 };
 

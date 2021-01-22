@@ -23,6 +23,14 @@ namespace proxy_server {
 		shared_ptr<string> header(new string(""));
 		shared_ptr<string> body(new string(""));
 
+		size_t _ignore_pos;
+		auto _type = _chunked_integrity_check(data, _ignore_pos);
+		if (_type == chunked || _type == intact) {
+			cout << *data << endl;
+			return;
+		}
+
+
 		cout << "[HEADER PART]\n";
 		if (!split_request(data, header, body)) {
 			cout << "header integrity compromised" << endl;
@@ -53,20 +61,35 @@ namespace proxy_server {
 
 
 
-	void display_filter::update_display(int id, const shared_ptr<string>& rsp_data)
-	{
-		cout << "[Response Data]\n";
 
-		_temp_display(rsp_data);
-	}
 
 	awaitable<int> display_filter::display_breakpoint_req(shared_ptr<string> req_data)
 	{
+
 		co_return 0;
 	}
 
-	awaitable<int> display_filter::display_breakpoint_rsp(shared_ptr<string> req_data,
-		shared_ptr<string> rsp_data, int update_id)//update_id==-2 新显示， 否则 更新旧显示
+	void display_filter::update_display_req(int id, const shared_ptr<string>& req_data)
+	{
+		cout << "[Request Data](supplementary)\n";
+		_temp_display(req_data);
+	}
+
+	void display_filter::update_display_rsp(int id, const shared_ptr<string>& rsp_data)
+	{
+		cout << "[Response Data]\n";
+		_temp_display(rsp_data);
+	}
+
+	void display_filter::update_display_error(int id, const shared_ptr<string>& rsp_data)
+	{
+		cout << "[ERROR]\n";
+		cout << *rsp_data << endl;
+	}
+
+
+	awaitable<int> display_filter::display_breakpoint_rsp(int update_id,
+		shared_ptr<string> rsp_data)//更新旧显示
 	{
 		co_return 0;
 	}

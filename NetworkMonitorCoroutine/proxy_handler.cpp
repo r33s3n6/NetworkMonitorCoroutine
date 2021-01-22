@@ -9,10 +9,6 @@ using namespace common;
 namespace proxy_server {
 
 	
-	typedef enum {
-		transparency_proxy,
-		default_proxy
-	}proxy_type;
 
 
 
@@ -26,102 +22,6 @@ namespace proxy_server {
 	{
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::receive_remaining_chunked(shared_ptr<string> result, bool _with_ssl)
-	{
-		connection_behaviour _behaviour = co_await _client->read_chunked_data(result); //TODO:breakpoint
-
-		co_return _behaviour;
-	}
-
-
-	//send chunked data
-	awaitable<connection_behaviour> http_proxy_handler::send_remaining_chunked(shared_ptr<string> result, bool _with_ssl) {
-		
-		
-		
-	}
-
-
-	shared_ptr<string> http_proxy_handler::_ssl_encrypt(const shared_ptr<string>& data)
-	{
-		return shared_ptr<string>();
-	}
-
-	shared_ptr<string> http_proxy_handler::_ssl_decrypt(const shared_ptr<string>& data)
-	{
-		return shared_ptr<string>();
-	}
-
-	void http_proxy_handler::_ssl_encrypt(const shared_ptr<string>& data, shared_ptr<string> result)
-	{
-
-	}
-
-	awaitable<connection_behaviour> http_proxy_handler::handle_request_http(
-		shared_ptr<string> data, shared_ptr<string> result)
-	{
-		host.reset(new string(""));
-
-
-		request_type _type = _get_request_type(*data);
-		if (_type == _CONNECT) {
-			*result = "HTTP/1.1 200 Connection Established\r\n\r\n";
-			//_display_filter.display(data, result);
-			co_return connection_behaviour::respond_as_tunnel;
-		}
-
-		//非connect
-		shared_ptr<string> _modified_data(new string(""));
-		bool _keep_alive = _process_header(data, _modified_data);
-
-		if (_modified_data->size() == 0) {
-			co_return handle_error(result);
-		}
-
-		//TODO:有一说一，不需要理这个keep alive,就应该直白的返回是否错误
-		if (_keep_alive)
-			co_return co_await _handle_request(_modified_data, result, respond_and_keep_alive);
-		else
-			co_return co_await _handle_request(_modified_data, result, respond_and_close);
-
-
-
-	}
-
-	awaitable<connection_behaviour> http_proxy_handler::handle_request_as_tunnel(shared_ptr<string> data, shared_ptr<string> result)
-	{
-
-
-		shared_ptr<string> _decrypted_data = _ssl_decrypt(data);//可能甚至不需要加解密，因为boost帮忙做了这一步
-
-		shared_ptr<string> not_encrypted_result(new string(""));
-		auto _behaviour = co_await _handle_request(data, not_encrypted_result, respond_as_tunnel);
-		if (_behaviour == ignore)
-			co_return _behaviour;
-		_ssl_encrypt(not_encrypted_result, result);//加密并直接写入result
-
-		co_return _behaviour;
-	}
-
-	
-
-	awaitable<connection_behaviour> http_proxy_handler::handle_request(shared_ptr<string> data, shared_ptr<string> result, bool _with_ssl)
-	{
-		return awaitable<connection_behaviour>();
-	}
-
-	awaitable<connection_behaviour> http_proxy_handler::handle_handshake(shared_ptr<string> data, shared_ptr<string> result)
-	{
-		//_display_filter.display(data, result);
-		//cout << "DEBUG::handshake_refused" << endl;
-		co_return connection_behaviour::ignore;
-	}
-
-	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result, bool _with_ssl)
-	{
-		return connection_behaviour();
-	}
-
 	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result)//TODO
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
@@ -129,78 +29,99 @@ namespace proxy_server {
 		return respond_and_close;
 	}
 
-
-
-
-
-
-	awaitable<connection_behaviour> http_proxy_handler::_handle_request(shared_ptr<string> data, shared_ptr<string> result, connection_behaviour _behaviour)
+	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg, bool with_ssl, bool force_old_conn)
 	{
+		host.reset(new string(""));
 
-		int update_id = -2;
-		if (_breakpoint_manager.check(*data)) {
-			//_modified_data 在此处是可能被修改的
-			update_id = co_await _display_filter.display_breakpoint_req(data);
-			if (update_id == -1) {//不继续执行
-				co_return connection_behaviour::ignore;
+
+		//非connect
+		shared_ptr<string> _modified_data(new string(""));
+		bool _keep_alive = _process_header(msg, _modified_data);
+
+		if (_modified_data->size() == 0) {
+			co_return respond_error;
+		}
+
+
+		if (_update_id == -2) {//说明是一次全新的请求，不是某次chunked的后续
+			if (_breakpoint_manager.check(*_modified_data)) {
+				//断点
+				//_modified_data 在此处是可能被修改的
+				_update_id = co_await _display_filter.display_breakpoint_req(_modified_data);
+				if (_update_id == -1) {//不继续执行
+					_update_id = -2;//reset to default
+					co_return connection_behaviour::ignore;
+				}
+			}
+			else {//新显示 
+				_update_id = _display_filter.display(_modified_data);
 			}
 		}
-		else {
-			update_id = _display_filter.display(data);
-		}
-		connection_behaviour _behaviour_res;
-		if (_behaviour == respond_as_tunnel) {//https
-			_behaviour_res = co_await _client->send_request_ssl(*host,*data, result); //TODO: 此处可以判断连接是否出错 //TODO: async
-		}
-		else {//http
-			_behaviour_res = co_await _client->send_request(*host ,*data, result);//阻塞
+		else {//是某次的后续，因此直接更新
+			_display_filter.update_display_req(_update_id, _modified_data);
 		}
 
+		connection_behaviour _behaviour;
+		_behaviour = co_await _client->send_request(*host, *_modified_data, with_ssl, force_old_conn);
 
-		if (_breakpoint_manager.check(*result)) {
-			if (-1== co_await _display_filter.display_breakpoint_rsp(data, result, update_id)) {//result 在此处是可能被修改的
-				//请求被阻断
-				co_return connection_behaviour::ignore;
-			}
-
-			co_return _behaviour_res;
-
+		if (_behaviour == respond_error) {
+			_display_filter.update_display_error(_update_id, make_shared<string>("sending message fucked up"));//TODO
+			co_return _behaviour;
 		}
 		else {
-			_display_filter.update_display(update_id, result);
-		}
-
-		co_return _behaviour_res;
-
-	}
-
-	request_type http_proxy_handler::_get_request_type(const string& data)
-	{
-		switch (data[0]) {
-		case 'G'://get
-			return request_type::_GET;
-		case 'O'://options
-			return request_type::_OPTIONS;
-		case 'P'://post/put
-			if (data[1] == 'O')
-				return request_type::_POST;
+			if (_keep_alive)
+				co_return respond_and_keep_alive;
 			else
-				return request_type::_PUT;
-		case 'H'://head
-			return request_type::_HEAD;
-		case 'D'://delete
-			return request_type::_DELETE;
-		case 'T'://trace
-			return request_type::_TRACE;
-		case 'C'://connect
-			return request_type::_CONNECT;
-		default:
-			return request_type::_GET;
+				co_return respond_and_close;
+
 		}
 
 
-		return request_type::_GET;
+
+		
 	}
+
+	awaitable<connection_behaviour> http_proxy_handler::receive_message(shared_ptr<string>& rsp, bool with_ssl)
+	{
+		//必然有update_id
+		//assert(update_id>=0)
+		connection_behaviour _behaviour;
+		_behaviour = co_await _client->receive_response(rsp);
+		if (_behaviour == respond_error) {
+
+			_display_filter.update_display_error(_update_id, rsp);
+			co_return _behaviour;
+		}
+
+		if (_breakpoint_manager.check(*rsp)) {
+			//断点
+			if (-1 == co_await _display_filter.display_breakpoint_rsp(_update_id, rsp)) {//result 在此处是可能被修改的
+				//请求被阻断
+				_update_id = -2;
+				co_return connection_behaviour::ignore;
+			}
+			//else 不用做任何事，因为display_breakpoint_rsp 已经处理好了后续显示工作
+
+		}
+		else {//手动更新显示
+			_display_filter.update_display_rsp(_update_id, rsp);
+		}
+
+		
+		if(_behaviour != keep_receiving_data){
+			//reset _update_id
+			_update_id = -2;
+		}
+
+		co_return _behaviour;
+		
+	}
+
+
+
+	//=====================common functions=============================
+
+	
 
 
 	//return is keep_alive

@@ -152,6 +152,7 @@
     <ClCompile Include="client_unit.cpp" />
     <ClCompile Include="common_coroutine.h" />
     <ClCompile Include="common_functions.cpp" />
+    <ClCompile Include="connection.cpp" />
     <ClCompile Include="display_filter.cpp" />
     <ClCompile Include="io_context_pool.cpp" />
     <ClCompile Include="main.cpp" />
