@@ -1,6 +1,8 @@
 #include "connection.hpp"
 #include "proxy_handler.h"
 
+#include <boost/thread.hpp>
+
 namespace proxy_server {
 
 
@@ -9,6 +11,17 @@ namespace proxy_server {
 connection::connection(tcp::socket socket,
 	shared_ptr<http_proxy_handler> handler_ptr)
 	: _socket(std::move(socket)),
+	_request_handler(handler_ptr),
+	_whole_request(new string(""))
+{
+	boost::asio::socket_base::keep_alive _ka(true);
+	_socket.set_option(_ka);
+
+}
+
+connection::connection(boost::asio::io_context& _io_context,
+	shared_ptr<http_proxy_handler> handler_ptr)
+	: _socket(_io_context),
 	_request_handler(handler_ptr),
 	_whole_request(new string(""))
 {
@@ -43,6 +56,9 @@ void connection::stop()
 }
 
 
+
+
+
 //test
 
 awaitable<void> connection::_waitable_loop()
@@ -65,6 +81,8 @@ awaitable<void> connection::_waitable_loop()
 	* 多次接收由handler控制，这样可以减少一遍判断
 	
 	*/
+
+	cout << "executed by thread " << boost::this_thread::get_id() << endl;
 
 	try
 	{
@@ -99,6 +117,9 @@ awaitable<void> connection::_waitable_loop()
 					//TODO: 转发给内置的https服务器，
 					//(temp_var,new_bytes_transferred) = https_decrypt_server.read(_buffer.data(), bytes_transferred);
 					//_whole_request->append(temp_var, new_bytes_transferred);
+
+					//DEBUG
+					cout << _buffer.data() << endl;
 					_keep_alive = false;
 					continue;//DEBUG code(not complete)
 				}
@@ -149,8 +170,9 @@ awaitable<void> connection::_waitable_loop()
 				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method 单独处理直接返回，
 					//DISPLAY IS NOT NECESSARY
 					_is_tunnel_conn = true;
+					*res = "HTTP/1.1 200 Connection Established\r\n\r\n";
 					co_await boost::asio::async_write(_socket,
-						boost::asio::buffer("HTTP/1.1 200 Connection Established\r\n\r\n"),
+						boost::asio::buffer(*res),
 						boost::asio::redirect_error(use_awaitable, ec));
 					//cout << *_whole_request << endl;
 					cout << "prepare for handshake" << endl;

@@ -75,19 +75,27 @@ awaitable<void> proxy_server::_listener()
 
 
 	while (true) {
-		auto& temp_io_context = _io_context_pool.get_io_context();
 
-		shared_ptr<client_unit> _client(new client_unit(temp_io_context));
+
+		shared_ptr<client_unit> _client(new client_unit(
+			_io_context_pool.get_io_context()));
 		_new_proxy_handler.reset(new http_proxy_handler(
 			_breakpoint_manager, _display_filter, _client));
-		//std::cout << "waiting to accept\n";
 
 
-		//TODO:此处有一些问题，得到的socket全都是一个io_context的
+		boost::system::error_code ec;
+
+		
 		_new_proxy_conn.reset(new connection(
-			co_await _acceptor.async_accept(use_awaitable)
+			co_await _acceptor.async_accept(
+				_io_context_pool.get_io_context(),
+				boost::asio::redirect_error(use_awaitable, ec))
 			, _new_proxy_handler));
-		//co_await _acceptor.async_accept(temp_io_context,use_awaitable)
+
+		if (ec) {
+			cout << "Runtime Error: async_accept error!\n";
+		}
+
 
 		_new_proxy_conn->start();
 

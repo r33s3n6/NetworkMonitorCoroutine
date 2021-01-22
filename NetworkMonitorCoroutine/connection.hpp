@@ -43,17 +43,22 @@ public:
 	connection(const connection&) = delete;
 	connection& operator=(const connection&) = delete;
 
-	//由给定的io_context来建立连接
+	
 	explicit connection(tcp::socket socket,
 		shared_ptr<http_proxy_handler> handler_ptr);
+
+	//由给定的io_context来建立连接
+	connection(boost::asio::io_context& _io_context, shared_ptr<http_proxy_handler> handler_ptr);
 
 	void start();
 	void stop();
 
+
+
 	~connection() {
-		//cout << "lost connection" << endl;
+		cout << "lost connection" << endl;
 	}
-	//tcp::socket& socket(){ return _socket; }
+	tcp::socket& socket(){ return _socket; }
 
 	
 
