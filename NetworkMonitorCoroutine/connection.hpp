@@ -22,7 +22,7 @@ using namespace boost::asio::ip;
 using namespace common;
 
 #include "connection_enums.h"
-
+#include "ssl_layer.h"
 
 
 namespace proxy_server{
@@ -48,7 +48,7 @@ public:
 		shared_ptr<http_proxy_handler> handler_ptr);
 
 	//由给定的io_context来建立连接
-	connection(boost::asio::io_context& _io_context, shared_ptr<http_proxy_handler> handler_ptr);
+	//connection(boost::asio::io_context& _io_context, shared_ptr<http_proxy_handler> handler_ptr);
 
 	void start();
 	void stop();
@@ -66,22 +66,26 @@ private:
 
 	awaitable<void> _waitable_loop();
 
+	awaitable<void> _async_read(bool with_ssl);
+	awaitable<void> _async_write(const string& data, bool with_ssl);
+
+	ssl_layer _ssl_layer;
 
 	tcp::socket _socket;
 	
 	bool _keep_alive = true;
 
 	shared_ptr<http_proxy_handler> _request_handler;
+
 	array<char, 8192> _buffer;
+
+
 	shared_ptr<string> _whole_request;
 
 
-	//integrity_status _http_integrity_check();
-	integrity_status _https_integrity_check();
-
 	bool _is_tunnel_conn = false;
-	bool _keep_waiting_chunked = false;
-	handshake_status _handshake_status = not_begin;
+
+	string host;
 
 
 };

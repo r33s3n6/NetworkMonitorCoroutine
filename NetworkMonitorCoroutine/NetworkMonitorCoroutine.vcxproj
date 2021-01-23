@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\Libraries\boost_1_75_0;$(IncludePath)</IncludePath>
+    <IncludePath>F:\Libraries\NanoLog-master\runtime;F:\Libraries\boost_1_75_0;$(IncludePath)</IncludePath>
     <LibraryPath>F:\Libraries\boost_1_75_0\stage\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -158,6 +158,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="proxy_handler.cpp" />
     <ClCompile Include="proxy_server.cpp" />
+    <ClCompile Include="ssl_layer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="breakpoint_manager.h" />
@@ -171,6 +172,7 @@
     <ClInclude Include="io_context_pool.h" />
     <ClInclude Include="proxy_handler.h" />
     <ClInclude Include="proxy_server.h" />
+    <ClInclude Include="ssl_layer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
