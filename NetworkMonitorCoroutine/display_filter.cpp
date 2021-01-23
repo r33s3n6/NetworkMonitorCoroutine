@@ -19,7 +19,7 @@ namespace proxy_server {
 
 	}
 
-	void display_filter::_temp_display(const shared_ptr<string>& data) {
+	void display_filter::_temp_display(shared_ptr<const string> data) {
 		shared_ptr<string> header(new string(""));
 		shared_ptr<string> body(new string(""));
 
@@ -47,7 +47,7 @@ namespace proxy_server {
 		}
 	}
 
-	int display_filter::display(const shared_ptr<string>& req_data) //return update_id
+	int display_filter::display(shared_ptr<const string> req_data) //return update_id
 	{
 		cout << "[Request Data]\n";
 
@@ -69,19 +69,19 @@ namespace proxy_server {
 		co_return 0;
 	}
 
-	void display_filter::update_display_req(int id, const shared_ptr<string>& req_data)
+	void display_filter::update_display_req(int id, shared_ptr<const string> req_data)
 	{
 		cout << "[Request Data](supplementary)\n";
 		_temp_display(req_data);
 	}
 
-	void display_filter::update_display_rsp(int id, const shared_ptr<string>& rsp_data)
+	void display_filter::update_display_rsp(int id, shared_ptr<const string> rsp_data)
 	{
 		cout << "[Response Data]\n";
 		_temp_display(rsp_data);
 	}
 
-	void display_filter::update_display_error(int id, const shared_ptr<string>& rsp_data)
+	void display_filter::update_display_error(int id, shared_ptr<const string> rsp_data)
 	{
 		cout << "[ERROR]\n";
 		cout << *rsp_data << endl;

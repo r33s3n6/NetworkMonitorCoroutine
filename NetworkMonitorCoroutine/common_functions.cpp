@@ -34,7 +34,7 @@ size_t hex2decimal(const char* hex_str)
 
 
 
-bool split_request(const shared_ptr<string>& data, shared_ptr<string> header, shared_ptr<string> body)
+bool split_request(shared_ptr<const string> data, shared_ptr<string> header, shared_ptr<string> body)
 {
 	size_t header_end_pos = data->find("\r\n\r\n");
 	if (header_end_pos == string::npos) {
@@ -48,7 +48,7 @@ bool split_request(const shared_ptr<string>& data, shared_ptr<string> header, sh
 
 //input lower case, header is case insensitive
 string get_header_value(
-	const shared_ptr<string>& header_field, const string& header_name) {
+	shared_ptr<const string> header_field, const string& header_name) {
 
 	shared_ptr<vector<string>> header_vec_ptr
 		= string_split(*header_field, "\r\n");
@@ -79,7 +79,7 @@ string get_header_value(
 
 
 //仅仅根据头的信息分割报文，无法对内容完整性做出任何保证
-proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& http_data,size_t& split_pos)
+proxy_server::integrity_status _http_integrity_check(shared_ptr<const string> http_data,size_t& split_pos)
 {
 	using namespace proxy_server;
 
@@ -137,7 +137,7 @@ proxy_server::integrity_status _http_integrity_check(const shared_ptr<string>& h
 }
 
 
-proxy_server::integrity_status _chunked_integrity_check(const shared_ptr<string>& http_data, size_t& split_pos)
+proxy_server::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos)
 {
 	using namespace proxy_server;
 
@@ -188,7 +188,7 @@ proxy_server::integrity_status _chunked_integrity_check(const shared_ptr<string>
 
 
 
-shared_ptr<string> memory2hex_string(const shared_ptr<string>& data)
+shared_ptr<string> memory2hex_string(shared_ptr<const string> data)
 {
 	shared_ptr<string> res(new string(""));
 	for (unsigned char _byte : *data) {
