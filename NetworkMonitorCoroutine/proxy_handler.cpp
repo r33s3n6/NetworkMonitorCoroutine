@@ -36,7 +36,7 @@ namespace proxy_server {
 
 		//非connect
 		shared_ptr<string> _modified_data(new string(""));
-		bool _keep_alive = _process_header(msg, _modified_data);
+		bool _keep_alive = _process_header(msg, _modified_data);//在其中host被修改
 
 		if (_modified_data->size() == 0) {
 			co_return respond_error;
@@ -62,6 +62,9 @@ namespace proxy_server {
 		}
 
 		connection_behaviour _behaviour;
+
+
+
 		_behaviour = co_await _client->send_request(*host, *_modified_data, with_ssl, force_old_conn);
 
 		if (_behaviour == respond_error) {
@@ -140,7 +143,8 @@ namespace proxy_server {
 			"proxy-connection",
 			"connection",
 			//"transfer-encoding","te","trailers"//可以原样转发，不要徒增麻烦
-			"upgrade"
+			"upgrade",
+			"accept-encoding"//TODO: 解决gzip, br, deflate后再加回去吧
 		};
 
 
