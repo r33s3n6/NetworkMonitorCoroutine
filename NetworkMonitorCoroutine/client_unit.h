@@ -8,9 +8,13 @@ using namespace std;
 #define CLIENT_UNIT_KEEP_ALIVE true
 
 #include <boost/asio.hpp>
-
+#include <boost/asio/ssl.hpp>
 
 #include "connection_enums.h"
+
+
+
+
 
 namespace proxy_server{
 
@@ -25,7 +29,7 @@ public:
 	client_unit& operator=(const client_unit&) = delete;
 
 	client_unit(boost::asio::io_context& io_context);
-	~client_unit();
+	~client_unit() ;
 
 	
 
@@ -38,11 +42,14 @@ public:
 
 
 private:
-	
+	typedef boost::asio::ssl::stream<tcp::socket> ssl_stream;
+
+	shared_ptr<ssl_stream> _ssl_stream_ptr;
+	boost::asio::ssl::context _ssl_context;
 
 	boost::asio::io_context& _io_context;
 
-	shared_ptr<tcp::socket> _socket;
+	tcp::socket* _socket;
 	tcp::resolver _resolver;
 
 	string _current_host;
@@ -61,6 +68,7 @@ private:
 
 	void _socket_close();
 
+	
 	//awaitable<bool> _check_connection(const string& host);
 };
 

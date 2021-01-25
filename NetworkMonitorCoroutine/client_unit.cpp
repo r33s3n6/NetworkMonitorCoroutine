@@ -6,6 +6,38 @@ using namespace common;
 #include <iostream>
 using namespace std;
 
+
+#include <boost/asio/ssl/context.hpp>
+#include <wincrypt.h>
+#include <tchar.h>
+
+void add_windows_root_certs(boost::asio::ssl::context& ctx)
+{
+	HCERTSTORE hStore = CertOpenSystemStore(0, _T("ROOT"));
+	if (hStore == NULL) {
+		return;
+	}
+
+	X509_STORE* store = X509_STORE_new();
+	PCCERT_CONTEXT pContext = NULL;
+	while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) != NULL) {
+		// convert from DER to internal format
+		X509* x509 = d2i_X509(NULL,
+			(const unsigned char**)&pContext->pbCertEncoded,
+			pContext->cbCertEncoded);
+		if (x509 != NULL) {
+			X509_STORE_add_cert(store, x509);
+			X509_free(x509);
+		}
+	}
+
+	CertFreeCertificateContext(pContext);
+	CertCloseStore(hStore, 0);
+
+	// attach X509_STORE to boost ssl context
+	SSL_CTX_set_cert_store(ctx.native_handle(), store);
+}
+
 namespace proxy_server {
 
 	using boost::asio::co_spawn;
@@ -20,14 +52,20 @@ client_unit::client_unit(boost::asio::io_context& io_context)
 	:_io_context(io_context),
 	_resolver(io_context),
 	_socket(),
-	_current_host("")
-{
+	_current_host(""),
+	_ssl_context(boost::asio::ssl::context::sslv23)
 
+{
+	add_windows_root_certs(_ssl_context);
 	
 }
 
 client_unit::~client_unit()
 {
+	if (_ssl_stream_ptr)
+		_socket = nullptr;//避免两次释放
+	else if (_socket)
+		delete _socket;
 	
 }
 
@@ -38,6 +76,7 @@ void client_unit::_error_handler(boost::system::error_code ec) {
 
 
 //TODO:返回错误时要同时返回错误信息
+//host 是可能有端口号的
 awaitable<connection_behaviour> client_unit::send_request(const string& host, const string& data, bool with_ssl,bool force_old_conn)
 {
 	if (host.size() == 0)
@@ -78,26 +117,52 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 
 	//try to connect
 	if (!(*is_connected)) {
-		if (_socket)
+
+		if (_ssl_stream_ptr) {//https
+			_ssl_stream_ptr.reset();
+			_socket = nullptr;
+		}
+		else if (_socket) {//http
 			_socket_close();
+		}
 
 		if (force_old_conn)//TODO: error msg
 			co_return respond_error;
 
-		cout << "reconnecting" << endl;
+		if (with_ssl) {
+			_ssl_stream_ptr = make_shared<ssl_stream>(_io_context, _ssl_context);
+			_socket = &_ssl_stream_ptr->next_layer();
+		}
+		else {
+			_socket = new tcp::socket(_io_context);
+		}
 
 
-		//TODO: SSL_SUPPORT
-		_socket.reset(new tcp::socket(_io_context));
+	
 
 
 		//_socket->set_option(tcp::socket::keep_alive(true));
 
 		_current_host = host;
+		string _port = "80";
+		string _host = "";
+
+		size_t host_port_pos = host.find(":");
+		if (host_port_pos == string::npos) {
+			if (with_ssl)
+				_port = "443";
+			_host = host;
+		}
+		else {
+			_host = host.substr(0, host_port_pos);
+			_port = host.substr(host_port_pos, host.size() - host_port_pos);
+		}
+
+
 
 		//解析
-		_endpoints = co_await _resolver.async_resolve(host,
-			"http", redirect_error(use_awaitable, ec));
+		_endpoints = co_await _resolver.async_resolve(_host,
+			_port, redirect_error(use_awaitable, ec));
 
 		if (ec) {
 			_error_handler(ec);
@@ -115,6 +180,19 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 			co_return respond_error;
 		}
 
+		if (with_ssl) {
+			_ssl_stream_ptr->set_verify_mode(boost::asio::ssl::verify_peer);
+			_ssl_stream_ptr->set_verify_callback(boost::asio::ssl::host_name_verification(_host));
+
+			co_await _ssl_stream_ptr->async_handshake(boost::asio::ssl::stream_base::client
+				, boost::asio::redirect_error(use_awaitable, ec));
+			if (ec) {
+				_error_handler(ec);
+				co_return respond_error;
+				//throw std::runtime_error("handshake failed");
+			}
+		}
+
 
 	}
 
@@ -122,8 +200,15 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 	//now _socket is set up
 
 	//send request
-	co_await boost::asio::async_write(*_socket, boost::asio::buffer(data),
-		redirect_error(use_awaitable, ec));
+
+	if (with_ssl) {
+		co_await boost::asio::async_write(*_ssl_stream_ptr, boost::asio::buffer(data),
+			redirect_error(use_awaitable, ec));
+	}
+	else {
+		co_await boost::asio::async_write(*_socket, boost::asio::buffer(data),
+			redirect_error(use_awaitable, ec));
+	}
 
 	if (ec) {
 		_error_handler(ec);
@@ -156,10 +241,18 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 				_remained_response.reset();
 			}
 			else {
+				size_t bytes_transferred;
+				if (_ssl_stream_ptr) {
+					bytes_transferred = co_await _ssl_stream_ptr->async_read_some(
+						boost::asio::buffer(_buffer),
+						boost::asio::redirect_error(use_awaitable, ec));
+				}
+				else {
+					bytes_transferred = co_await _socket->async_read_some(
+						boost::asio::buffer(_buffer),
+						boost::asio::redirect_error(use_awaitable, ec));
+				}
 				
-				size_t bytes_transferred = co_await _socket->async_read_some(
-					boost::asio::buffer(_buffer),
-					boost::asio::redirect_error(use_awaitable, ec));
 				if (ec) {
 					if (ec != boost::asio::error::eof) {
 						_error_handler(ec);
@@ -252,7 +345,8 @@ void client_unit::_socket_close()
 	boost::system::error_code ignored_ec;
 	_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
 	_socket->close();
-	_socket.reset();
+	delete _socket;
+	_socket = nullptr;
 	_current_host = "";
 }
 

@@ -8,7 +8,10 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
+#include <iostream>
+using namespace std;
 
+#include "certificate_manager.h"
 
 namespace proxy_server {
 
@@ -70,36 +73,55 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 awaitable<void> proxy_server::_listener()
 {
 
+	shared_ptr<certificate_manager> cert_mgr = 
+		make_shared<certificate_manager>("F:/TEMP/CAcert.pem", "F:/TEMP/CAkey.pem");//TODO
 
 
+	try
+	{
+
+		while (true) {
 
 
-	while (true) {
+			shared_ptr<client_unit> _client(new client_unit(
+				_io_context_pool.get_io_context()));
+			_new_proxy_handler.reset(new http_proxy_handler(
+				_breakpoint_manager, _display_filter, _client));
 
 
-		shared_ptr<client_unit> _client(new client_unit(
-			_io_context_pool.get_io_context()));
-		_new_proxy_handler.reset(new http_proxy_handler(
-			_breakpoint_manager, _display_filter, _client));
+			boost::system::error_code ec;
 
+			/*
+			_new_proxy_conn.reset(new connection(
+				co_await _acceptor.async_accept(
+					_io_context_pool.get_io_context(),
+					boost::asio::redirect_error(use_awaitable, ec))
+				, _new_proxy_handler));
+				*/
 
-		boost::system::error_code ec;
+			_new_proxy_conn.reset(new connection(
+				_io_context_pool.get_io_context(), _new_proxy_handler, cert_mgr));
 
-		
-		_new_proxy_conn.reset(new connection(
 			co_await _acceptor.async_accept(
-				_io_context_pool.get_io_context(),
-				boost::asio::redirect_error(use_awaitable, ec))
-			, _new_proxy_handler));
+				_new_proxy_conn->socket(),
+				boost::asio::redirect_error(use_awaitable, ec));
 
-		if (ec) {
-			cout << "Runtime Error: async_accept error!\n";
+			if (ec) {
+				cout << "Runtime Error: async_accept error!\n";
+			}
+
+
+			_new_proxy_conn->start();
+
 		}
 
-
-		_new_proxy_conn->start();
-
 	}
+	catch (const std::exception& e)
+	{
+		cout << e.what() << endl;
+	}
+
+	
 
 
 }
