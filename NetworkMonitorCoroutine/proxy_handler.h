@@ -45,7 +45,7 @@ public:
 
 	//receive 不需要指定是否使用旧连接，因为断开直接失败
 	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
-		bool with_ssl);
+		bool with_ssl, bool chunked_body = false);
 
 	connection_behaviour handle_error(shared_ptr<string> result);
 

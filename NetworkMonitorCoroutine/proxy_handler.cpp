@@ -50,6 +50,7 @@ namespace proxy_server {
 				_update_id = co_await _display_filter.display_breakpoint_req(_modified_data);
 				if (_update_id == -1) {//不继续执行
 					_update_id = -2;//reset to default
+					_client->disconnect();
 					co_return connection_behaviour::ignore;
 				}
 			}
@@ -64,11 +65,14 @@ namespace proxy_server {
 		connection_behaviour _behaviour;
 
 
-
-		_behaviour = co_await _client->send_request(*host, *_modified_data, with_ssl, force_old_conn);
+		shared_ptr<string> _error_msg = make_shared<string>("");
+		
+		_behaviour = co_await _client->send_request(*host, *_modified_data,_error_msg, with_ssl, force_old_conn);
 
 		if (_behaviour == respond_error) {
-			_display_filter.update_display_error(_update_id, make_shared<string>("sending message fucked up"));//TODO
+			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
+			complete_error_msg->append(*_error_msg);
+			_display_filter.update_display_error(_update_id, complete_error_msg);
 			co_return _behaviour;
 		}
 		else {
@@ -84,24 +88,26 @@ namespace proxy_server {
 		
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::receive_message(shared_ptr<string>& rsp, bool with_ssl)
+	awaitable<connection_behaviour> http_proxy_handler::receive_message(shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
 	{
 		//必然有update_id
 		//assert(update_id>=0)
 		connection_behaviour _behaviour;
 		_behaviour = co_await _client->receive_response(rsp);
 		if (_behaviour == respond_error) {
-
-			_display_filter.update_display_error(_update_id, rsp);
+			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
+			complete_error_msg->append(*rsp);
+			_display_filter.update_display_error(_update_id, complete_error_msg);
 			co_return _behaviour;
 		}
 
-		if (_breakpoint_manager.check(*rsp)) {
+		if (!chunked_body && _breakpoint_manager.check(*rsp)) {
 			//断点
 			if (-1 == co_await _display_filter.display_breakpoint_rsp(_update_id, rsp)) {//result 在此处是可能被修改的
 				//请求被阻断
 				_update_id = -2;
-				co_return connection_behaviour::ignore;
+				_client->disconnect();
+				co_return connection_behaviour::ignore;//ignore 要清除client的连接
 			}
 			//else 不用做任何事，因为display_breakpoint_rsp 已经处理好了后续显示工作
 

@@ -22,6 +22,7 @@ struct cert_key {
 
 };
 
+//TODO: certificate cache, generate CA certificate
 class certificate_manager
 {
 public:

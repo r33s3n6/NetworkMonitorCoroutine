@@ -26,7 +26,8 @@ namespace proxy_server {
 		size_t _ignore_pos;
 		auto _type = _chunked_integrity_check(data, _ignore_pos);
 		if (_type == chunked || _type == intact) {
-			cout << *data << endl;
+			//cout << *data << endl;
+			cout << memory2hex_string(data)->substr(0, 333) << "...\n\n";
 			return;
 		}
 
@@ -43,7 +44,8 @@ namespace proxy_server {
 			cout << memory2hex_string(body)->substr(0,333)<< "...\n\n";
 		}
 		else {
-			cout << *body << "\n\n";
+			//cout << *body << "\n\n";
+			cout << memory2hex_string(body)->substr(0, 333) << "...\n\n";
 		}
 	}
 
@@ -59,15 +61,7 @@ namespace proxy_server {
 	}
 
 
-
-
-
-
-	awaitable<int> display_filter::display_breakpoint_req(shared_ptr<string> req_data)
-	{
-
-		co_return 0;
-	}
+	
 
 	void display_filter::update_display_req(int id, shared_ptr<const string> req_data)
 	{
@@ -87,6 +81,11 @@ namespace proxy_server {
 		cout << *rsp_data << endl;
 	}
 
+	awaitable<int> display_filter::display_breakpoint_req(shared_ptr<string> req_data)
+	{
+
+		co_return 0;
+	}
 
 	awaitable<int> display_filter::display_breakpoint_rsp(int update_id,
 		shared_ptr<string> rsp_data)//¸üĞÂ¾ÉÏÔÊ¾

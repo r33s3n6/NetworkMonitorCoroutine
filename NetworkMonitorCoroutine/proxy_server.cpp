@@ -12,6 +12,7 @@
 using namespace std;
 
 #include "certificate_manager.h"
+#include "client_unit.h"
 
 namespace proxy_server {
 
@@ -61,6 +62,14 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 	_acceptor.bind(endpoint);
 	_acceptor.listen();
 
+
+
+	
+
+	//client_unit::set_server_certificate_verify(false);
+	client_unit::set_server_certificate_verify(true);
+
+
 	//ignore the error reported by intellisense
 	co_spawn(_io_context, _listener(), detached);
 
@@ -72,11 +81,9 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 
 awaitable<void> proxy_server::_listener()
 {
-
-	shared_ptr<certificate_manager> cert_mgr = 
+	shared_ptr<certificate_manager> cert_mgr =
 		make_shared<certificate_manager>("F:/TEMP/CAcert.pem", "F:/TEMP/CAkey.pem");//TODO
-
-
+	
 	try
 	{
 

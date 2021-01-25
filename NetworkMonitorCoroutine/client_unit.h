@@ -12,7 +12,7 @@ using namespace std;
 
 #include "connection_enums.h"
 
-
+#include <boost/asio/ssl/context.hpp>
 
 
 
@@ -33,15 +33,21 @@ public:
 
 	
 
-	awaitable<connection_behaviour> send_request(const string& host, const string& data, bool with_ssl, bool force_old_conn = false);
+	//awaitable<connection_behaviour> send_request(const string& host, const string& data, bool with_ssl, bool force_old_conn = false);
+	awaitable<connection_behaviour> send_request(const string& host,
+		const string& data, shared_ptr<string> error_msg, bool with_ssl, bool force_old_conn = false);
 	awaitable<connection_behaviour> receive_response(shared_ptr<string>& result);//直接复用socket 不需要with_ssl 参数
 
-
+	void disconnect();
 	
 	
-
+	static void set_server_certificate_verify(bool verify);
 
 private:
+
+	static bool server_certificate_verify;
+	static X509_STORE* store;
+
 	typedef boost::asio::ssl::stream<tcp::socket> ssl_stream;
 
 	shared_ptr<ssl_stream> _ssl_stream_ptr;

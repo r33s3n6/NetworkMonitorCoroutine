@@ -11,11 +11,13 @@ using namespace std;
 #include <wincrypt.h>
 #include <tchar.h>
 
-void add_windows_root_certs(boost::asio::ssl::context& ctx)
+
+
+X509_STORE* add_windows_root_certs()
 {
 	HCERTSTORE hStore = CertOpenSystemStore(0, _T("ROOT"));
 	if (hStore == NULL) {
-		return;
+		return nullptr;
 	}
 
 	X509_STORE* store = X509_STORE_new();
@@ -33,9 +35,8 @@ void add_windows_root_certs(boost::asio::ssl::context& ctx)
 
 	CertFreeCertificateContext(pContext);
 	CertCloseStore(hStore, 0);
-
-	// attach X509_STORE to boost ssl context
-	SSL_CTX_set_cert_store(ctx.native_handle(), store);
+	return store;
+	
 }
 
 namespace proxy_server {
@@ -45,7 +46,20 @@ namespace proxy_server {
 	using boost::asio::redirect_error;
 	using boost::asio::use_awaitable;
 
+	X509_STORE* client_unit::store = nullptr;
+	bool client_unit::server_certificate_verify = true;
+	//X509_STORE* client_unit::store = nullptr;
 
+void client_unit::set_server_certificate_verify(bool verify)
+{
+	if (verify) {
+		client_unit::store = add_windows_root_certs();
+	}
+	else {
+		client_unit::server_certificate_verify = false;
+	}
+
+}
 
 
 client_unit::client_unit(boost::asio::io_context& io_context)
@@ -56,31 +70,54 @@ client_unit::client_unit(boost::asio::io_context& io_context)
 	_ssl_context(boost::asio::ssl::context::sslv23)
 
 {
-	add_windows_root_certs(_ssl_context);
+
+	if (client_unit::server_certificate_verify) {
+
+		if (client_unit::store != nullptr) {
+			// attach X509_STORE to boost ssl context
+			SSL_CTX_set1_cert_store(_ssl_context.native_handle(), client_unit::store);
+		}
+		else {
+			cout << "add_windows_root_certs failed" << endl;
+		}
+	}
+
+	
+		
+
+	
 	
 }
 
 client_unit::~client_unit()
 {
+	_socket_close();
+	
+	/*
 	if (_ssl_stream_ptr)
 		_socket = nullptr;//避免两次释放
 	else if (_socket)
-		delete _socket;
+		delete _socket;*/
 	
 }
 
 
+/*
 void client_unit::_error_handler(boost::system::error_code ec) {
-	cout << "Error: " << ec.message() << "\n";
+	//cout << "Error: " << ec.message() << "\n";
 }
+*/
 
-
-//TODO:返回错误时要同时返回错误信息
+//返回错误时要同时返回错误信息
 //host 是可能有端口号的
-awaitable<connection_behaviour> client_unit::send_request(const string& host, const string& data, bool with_ssl,bool force_old_conn)
+awaitable<connection_behaviour> client_unit::send_request(const string& host, 
+	const string& data, shared_ptr<string> error_msg, bool with_ssl,bool force_old_conn)
 {
-	if (host.size() == 0)
+	if (host.size() == 0) {
+		*error_msg = "host is empty";
 		co_return respond_error;
+	}
+		
 
 
 	boost::system::error_code ec;
@@ -126,22 +163,30 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 			_socket_close();
 		}
 
-		if (force_old_conn)//TODO: error msg
+		if (force_old_conn) {
+			*error_msg = "old connection closed";
 			co_return respond_error;
+		}
+			
 
 		if (with_ssl) {
+			
 			_ssl_stream_ptr = make_shared<ssl_stream>(_io_context, _ssl_context);
+			if (!_ssl_stream_ptr) {
+				*error_msg = "ssl_stream init failed";
+				co_return respond_error;
+			}
 			_socket = &_ssl_stream_ptr->next_layer();
+			
 		}
 		else {
 			_socket = new tcp::socket(_io_context);
 		}
 
 
-	
+		
 
 
-		//_socket->set_option(tcp::socket::keep_alive(true));
 
 		_current_host = host;
 		string _port = "80";
@@ -165,7 +210,9 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 			_port, redirect_error(use_awaitable, ec));
 
 		if (ec) {
-			_error_handler(ec);
+
+			*error_msg = "Resolve failed: ";
+			*error_msg += ec.message();
 			co_return respond_error;
 		}
 
@@ -176,22 +223,36 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 			redirect_error(use_awaitable, ec));
 
 		if (ec) {
-			_error_handler(ec);
+			*error_msg = "Connect failed: ";
+			*error_msg += ec.message();
 			co_return respond_error;
 		}
 
-		if (with_ssl) {
-			_ssl_stream_ptr->set_verify_mode(boost::asio::ssl::verify_peer);
-			_ssl_stream_ptr->set_verify_callback(boost::asio::ssl::host_name_verification(_host));
 
+		boost::asio::socket_base::keep_alive option(true);
+		_socket->set_option(option);
+
+		if (with_ssl) {
+			//for ssl connection, disable Nagle's algorithm boost the performance
+			_socket->set_option(tcp::no_delay(true));
+
+			if (client_unit::server_certificate_verify && store) {//只有成功初始化store的情况下才验证
+				_ssl_stream_ptr->set_verify_mode(boost::asio::ssl::verify_peer);
+				_ssl_stream_ptr->set_verify_callback(boost::asio::ssl::host_name_verification(_host));
+			}
+
+			// Set SNI Hostname (many hosts need this to handshake successfully)
+			SSL_set_tlsext_host_name(_ssl_stream_ptr->native_handle(), _host.c_str());
 			co_await _ssl_stream_ptr->async_handshake(boost::asio::ssl::stream_base::client
 				, boost::asio::redirect_error(use_awaitable, ec));
 			if (ec) {
-				_error_handler(ec);
+				*error_msg = "Handshake failed: ";
+				*error_msg += ec.message();
+				*error_msg += "Debug info: _host:"+_host;
 				co_return respond_error;
-				//throw std::runtime_error("handshake failed");
 			}
 		}
+
 
 
 	}
@@ -211,7 +272,8 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 	}
 
 	if (ec) {
-		_error_handler(ec);
+		*error_msg = "async_write failed: ";
+		*error_msg += ec.message();
 		co_return respond_error;
 	}
 
@@ -219,7 +281,7 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host, co
 	
 }
 
-//TODO:返回错误时要同时返回错误信息
+//返回错误时要同时返回错误信息
 awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>& result) //不需要检查连接性，出错直接返回即可
 {
 	boost::system::error_code ec;
@@ -255,7 +317,10 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 				
 				if (ec) {
 					if (ec != boost::asio::error::eof) {
-						_error_handler(ec);
+						
+						*result = "async_read_some : ";
+						*result += ec.message();
+						*result += "\n";
 						throw std::runtime_error("client unit read failed");
 					}
 					else {//连接已断开
@@ -297,8 +362,9 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 
 			case integrity_status::wait_chunked:
 			case integrity_status::wait:
+				//此处的ec要不然就没错，要不然就是eof，因为其他的早已跳出
 				if (ec == boost::asio::error::eof) {
-					_error_handler(ec);
+					
 					throw std::runtime_error("response integrity check failed(wait but eof)");
 				}
 				else {
@@ -306,7 +372,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 				}
 				break;
 			default:
-				_error_handler(ec);
+
 				throw std::runtime_error("response integrity check failed(switch encounter default)");
 			}
 
@@ -332,236 +398,45 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 	}
 	catch (const std::exception& e)
 	{
-		cout << e.what() << endl;
-		*result = e.what();
+
+		*result += e.what();
 	}
 	_socket_close();
 	co_return  respond_error;
 	
 }
 
+void client_unit::disconnect()
+{
+	_socket_close();
+}
+
+
+
 void client_unit::_socket_close()
 {
 	boost::system::error_code ignored_ec;
-	_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
-	_socket->close();
-	delete _socket;
-	_socket = nullptr;
+	if (_socket) {
+		_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
+		_socket->close();
+		if (_ssl_stream_ptr) {
+			_socket = nullptr;//避免两次释放
+			_ssl_stream_ptr.reset();
+		}
+		else
+			delete _socket;
+
+	}
+	
 	_current_host = "";
+	
+	
+	
 }
 
 
 
-/*
 
-//return if it is successful
-awaitable<connection_behaviour> client_unit::send_request(const string& host,
-	const string& data, shared_ptr<string> result)
-{
-
-	if (host.size() == 0)
-		co_return respond_and_close;
-
-	
-	boost::system::error_code ec;
-
-	//try to reuse the old connection
-
-	shared_ptr<bool> is_connected(new bool(false));
-	if (_current_host == host && _socket) {
-		*is_connected = true;
-		//TODO:尝试性读取来检测连接是否仍存在
-		boost::asio::steady_timer _deadline(_io_context);
-		
-		_deadline.expires_after(std::chrono::milliseconds(100));
-
-		_deadline.async_wait(
-			[this, is_connected](boost::system::error_code ec) {
-			if (_socket && (*is_connected))//说明仍在等待读取
-				_socket->cancel();
-			});
-
-		std::size_t bytes_transferred = co_await _socket->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
-		if (ec!= boost::asio::error::operation_aborted) {//只要不是被cancel，就肯定是出错了
-			_deadline.cancel();
-			*is_connected = false;
-		}
-
-	}
-	
-	//clear buffer
-	//_whole_response.reset(new string(""));
-
-	//try to connect
-	if (!(*is_connected)) {
-		if(_socket)
-			_socket_close();
-		_socket.reset(new tcp::socket(_io_context));
-
-
-		//_socket->set_option(tcp::socket::keep_alive(true));
-		
-		_current_host = host;
-
-		//解析
-		_endpoints = co_await _resolver.async_resolve(host,
-				"http", redirect_error(use_awaitable, ec));
-
-		if (ec) {
-			_error_handler(ec);
-			co_return respond_and_close;
-		}
-
-
-		
-
-		co_await boost::asio::async_connect(*_socket, _endpoints,
-			redirect_error(use_awaitable, ec));
-
-		if (ec) {
-			_error_handler(ec);
-			co_return respond_and_close;
-		}
-
-		
-
-	}
-	
-	
-	//now _socket is set up
-	
-	//send request
-	co_await boost::asio::async_write(*_socket, boost::asio::buffer(data),
-		redirect_error(use_awaitable, ec));
-
-	if (ec) {
-		_error_handler(ec);
-		co_return respond_and_close;
-	}
-
-	
-
-	//=====================================read========================================
-	try
-	{
-		
-		while (true) {
-			std::size_t bytes_transferred = co_await _socket->async_read_some(
-				boost::asio::buffer(_buffer),
-				boost::asio::redirect_error(use_awaitable, ec));
-			if (ec) {
-				if (ec != boost::asio::error::eof) {
-					_error_handler(ec);
-					throw std::runtime_error("read failed");
-				}
-			}
-
-			//_whole_response->append(_buffer.data(), bytes_transferred);
-			result->append(_buffer.data(), bytes_transferred);
-
-			integrity_status _status;
-
-			_status = _http_integrity_check(result);
-
-
-
-			connection_behaviour ret = respond_and_keep_alive;
-
-			switch (_status) {
-			case integrity_status::success:
-				ret = respond_and_keep_alive;
-				break;
-			case integrity_status::failed:
-
-				ret = respond_and_close;
-				break;
-
-			case integrity_status::wait_chunked:
-
-				ret = respond_and_keep_reading;
-				break;
-			case integrity_status::wait:
-				if (ec == boost::asio::error::eof) {
-					_error_handler(ec);
-					throw std::runtime_error("response integrity check failed");
-				}
-				else {
-					continue;
-				}
-				break;
-			default:
-				_error_handler(ec);
-				throw std::runtime_error("response integrity check failed");
-			}
-
-			if (!CLIENT_UNIT_KEEP_ALIVE && ret!= respond_and_keep_reading)
-				_socket_close();
-
-			co_return ret;
-
-
-
-		}
-
-	}
-	catch (const std::exception&)
-	{
-
-		_socket_close();
-		co_return  respond_and_close;;
-	}
-
-
-
-	*result = error_response::error404;
-	co_return  respond_and_close;;
-}
-
-awaitable<connection_behaviour> client_unit::send_request_ssl(const string& host,
-	const string& data, shared_ptr<string> result)
-{
-	*result = error_response::error404;
-	co_return respond_and_close;
-}
-
-
-
-awaitable<bool> client_unit::_check_connection(const string& host)
-{
-	boost::system::error_code ec;
-	shared_ptr<bool> is_connected(new bool(false));
-
-	if (_current_host == host && _socket) {
-		*is_connected = true;//maybe
-
-		//读取直到超时来检测连接是否仍存在，出错说明连接中断
-		boost::asio::steady_timer _deadline(_io_context);
-
-		_deadline.expires_after(std::chrono::milliseconds(100));//等待100ms
-
-		_deadline.async_wait(
-			[this, is_connected](boost::system::error_code ec) {
-				if (_socket && (*is_connected))//说明仍在等待读取
-					_socket->cancel();
-			});
-
-		std::size_t bytes_transferred = co_await _socket->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
-
-		if (ec != boost::asio::error::operation_aborted) {//只要不是被cancel，就肯定是出错了
-			_deadline.cancel();
-			*is_connected = false;
-		}
-
-	}
-
-	co_return *is_connected;
-}
-
-*/
 
 
 

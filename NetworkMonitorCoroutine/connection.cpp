@@ -101,6 +101,9 @@ awaitable<void> connection::_waitable_loop()
 
 	//cout << "executed by thread " << boost::this_thread::get_id() << endl;
 	
+	boost::asio::socket_base::keep_alive option(true);
+	_socket->set_option(option);
+
 	try
 	{
 		boost::system::error_code ec;
@@ -158,7 +161,7 @@ awaitable<void> connection::_waitable_loop()
 
 
 	
-					size_t host_end_pos = _whole_request->find(":");//https tunnel, TODO:http tunnel
+					size_t host_end_pos = _whole_request->find(":");
 					if (host_end_pos == string::npos) {
 						host_end_pos = _whole_request->find(" HTTP");
 						if (host_end_pos == string::npos) {
@@ -183,6 +186,8 @@ awaitable<void> connection::_waitable_loop()
 					
 					_ssl_stream_ptr = make_shared<ssl_stream>(move(*_socket), _ssl_context);//一直继承这个socket
 					_socket = &_ssl_stream_ptr->next_layer();
+					//for ssl connection, disable Nagle's algorithm boost the performance
+					_socket->set_option(tcp::no_delay(true));
 					co_await _ssl_stream_ptr->async_handshake(boost::asio::ssl::stream_base::server
 						, boost::asio::redirect_error(use_awaitable, ec));
 					if (ec) {
@@ -267,7 +272,7 @@ awaitable<void> connection::_waitable_loop()
 				co_await _async_write(*res, _is_tunnel_conn);
 
 				res.reset(new string(""));
-				_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn);
+				_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn,true);//此时接收chunked body
 			}
 
 
@@ -335,8 +340,8 @@ awaitable<void> connection::_async_read(bool with_ssl)
 		if (ec != boost::asio::error::eof) {
 
 			cout << boost::this_thread::get_id() << ":" << ec.message() << endl;
-			throw std::runtime_error("read failed");//TODO 出大问题
-		}//TODO eof意味着无法写数据
+			throw std::runtime_error("read failed");
+		}//eof意味着无法写数据
 		else {
 			throw std::runtime_error("connection closed by peer");
 		}
