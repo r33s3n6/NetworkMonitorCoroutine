@@ -3,13 +3,12 @@
 
 #include <boost/thread.hpp>
 
-#include <iostream>
-using namespace std;
+
 namespace proxy_server {
 
 
 
-	/*
+
 connection::connection(tcp::socket socket,
 	shared_ptr<http_proxy_handler> handler_ptr)
 	: _socket(std::move(socket)),
@@ -17,43 +16,32 @@ connection::connection(tcp::socket socket,
 	_whole_request(new string("")),
 	host(""),
 	_buffer({'\0'}),
-	_ssl_context(boost::asio::ssl::context::sslv23)
-
+	_ssl_layer()
 {
-	
-}
-*/
+	boost::asio::socket_base::keep_alive _ka(true);
+	_socket.set_option(_ka);
 
+}
+
+/*
 connection::connection(boost::asio::io_context& _io_context,
-	shared_ptr<http_proxy_handler> handler_ptr,shared_ptr<certificate_manager> cert_mgr)
-	: _socket(new tcp::socket(_io_context)),
+	shared_ptr<http_proxy_handler> handler_ptr)
+	: _socket(_io_context),
 	_request_handler(handler_ptr),
-	_whole_request(new string("")),
-	host(""),
-	_buffer({ '\0' }),
-	_ssl_context(boost::asio::ssl::context::sslv23),
-	_cert_mgr(cert_mgr)
+	_whole_request(new string(""))
 {
-	_ssl_context.set_options(
-		boost::asio::ssl::context::default_workarounds
-		| boost::asio::ssl::context::no_sslv2);
-
-	
-
-	
-
-	//_socket.reset(&_ssl_stream_ptr->lowest_layer());
-	
+	boost::asio::socket_base::keep_alive _ka(true);
+	_socket.set_option(_ka);
 
 }
 
-
+*/
 
 void connection::start()
 {
 	//保证connection存在
 	auto self = this->shared_from_this();
-	co_spawn(_socket->get_executor(),
+	co_spawn(_socket.get_executor(),
 		[self]() {
 			return self->_waitable_loop();
 		}, detached);
@@ -64,10 +52,10 @@ void connection::start()
 
 void connection::stop()
 {
-	if (_socket->is_open()) {
+	if (_socket.is_open()) {
 		boost::system::error_code ignored_ec;
-		_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
-		_socket->close();
+		_socket.shutdown(tcp::socket::shutdown_both, ignored_ec);
+		_socket.close();
 	}
 	
 }
@@ -99,8 +87,8 @@ awaitable<void> connection::_waitable_loop()
 	
 	*/
 
-	//cout << "executed by thread " << boost::this_thread::get_id() << endl;
-	
+	cout << "executed by thread " << boost::this_thread::get_id() << endl;
+
 	try
 	{
 		boost::system::error_code ec;
@@ -117,7 +105,9 @@ awaitable<void> connection::_waitable_loop()
 
 			//若上次有一些剩余的尾巴，这次先不读而是先检查完整性，否则可能其中为最后一个报文而阻塞
 			if (!_with_appendix) {
+				
 				co_await _async_read(_is_tunnel_conn);
+
 			}
 
 			
@@ -150,17 +140,14 @@ awaitable<void> connection::_waitable_loop()
 							last_status == wait_chunked));//上一次是chunked/wait_chunked则需要强制使用旧连接
 				break;
 			case integrity_status::intact:
-				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method 单独处理直接返回，应该不可能连缀
+				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method 单独处理直接返回，
 					//DISPLAY IS NOT NECESSARY
 					//format
 					//CONNECT www.example.com:443 HTTP/1.1\r\n ......
-					
 
-
-	
-					size_t host_end_pos = _whole_request->find(":");//https tunnel, TODO:http tunnel
+					size_t host_end_pos = _whole_request->find(":443");//https tunnel, TODO:http tunnel
 					if (host_end_pos == string::npos) {
-						host_end_pos = _whole_request->find(" HTTP");
+						host_end_pos = _whole_request->find("HTTP");
 						if (host_end_pos == string::npos) {
 							throw std::runtime_error("cannot get host information");
 						}
@@ -168,30 +155,16 @@ awaitable<void> connection::_waitable_loop()
 
 					//now host_end_pos is properly set
 					host = _whole_request->substr(8, host_end_pos - 8);
-					//此处的host是没有端口的
+
 
 					_is_tunnel_conn = true;
-					*res = "HTTP/1.1 200 Connection Established\r\n\r\n";
-					co_await _async_write(*res, false);
+					//*res = "HTTP/1.1 200 Connection Established\r\n\r\n";
+					co_await _async_write("HTTP/1.1 200 Connection Established\r\n\r\n", false);
 
-					shared_ptr<cert_key> temp = _cert_mgr->get_server_certificate(host);
+					cout << "prepare for handshake" << endl;
+					//TODO: do handshake 读一点转发一点，直到收到ssl layer的回复
 					
-					_ssl_context.use_certificate(boost::asio::buffer(temp->crt_bytes), boost::asio::ssl::context::pem);
-					_ssl_context.use_private_key(boost::asio::buffer(temp->key_bytes), boost::asio::ssl::context::pem);
-					//_ssl_context.use_certificate_file("F:/for_all.pem", boost::asio::ssl::context::pem);
-					//_ssl_context.use_private_key_file("F:/for_all.key", boost::asio::ssl::context::pem);
-					
-					_ssl_stream_ptr = make_shared<ssl_stream>(move(*_socket), _ssl_context);//一直继承这个socket
-					_socket = &_ssl_stream_ptr->next_layer();
-					co_await _ssl_stream_ptr->async_handshake(boost::asio::ssl::stream_base::server
-						, boost::asio::redirect_error(use_awaitable, ec));
-					if (ec) {
-						cout << ec.message() << endl;
-						throw std::runtime_error("handshake failed");
-					}
-
-
-					_whole_request.reset(new string(""));
+					_keep_alive = false;//DEBUG
 					continue;
 				}
 				_behaviour = co_await _request_handler->
@@ -239,7 +212,7 @@ awaitable<void> connection::_waitable_loop()
 			case respond_error:
 				_keep_alive = false;
 				_request_handler->handle_error(res); //很快，不需要异步进行
-				cout << "error" << endl;
+
 				co_await _async_write(*res, _is_tunnel_conn);
 				continue;//自动就跳出循环了
 
@@ -275,7 +248,6 @@ awaitable<void> connection::_waitable_loop()
 			case respond_error:
 				_keep_alive = false;
 				_request_handler->handle_error(res); //很快，不需要异步进行
-				cout << "error" << endl;
 				co_await _async_write(*res, _is_tunnel_conn);
 				continue;//自动就跳出循环了
 
@@ -305,7 +277,7 @@ awaitable<void> connection::_waitable_loop()
 	catch (const std::exception& e)
 	{
 		//NANO_LOG(WARNING,"%s", e.what());
-		cout << boost::this_thread::get_id()<<":" << e.what() << endl;
+		cout << e.what() << endl;
 	}
 
 	stop();// Initiate graceful connection closure.
@@ -316,25 +288,11 @@ awaitable<void> connection::_async_read(bool with_ssl)
 {
 
 	boost::system::error_code ec;
-	
-	
-	size_t bytes_transferred;
-	if (with_ssl) {
-		bytes_transferred = co_await _ssl_stream_ptr->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
-		//_ssl_layer.decrypt_append(_whole_request, _buffer.data(), bytes_transferred);
-	}
-	else {
-		bytes_transferred = co_await _socket->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
-	}
-
+	size_t bytes_transferred = co_await _socket.async_read_some(
+		boost::asio::buffer(_buffer),
+		boost::asio::redirect_error(use_awaitable, ec));
 	if (ec) {
 		if (ec != boost::asio::error::eof) {
-
-			cout << boost::this_thread::get_id() << ":" << ec.message() << endl;
 			throw std::runtime_error("read failed");//TODO 出大问题
 		}//TODO eof意味着无法写数据
 		else {
@@ -342,8 +300,13 @@ awaitable<void> connection::_async_read(bool with_ssl)
 		}
 	}
 
-	_whole_request->append(_buffer.data(), bytes_transferred);
-	cout << *_whole_request << endl;
+	if (with_ssl) {
+		_ssl_layer.decrypt_append(_whole_request, _buffer.data(), bytes_transferred);
+	}
+	else {
+		_whole_request->append(_buffer.data(), bytes_transferred);
+	}
+
 	co_return;
 }
 
@@ -352,22 +315,17 @@ awaitable<void> connection::_async_write(const string& data, bool with_ssl)
 	boost::system::error_code ec;
 
 	if (with_ssl) {
-		co_await boost::asio::async_write(*_ssl_stream_ptr, boost::asio::buffer(data),
+		shared_ptr<string> res = co_await _ssl_layer.ssl_encrypt(data);
+		co_await boost::asio::async_write(_socket, boost::asio::buffer(*res),
 			boost::asio::redirect_error(use_awaitable, ec));
 	}
 	else {
-		if (_ssl_stream_ptr)
-			cout << "i am confused [BUG TRACK ID: 0x0f1f]" << endl;
-		else
-			co_await boost::asio::async_write(*_socket, boost::asio::buffer(data),
-				boost::asio::redirect_error(use_awaitable, ec));
+		co_await boost::asio::async_write(_socket, boost::asio::buffer(data),
+			boost::asio::redirect_error(use_awaitable, ec));
 	}
 
 	
 	if (ec) {
-
-		cout << boost::this_thread::get_id() << ":" << ec.message() 
-			<< "\nwith_ssl:" << with_ssl<< endl;
 		throw std::runtime_error("write failed");
 	}
 

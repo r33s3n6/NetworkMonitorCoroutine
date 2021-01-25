@@ -338,6 +338,3 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-/NetworkMonitorCoroutine/for_all.key
-/NetworkMonitorCoroutine/for_all.pem
-/utilities

@@ -32,16 +32,16 @@ using boost::asio::ip::tcp;
 * logging ¿‡
 * 
 * 
+* client_unit::send_request_ssl
 * 
-* client_unit::verify
+* proxy_handler::handle_handshake
+* proxy_handler::handle_request_as_tunnel
 * 
-* 
-* 
-* 
+* connection::https_integrity_check
 * 
 * certificate_manager::
 create_ca
-
+create_certificate
 auto_trust_ca
 * 
 * 
