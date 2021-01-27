@@ -341,3 +341,8 @@ healthchecksdb
 /NetworkMonitorCoroutine/for_all.key
 /NetworkMonitorCoroutine/for_all.pem
 /utilities
+/NetworkMonitorCoroutine/padlock.dll
+/NetworkMonitorCoroutine/libssl-1_1-x64.dll
+/NetworkMonitorCoroutine/libcrypto-1_1-x64.dll
+/NetworkMonitorCoroutine/dasync.dll
+/NetworkMonitorCoroutine/capi.dll

@@ -33,7 +33,7 @@ using boost::asio::ip::tcp;
 * 
 * 
 * 
-* client_unit::verify
+* 
 * 
 * 
 * 
@@ -41,12 +41,10 @@ using boost::asio::ip::tcp;
 * 
 * certificate_manager::
 create_ca
-
 auto_trust_ca
 * 
 * 
 */
-// client_unit send request 改成 connection:close 一直尝试读取，读一点写一点，直到读到eof
 
 /*
 程序入口点

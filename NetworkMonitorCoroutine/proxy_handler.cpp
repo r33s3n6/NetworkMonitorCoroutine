@@ -144,7 +144,7 @@ namespace proxy_server {
 			return false;
 
 
-		list<string> to_be_remove_header_list{//Сд
+		list<string> to_be_removed_header_list{//Сд
 			"proxy-authenticate",
 			"proxy-connection",
 			"connection",
@@ -183,7 +183,7 @@ namespace proxy_server {
 					_keep_alive = true;
 				}
 				else {
-					to_be_remove_header_list.emplace_back(t);
+					to_be_removed_header_list.emplace_back(t);
 				}
 			}
 		}
@@ -211,12 +211,12 @@ namespace proxy_server {
 			temp.resize(header.size());
 			transform(header.begin(), header.end(), temp.begin(), ::tolower);
 			bool skip = false;
-			auto list_iter = to_be_remove_header_list.begin();
-			while (list_iter != to_be_remove_header_list.end()) {
+			auto list_iter = to_be_removed_header_list.begin();
+			while (list_iter != to_be_removed_header_list.end()) {
 				if (temp.find(*list_iter) == 0) {
 					auto temp_iter = list_iter;
 					list_iter++;
-					to_be_remove_header_list.erase(temp_iter);
+					to_be_removed_header_list.erase(temp_iter);
 					skip = true;
 					break;
 				}

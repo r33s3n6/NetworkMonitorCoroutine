@@ -12,9 +12,9 @@ using namespace boost::asio::ip;
 #include "proxy_handler.h"
 #include "io_context_pool.h"
 #include "breakpoint_manager.h"
+
+
 #include "display_filter.h"
-
-
 
 #include <iostream>
 #include <cstdio>
@@ -41,13 +41,15 @@ public:
 
 	
 
-	awaitable<void> _listener();
+	
 
 	void start();//“Ï≤Ω‘À––
 	
 
 private:
+
 	// Initiate an asynchronous accept operation.
+	awaitable<void> _listener();
 
 	void _stop();
 	io_context_pool _io_context_pool;
@@ -70,7 +72,7 @@ private:
 
 	display_filter _display_filter;
 
-	//client_manager _client_manager;
+
 };
 
 }
