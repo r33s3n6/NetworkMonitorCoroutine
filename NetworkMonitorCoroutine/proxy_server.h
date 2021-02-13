@@ -27,7 +27,7 @@ using namespace boost::asio::ip;
 
 
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 
 class proxy_server
@@ -44,7 +44,7 @@ public:
 	
 
 	void start();//“Ï≤Ω‘À––
-	
+	display_filter* get_display_filter() { return &_display_filter; }
 
 private:
 

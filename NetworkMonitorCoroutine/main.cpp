@@ -33,12 +33,6 @@ using boost::asio::ip::tcp;
 * 
 * 
 * 
-* 
-* 
-* 
-* 
-* 
-* 
 * certificate_manager::
 create_ca
 auto_trust_ca
@@ -69,7 +63,7 @@ int main(int argc, char* argv[])
         
         // Initialise the server.
         std::size_t num_threads = boost::lexical_cast<std::size_t>(argv[3]);
-        proxy_server::proxy_server srv(argv[1], argv[2], num_threads);
+        proxy_tcp::proxy_server srv(argv[1], argv[2], num_threads);
         printf("listening on %s:%s\n", argv[1], argv[2]);
 
         // Run the server until stopped.

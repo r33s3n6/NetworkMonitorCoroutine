@@ -25,7 +25,7 @@ using namespace common;
 #include "connection_enums.h"
 #include "certificate_manager.h"
 
-namespace proxy_server{
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;
@@ -105,4 +105,4 @@ private:
 
 
 
-}// namespace proxy_server
+}// namespace proxy_tcp

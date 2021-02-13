@@ -39,7 +39,7 @@ X509_STORE* add_windows_root_certs()
 	
 }
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	using boost::asio::co_spawn;
 	using boost::asio::detached;

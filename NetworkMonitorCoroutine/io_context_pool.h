@@ -6,7 +6,7 @@
 
 using namespace std;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 /*
 这其中的io_context 全部运行协程
@@ -36,5 +36,5 @@ private:
 	size_t _next_io_context;
 };
 
-}//namespace proxy_server
+}//namespace proxy_tcp
 

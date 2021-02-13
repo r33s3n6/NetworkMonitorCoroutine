@@ -6,7 +6,7 @@
 #include <list>
 using namespace common;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	
 
@@ -73,7 +73,7 @@ namespace proxy_server {
 			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
 			complete_error_msg->append(*_error_msg);
 			_display_filter.update_display_error(_update_id, complete_error_msg);
-			co_return _behaviour;
+			co_return respond_error;
 		}
 		else {
 			if (_keep_alive)

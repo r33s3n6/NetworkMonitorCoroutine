@@ -16,7 +16,7 @@ using namespace std;
 
 
 
-namespace proxy_server{
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;

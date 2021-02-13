@@ -14,7 +14,7 @@ using namespace std;
 #include "certificate_manager.h"
 #include "client_unit.h"
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 using boost::asio::ip::tcp;
 using boost::asio::awaitable;

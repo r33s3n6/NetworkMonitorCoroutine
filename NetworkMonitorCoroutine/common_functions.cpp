@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace std;
 namespace common {
-	using namespace proxy_server;
+	using namespace proxy_tcp;
 
 
 shared_ptr<vector<string>> string_split(const string& str, const string& pattern) {
@@ -79,9 +79,9 @@ string get_header_value(
 
 
 //仅仅根据头的信息分割报文，无法对内容完整性做出任何保证
-proxy_server::integrity_status _http_integrity_check(shared_ptr<const string> http_data,size_t& split_pos)
+proxy_tcp::integrity_status _http_integrity_check(shared_ptr<const string> http_data,size_t& split_pos)
 {
-	using namespace proxy_server;
+	using namespace proxy_tcp;
 
 	split_pos = http_data->size();
 	size_t header_end_pos = http_data->find("\r\n\r\n");
@@ -137,9 +137,9 @@ proxy_server::integrity_status _http_integrity_check(shared_ptr<const string> ht
 }
 
 
-proxy_server::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos)
+proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos)
 {
-	using namespace proxy_server;
+	using namespace proxy_tcp;
 
 	/*
 * 结构

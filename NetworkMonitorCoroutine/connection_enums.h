@@ -1,6 +1,6 @@
 #pragma once
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	typedef enum {
 		intact,//ÍêÕû

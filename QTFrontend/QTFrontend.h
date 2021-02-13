@@ -12,10 +12,10 @@ class QTFrontend : public QMainWindow
     Q_OBJECT
 
 public:
-    QTFrontend(QWidget *parent = Q_NULLPTR);
+    QTFrontend(QWidget *parent = Q_NULLPTR, display_filter* _disp = nullptr);
 
 
-    void _set_text(const QModelIndex& index);
+    void _set_text(const QModelIndex& index, const QModelIndex& prev);
 private:
 
     Ui::QTFrontendClass ui;
@@ -23,7 +23,9 @@ private:
     SessionDataModel _session_data;
     QSortFilterProxyModel _proxy_session_data;
    
-private:
+
+    
+
     
 
 };

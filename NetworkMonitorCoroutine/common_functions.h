@@ -51,14 +51,14 @@ string get_header_value(
 string get_header_value(
     const shared_ptr<vector<string>>& header_field, const string& header_name);
 
-proxy_server::integrity_status _http_integrity_check(
+proxy_tcp::integrity_status _http_integrity_check(
     shared_ptr<const string> _whole_request,  size_t& split_pos);
 
-proxy_server::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos);
+proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos);
 
 static const char hex_char[] {"0123456789ABCDEF"};
 shared_ptr<string> memory2hex_string(shared_ptr<const string> data);
 
-proxy_server::request_type _get_request_type(const string& data);
+proxy_tcp::request_type _get_request_type(const string& data);
 
 }

@@ -4,29 +4,26 @@
 using namespace common;
 #include <boost/lexical_cast.hpp>
 
+#include <iostream>
+
 SessionDataModel::SessionDataModel(QObject* parent, display_filter* _disp_fil)
     : QAbstractTableModel(parent),
     _data_vec()
+
 {
     _data_vec.reserve(_default_capacity);
+    //_data_vec.resize(_default_capacity / 2);
+    connect(_disp_fil, &display_filter::session_created, this, &SessionDataModel::session_created, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::filter_updated, this, &SessionDataModel::filter_updated, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_created_breakpoint, this, &SessionDataModel::session_created_breakpoint, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_req_updated, this, &SessionDataModel::session_req_updated, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_rsp_updated, this, &SessionDataModel::session_rsp_updated, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_rsp_updated_breakpoint, this, &SessionDataModel::session_rsp_updated_breakpoint, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_error, this, &SessionDataModel::session_error, Qt::DirectConnection);
 
-    connect(_disp_fil, &display_filter::session_created, this, &SessionDataModel::session_created);
-    connect(_disp_fil, &display_filter::filter_updated, this, &SessionDataModel::filter_updated);
-    connect(_disp_fil, &display_filter::session_created_breakpoint, this, &SessionDataModel::session_created_breakpoint);
-    connect(_disp_fil, &display_filter::session_req_updated, this, &SessionDataModel::session_req_updated);
-    connect(_disp_fil, &display_filter::session_rsp_updated, this, &SessionDataModel::session_rsp_updated);
-    connect(_disp_fil, &display_filter::session_rsp_updated_breakpoint, this, &SessionDataModel::session_rsp_updated_breakpoint);
-    connect(_disp_fil, &display_filter::session_error, this, &SessionDataModel::session_error);
 
 
-
-    /*
-    
-    for (int i = 0; i < 3; i++) {
-        _data_vec.emplace_back(&_test_data[i]);
-    }
-    */
-    //connect()
+ 
 
 }
 
@@ -45,10 +42,10 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
     if (role == Qt::DisplayRole) {
         session_info* temp = _data_vec[index.row()];
         if (temp == nullptr)
-            return QString("data error");
+            return QString("N/A");
         switch (index.column()) {
         case 0://#
-            return QString::number(index.row());
+            return index.row();
         case 1://url
             return QString::fromStdString(temp->url);
         case 2://code
@@ -58,7 +55,7 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
         case 4://host
             return QString::fromStdString(temp->host);
         case 5://body
-            return QString::number(temp->body_length);
+            return temp->body_length;
         case 6://content-type
             return QString::fromStdString(temp->content_type);
         }
@@ -73,7 +70,7 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
 
 QVariant SessionDataModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-   
+   //insertRow()
 
 
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
@@ -86,13 +83,30 @@ void SessionDataModel::filter_updated(string filter)
 {
 }
 
-void SessionDataModel::session_created(shared_ptr<const string> req_data, int update_id)
+void SessionDataModel::session_created(shared_ptr<string> req_data, int update_id)
 {
-    if (update_id >= _data_vec.capacity())
-        _data_vec.reserve(_data_vec.capacity() * 2);
 
-    session_info* info = new session_info;
-    _data_vec[update_id] = info;
+
+    std::cout << update_id<<":session_created\n";
+    session_info* info;
+
+    bool data_change = false;
+    
+    if (update_id < _data_vec.size()) {
+        info = _data_vec[update_id];
+        data_change = true;
+        
+    }
+        
+    else {
+        beginInsertRows(QModelIndex(), _data_vec.size(), update_id);
+        _data_vec.resize(update_id+1);
+        info = new session_info;
+        _data_vec[update_id] = info;//TODO:potention read/write conflict
+        data_change = false;
+    }
+        
+   
 
     shared_ptr<string> header= make_shared<string>();
     shared_ptr<string> body = make_shared<string>();
@@ -109,14 +123,21 @@ void SessionDataModel::session_created(shared_ptr<const string> req_data, int up
         info->url = (*header_vec_ptr)[0].substr(url_start_pos, url_end_pos - url_start_pos);
     }
     info->protocol = "TODO";
-    //info->content_type = get_header_value(header_vec_ptr, "content-type");
-    
-    //info->body_length = boost::lexical_cast<int>(
-    //    get_header_value(header_vec_ptr, "content-length"));
+
     info->host = get_header_value(header_vec_ptr, "host");
     info->raw_req_data = req_data;
 
-   
+
+    
+    if (data_change) {
+        emit dataChanged(createIndex(update_id, 0), createIndex(update_id, columnCount() - 1));
+    }
+    else {
+        endInsertRows();
+    }
+    
+
+
 }
 
 void SessionDataModel::session_created_breakpoint(shared_ptr<string> req_data, int update_id)
@@ -125,14 +146,29 @@ void SessionDataModel::session_created_breakpoint(shared_ptr<string> req_data, i
 
 }
 
-void SessionDataModel::session_req_updated(shared_ptr<const string> req_data, int update_id)
+void SessionDataModel::session_req_updated(shared_ptr<string> req_data, int update_id)
 {
 
 }
 
-void SessionDataModel::session_rsp_updated(shared_ptr<const string> rsp_data, int update_id)
+void SessionDataModel::session_rsp_updated(shared_ptr<string> rsp_data, int update_id)
 {
+    std::cout << update_id << ":session_updated\n";
+    if (update_id >= _data_vec.size()) {
+        std::cout << "fck_rsp" << std::endl;
+        return;
+    }
+   
+    
     session_info* info = _data_vec[update_id];
+
+    if (rsp_data->find("HTTP") != 0) {
+        size_t body_start_pos = rsp_data->find("\r\n") + 2;
+        //beginInsertRows(QModelIndex(), update_id, update_id);
+        info->raw_rsp_data->append(rsp_data->substr(body_start_pos,rsp_data->size()-2-body_start_pos));
+        //endInsertRows();
+        return;
+    }
 
     shared_ptr<string> header = make_shared<string>();
     shared_ptr<string> body = make_shared<string>();
@@ -141,21 +177,29 @@ void SessionDataModel::session_rsp_updated(shared_ptr<const string> rsp_data, in
 
     shared_ptr<vector<string>> header_vec_ptr
         = string_split(*header, "\r\n");
-
-    size_t code_start_pos = (*header_vec_ptr)[0].find("HTTP/1.")+2;
+    // http/1.1 200 ok
+    size_t code_start_pos = (*header_vec_ptr)[0].find("HTTP/")+9;
     size_t code_end_pos = (*header_vec_ptr)[0].find(" ", code_start_pos);
+
+    //beginInsertRows(QModelIndex(), update_id, update_id);
     if (code_start_pos != string::npos &&
         code_end_pos != string::npos) {
         info->code = (*header_vec_ptr)[0].substr(code_start_pos, code_end_pos - code_start_pos);
     }
 
+
     info->content_type = get_header_value(header_vec_ptr, "content-type");
 
-    info->body_length = boost::lexical_cast<int>(
-        get_header_value(header_vec_ptr, "content-length"));
-    //info->host = get_header_value(header_vec_ptr, "host");
+    string l = get_header_value(header_vec_ptr, "content-length");
+    if (l.size() == 0)
+        info->body_length = 0;
+    else
+        info->body_length = boost::lexical_cast<int>(l);
+ 
     info->raw_rsp_data = rsp_data;
-    //TODO ¸üÐÂ
+    emit dataChanged(createIndex(update_id, 0), createIndex(update_id, columnCount() - 1));
+    //endInsertRows();
+
 
 }
 
@@ -163,6 +207,8 @@ void SessionDataModel::session_rsp_updated_breakpoint(shared_ptr<string> rsp_dat
 {
 }
 
-void SessionDataModel::session_error(shared_ptr<const string> err_msg, int update_id)
+void SessionDataModel::session_error(shared_ptr<string> err_msg, int update_id)
 {
+    //TODO emit signal to main dialog
+    _data_vec[update_id]->raw_rsp_data=err_msg;
 }

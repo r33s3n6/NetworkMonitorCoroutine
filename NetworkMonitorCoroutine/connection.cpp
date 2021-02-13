@@ -5,7 +5,7 @@
 
 #include <iostream>
 using namespace std;
-namespace proxy_server {
+namespace proxy_tcp {
 
 
 
@@ -243,8 +243,9 @@ awaitable<void> connection::_waitable_loop()
 				break;
 			case respond_error:
 				_keep_alive = false;
+
 				_request_handler->handle_error(res); //很快，不需要异步进行
-				cout << "error" << endl;
+				cout << "connection::respond_error" << endl;
 				co_await _async_write(*res, _is_tunnel_conn);
 				continue;//自动就跳出循环了
 
@@ -348,7 +349,7 @@ awaitable<void> connection::_async_read(bool with_ssl)
 	}
 
 	_whole_request->append(_buffer.data(), bytes_transferred);
-	cout << *_whole_request << endl;
+	//cout << *_whole_request << endl;
 	co_return;
 }
 

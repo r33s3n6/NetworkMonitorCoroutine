@@ -7,36 +7,36 @@ using namespace std;
 #include "../NetworkMonitorCoroutine/common_functions.h"
 using namespace common;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	
 
-	int display_filter::display(shared_ptr<const string> req_data) //return update_id
+	int display_filter::display(shared_ptr<string> req_data) //return update_id
 	{
 		size_t temp_id = get_temp_id();
 
 		emit session_created(req_data, temp_id);
 		
 
-		return 0;
+		return temp_id;
 	}
 
 
 
 
-	void display_filter::update_display_req(int id, shared_ptr<const string> req_data)
+	void display_filter::update_display_req(int id, shared_ptr<string> req_data)
 	{
 
 		emit session_req_updated(req_data, id);
 	}
 
-	void display_filter::update_display_rsp(int id, shared_ptr<const string> rsp_data)
+	void display_filter::update_display_rsp(int id, shared_ptr<string> rsp_data)
 	{
 		emit session_rsp_updated(rsp_data, id);
 
 	}
 
-	void display_filter::update_display_error(int id, shared_ptr<const string> rsp_data)
+	void display_filter::update_display_error(int id, shared_ptr<string> rsp_data)
 	{
 		emit session_error(rsp_data, id);
 

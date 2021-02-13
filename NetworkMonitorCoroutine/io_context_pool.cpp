@@ -4,7 +4,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/bind/bind.hpp>
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 io_context_pool::io_context_pool(std::size_t pool_size)
 	: _next_io_context(0)

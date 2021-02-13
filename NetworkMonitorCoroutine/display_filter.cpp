@@ -1,5 +1,7 @@
 #include "display_filter.h"
 
+#ifndef QT_CORE_LIB
+
 #include <cstdio>
 #include <iostream>
 using namespace std;
@@ -7,7 +9,7 @@ using namespace std;
 #include "common_functions.h"
 using namespace common;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	//需要立刻返回
 	void display_filter::display(shared_ptr<string> req_data, shared_ptr<string> rsp_data)
@@ -96,3 +98,4 @@ namespace proxy_server {
 
 
 }
+#endif

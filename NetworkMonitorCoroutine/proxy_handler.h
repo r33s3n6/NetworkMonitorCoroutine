@@ -21,7 +21,7 @@ using namespace std;
 #include "display_filter.h"
 #include "client_unit.h"
 
-namespace proxy_server{
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;
