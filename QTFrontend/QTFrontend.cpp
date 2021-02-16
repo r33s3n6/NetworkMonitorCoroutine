@@ -61,8 +61,9 @@ void QTFrontend::_display_full_info(size_t display_id)
 
     
     //绕远路了，但先这样吧
-    auto req = _session_data.get_raw_req_data(display_id);
-    auto rsp = _session_data.get_raw_rsp_data(display_id);
+    auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
+    auto req = _session_info_ptr->req_data_for_display;
+    auto rsp = _session_info_ptr->rsp_data_for_display;
     if (req)
         ui.plaintext_req_text->setPlainText(QString::fromStdString(*req));
     else

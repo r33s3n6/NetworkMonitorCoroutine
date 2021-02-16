@@ -11,64 +11,50 @@ namespace proxy_tcp {
 
 	
 
-	int display_filter::display(shared_ptr<string> req_data) //return update_id
+	void display_filter::display(shared_ptr<session_info> _session_info)
 	{
-		size_t temp_id = get_temp_id();//TODO 改为获取一个指针，然后传一个指针过去，以达到更新的效果
 
-		emit session_created(req_data, temp_id);
-		
 
-		return temp_id;
+		emit session_created(_session_info);
 	}
 
 
 
-
-	void display_filter::update_display_req(int id, shared_ptr<string> req_data)
+	void display_filter::update_display_req(
+		shared_ptr<session_info> _session_info)
 	{
 
-		emit session_req_updated(req_data, id);
+		emit session_req_updated(_session_info);
 	}
 
-	void display_filter::update_display_rsp(int id, shared_ptr<string> rsp_data)
+	void display_filter::display_rsp(
+		shared_ptr<session_info> _session_info)
 	{
-		emit session_rsp_updated(rsp_data, id);
 
-	}
 
-	void display_filter::update_display_error(int id, shared_ptr<string> rsp_data)
-	{
-		emit session_error(rsp_data, id);
+		emit session_rsp_begin(_session_info);
 
 	}
 
-	//return update_id/-1(ignore)
-	awaitable<int> display_filter::display_breakpoint_req(shared_ptr<string> req_data)
+	void display_filter::update_display_rsp(
+		shared_ptr<session_info> _session_info)
 	{
-		size_t temp_id = get_temp_id();
-
-		emit session_created_breakpoint(req_data, temp_id);
 
 
-		//co_await定时器检测是否有信号
-		if (false)
-			co_return -1;
-		
-		co_return temp_id;
+		emit session_rsp_updated(_session_info);
+
 	}
 
-	awaitable<int> display_filter::display_breakpoint_rsp(int update_id,
-		shared_ptr<string> rsp_data)//更新旧显示
+	void display_filter::update_display_error(
+		shared_ptr<session_info> _session_info)
 	{
-		
-		size_t temp_id = get_temp_id();
-		emit session_rsp_updated_breakpoint(rsp_data, temp_id);
+		emit session_error(_session_info);
 
-		
-		if (false)
-			co_return -1;
-		co_return temp_id;
 	}
+
+	
+
+
 
 
 

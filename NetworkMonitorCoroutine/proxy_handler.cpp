@@ -20,6 +20,7 @@ namespace proxy_tcp {
 		_display_filter(disp_fil),
 		_client(_client)
 	{
+		_session_info.reset();
 	}
 
 	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result)//TODO
@@ -29,50 +30,88 @@ namespace proxy_tcp {
 		return respond_and_close;
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg, bool with_ssl, bool force_old_conn)
+	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg,
+		bool with_ssl, bool force_old_conn,bool request_end)
 	{
 		host.reset(new string(""));
 
+		
+		//一定不是connect method
 
-		//非connect
+		//TODO connection 若为chunked body 就不要再次修改自身的keepalive 标志了
+		bool _keep_alive = true;
+
+
 		shared_ptr<string> _modified_data(new string(""));
-		bool _keep_alive = _process_header(msg, _modified_data);//在其中host被修改
+		if (!_session_info) {//说明是一次全新的请求
+			
+			_keep_alive = _process_header(msg, _modified_data);//在其中host被修改
 
-		if (_modified_data->size() == 0) {
-			co_return respond_error;
-		}
+			if (_modified_data->size() == 0) {
+				co_return respond_error;
+			}
 
-
-		if (_update_id == -2) {//说明是一次全新的请求，不是某次chunked的后续
-			if (_breakpoint_manager.check(*_modified_data)) {
+			_session_info = make_shared<session_info>();
+			_session_info->new_data = _modified_data;
+			_session_info->raw_req_data = _modified_data;
+			_session_info->proxy_handler_ptr = shared_from_this();
+			if (_breakpoint_manager.check(*_modified_data)) {//通过请求头来拦截 以后再说body的事吧 TODO
 				//断点
-				//_modified_data 在此处是可能被修改的
-				_update_id = co_await _display_filter.display_breakpoint_req(_modified_data);
-				if (_update_id == -1) {//不继续执行
-					_update_id = -2;//reset to default
-					_client->disconnect();
-					co_return connection_behaviour::ignore;
-				}
+				_session_info->send_behaviour = intercept;
 			}
 			else {//新显示 
-				_update_id = _display_filter.display(_modified_data);
+				_session_info->send_behaviour = pass;
+				
 			}
+			_display_filter.display(_session_info);
 		}
 		else {//是某次的后续，因此直接更新
-			_display_filter.update_display_req(_update_id, _modified_data);
+			_session_info->raw_req_data->append(*msg);
+			_display_filter.update_display_req(_session_info);
+			_modified_data = msg;
 		}
 
-		connection_behaviour _behaviour;
-
+		connection_behaviour _behaviour = respond_and_keep_alive;
 
 		shared_ptr<string> _error_msg = make_shared<string>("");
+
+		if (_session_info->send_behaviour == intercept) {
+			if (request_end) {
+				size_t retry_count = 0;
+				auto ex = co_await boost::asio::this_coro::executor;
+				boost::asio::steady_timer timer(ex);
+				while (retry_count < timeout 
+					&& _session_info->send_behaviour == intercept) {
+					timer.expires_after(std::chrono::milliseconds(1000));
+					co_await timer.async_wait(use_awaitable);
+				}
+			}
+		}
 		
-		_behaviour = co_await _client->send_request(*host, *_modified_data,_error_msg, with_ssl, force_old_conn);
+
+		switch (_session_info->send_behaviour) {
+		case pass:
+			_behaviour = co_await _client->send_request(*host, *_modified_data, _error_msg, with_ssl, force_old_conn);
+			break;
+		case pass_after_intercept:
+			_behaviour = co_await _client->send_request(*host, *_session_info->raw_req_data, _error_msg, with_ssl, force_old_conn);
+			_session_info->send_behaviour = pass;
+			break;
+		case drop:
+			_session_info.reset();
+			_client->disconnect();
+			co_return connection_behaviour::ignore;
+		case intercept://not end of request
+			break;
+			
+		}
+		
 
 		if (_behaviour == respond_error) {
 			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
 			complete_error_msg->append(*_error_msg);
-			_display_filter.update_display_error(_update_id, complete_error_msg);
+			_session_info->new_data = complete_error_msg;
+			_display_filter.update_display_error(_session_info);
 			co_return respond_error;
 		}
 		else {
@@ -88,42 +127,79 @@ namespace proxy_tcp {
 		
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::receive_message(shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
+	awaitable<connection_behaviour> http_proxy_handler::receive_message(
+		shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
 	{
-		//必然有update_id
-		//assert(update_id>=0)
+		//必然有_session_info
+		//assert(!_session_info)
+
 		connection_behaviour _behaviour;
 		_behaviour = co_await _client->receive_response(rsp);
 		if (_behaviour == respond_error) {
 			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
 			complete_error_msg->append(*rsp);
-			_display_filter.update_display_error(_update_id, complete_error_msg);
-			co_return _behaviour;
+			_session_info->new_data = complete_error_msg;
+			_display_filter.update_display_error(_session_info);
+			co_return respond_error;
 		}
 
-		if (!chunked_body && _breakpoint_manager.check(*rsp)) {
-			//断点
-			if (-1 == co_await _display_filter.display_breakpoint_rsp(_update_id, rsp)) {//result 在此处是可能被修改的
-				//请求被阻断
-				_update_id = -2;
-				_client->disconnect();
-				co_return connection_behaviour::ignore;//ignore 要清除client的连接
+		if (!chunked_body) {//response begin
+			
+			_session_info->new_data = rsp;
+			_session_info->raw_rsp_data = rsp;
+
+			if (_breakpoint_manager.check(*rsp)) {
+				_session_info->receive_behaviour = intercept;//断点
 			}
-			//else 不用做任何事，因为display_breakpoint_rsp 已经处理好了后续显示工作
+			else {
+				_session_info->receive_behaviour = pass;
+			}
+			
+			_display_filter.display_rsp(_session_info);
+		
 
 		}
-		else {//手动更新显示
-			_display_filter.update_display_rsp(_update_id, rsp);
+		else {
+			_session_info->raw_rsp_data->append(*rsp);
+			_display_filter.update_display_rsp(_session_info);
 		}
 
 		
+		if (_session_info->receive_behaviour == intercept) {
+			if (_behaviour == keep_receiving_data) {
+				size_t retry_count = 0;
+				auto ex = co_await boost::asio::this_coro::executor;
+				boost::asio::steady_timer timer(ex);
+				while (retry_count < timeout
+					&& _session_info->receive_behaviour == intercept) {
+					timer.expires_after(std::chrono::milliseconds(1000));
+					co_await timer.async_wait(use_awaitable);
+				}
+			}
+		}
+
+
+		switch (_session_info->receive_behaviour) {
+		case pass:
+			break;
+		case pass_after_intercept:
+			rsp = _session_info->raw_rsp_data;
+			_session_info->receive_behaviour = pass;
+			break;
+		case drop:
+			_session_info.reset();
+			_client->disconnect();
+			co_return connection_behaviour::ignore;
+		case intercept://not end of response
+			rsp.reset(new string(""));//TODO: connection 若rsp为空则不写入
+			break;
+		}
+
 		if(_behaviour != keep_receiving_data){
-			//reset _update_id
-			_update_id = -2;
+			_session_info.reset();
 		}
 
 		co_return _behaviour;
-		
 	}
 
 

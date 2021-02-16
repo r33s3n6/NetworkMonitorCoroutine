@@ -145,11 +145,7 @@ awaitable<void> connection::_waitable_loop()
 				_with_appendix = true;
 			}
 
-#ifdef _DEBUG
-			if (_whole_request->find("wss://") != string::npos) {
-				cout << "DEBUG\n";
-			}
-#endif
+
 
 			connection_behaviour _behaviour;
 			switch (_status) {
@@ -242,10 +238,14 @@ awaitable<void> connection::_waitable_loop()
 			//根据behaviour设置是否继续接收数据，是否直接出错返回
 			switch (_behaviour) {
 			case respond_and_close:
-				_keep_alive = false;
+				if((last_status != chunked &&
+					last_status != wait_chunked))//chunked body 不再次修改keep_alive 值
+					_keep_alive = false;
 				break;
 			case respond_and_keep_alive:
-				_keep_alive = true;
+				if ((last_status != chunked &&
+					last_status != wait_chunked))
+					_keep_alive = true;
 				break;
 			case respond_error:
 				_keep_alive = false;

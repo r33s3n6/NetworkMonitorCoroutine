@@ -7,6 +7,8 @@
 
 #include "SessionDataModel.h"
 
+using namespace proxy_tcp;
+
 class QTFrontend : public QMainWindow
 {
     Q_OBJECT

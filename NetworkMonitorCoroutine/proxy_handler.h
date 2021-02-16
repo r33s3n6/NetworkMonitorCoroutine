@@ -21,6 +21,8 @@ using namespace std;
 #include "display_filter.h"
 #include "client_unit.h"
 
+constexpr size_t timeout = 600;//10min
+
 namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
@@ -30,7 +32,7 @@ namespace proxy_tcp{
 	using boost::asio::use_awaitable;
 	namespace this_coro = boost::asio::this_coro;
 
-class http_proxy_handler
+class http_proxy_handler : public std::enable_shared_from_this<http_proxy_handler>
 {
 public:
 	http_proxy_handler(const http_proxy_handler&) = delete;
@@ -41,7 +43,7 @@ public:
 
 	//unified entrypoint
 	awaitable<connection_behaviour> send_message(shared_ptr<string> msg,bool with_ssl,
-		bool force_old_conn = false); //最后一个参数用于chunked data，如果旧连接丢失就直接失败
+		bool force_old_conn = false, bool request_end=false); //force_old_conn用于chunked data，如果旧连接丢失就直接失败
 
 	//receive 不需要指定是否使用旧连接，因为断开直接失败
 	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
@@ -60,9 +62,9 @@ private:
 	shared_ptr<client_unit> _client;
 	
 	shared_ptr<string> host;
+	shared_ptr<session_info> _session_info;
 
-
-	int _update_id = -2;
+	//int _update_id = -2;
 
 };
 

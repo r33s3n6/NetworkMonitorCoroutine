@@ -12,7 +12,7 @@
 #ifdef QT_CORE_LIB
 #include <qobject.h>
 #include <mutex>
-//#include "../QTFrontend/SessionDataModel.h"
+#include "../QTFrontend/SessionDataModel.h"
 #endif
 
 using namespace std;
@@ -27,6 +27,7 @@ namespace proxy_tcp{
 
 
 #ifdef QT_CORE_LIB
+class proxy_handler;
 class display_filter : public QObject
 {
 	Q_OBJECT
@@ -40,13 +41,9 @@ public:
 #ifndef QT_CORE_LIB
 	void display(shared_ptr<string> req_data, shared_ptr<string> rsp_data);
 	void _temp_display(shared_ptr<string> data);
-#endif
-	
-
-
 	//初始显示
 	int display(shared_ptr<string> req_data);
-	
+
 	//显示request的时候是不会有错的
 	void update_display_req(int id, shared_ptr<string> req_data);
 
@@ -57,40 +54,48 @@ public:
 	//对于chunked data，只在第一次调用breakpoint
 	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//里面要显示出来
 	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);//里面要显示出来
+#else
+
+	//shared_ptr<session_info> display(
+	//	shared_ptr<string> req_data, shared_ptr<proxy_handler> _proxy_handler, bool breakpoint);
+
+	void display(shared_ptr<session_info> _session_info);
+	void update_display_req(shared_ptr<session_info> _session_info);
+
+	void display_rsp(shared_ptr<session_info> _session_info);
+	void update_display_rsp(shared_ptr<session_info> _session_info);
+	void update_display_error(shared_ptr<session_info> _session_info);
+
+
+#endif
+	
 
 	
 #ifdef QT_CORE_LIB
 private:
-	mutex update_id_lock;
-	size_t update_id = 0;
-
-	//SessionDataModel* _session_data_model;
-	inline size_t get_temp_id() {//potential performance loss
-		update_id_lock.lock();
-		size_t temp_id = update_id;
-		update_id++;
-		update_id_lock.unlock();
-		return temp_id;
-	}
+	
 
 signals://signal
-	void filter_updated(string filter);
+	//void filter_updated(string filter);
 
-	void session_created(shared_ptr<string> req_data, int update_id);
-	void session_created_breakpoint(shared_ptr<string> req_data, int update_id);
+	void session_created(shared_ptr<session_info> _session_info);
 
-	void session_req_updated(shared_ptr<string> req_data, int update_id);//本质上可以改，等待所有chunked data就绪
+	void session_req_updated(shared_ptr<session_info> _session_info);
+	void session_req_completed(shared_ptr<session_info> _session_info);
 
-	void session_rsp_updated(shared_ptr<string> rsp_data, int update_id);
-	void session_rsp_updated_breakpoint(shared_ptr<string> rsp_data,int update_id);
+	void session_rsp_begin(shared_ptr<session_info> _session_info);
+	void session_rsp_updated(shared_ptr<session_info> _session_info);
+	void session_rsp_completed(shared_ptr<session_info> _session_info);
 
-	void session_error(shared_ptr<string> err_msg, int update_id);
+	void session_error(shared_ptr<session_info> _session_info);
 
-//private slots://slot
+//private slots:
 	//void session_passed(int update_id,bool is_req);//状态不知道应该用bitmap还是hashmap
 
 #endif
 };
+
+
 
 }
 

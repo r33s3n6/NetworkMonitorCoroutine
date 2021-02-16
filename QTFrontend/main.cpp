@@ -14,6 +14,8 @@
 int main(int argc, char *argv[])
 {
     qRegisterMetaType<QVector<int>>("QVector<int>");
+    qRegisterMetaType<shared_ptr<session_info>>("shared_ptr<session_info>");
+    
     qRegisterMetaType<size_t>("size_t");
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
