@@ -22,6 +22,9 @@
       <Extensions>qrc;*</Extensions>
       <ParseFiles>false</ParseFiles>
     </Filter>
+    <Filter Include="Dependencies">
+      <UniqueIdentifier>{a74b8b07-45f3-41b4-a4eb-d88e124b9d3b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="QTFrontend.qrc">
@@ -74,6 +77,15 @@
     <ClCompile Include="display_filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="QHexEditor\chunks.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="QHexEditor\commands.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="QHexEditor\qhexedit.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="SessionDataModel.h">
@@ -81,6 +93,15 @@
     </QtMoc>
     <QtMoc Include="..\NetworkMonitorCoroutine\display_filter.h">
       <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="QHexEditor\chunks.h">
+      <Filter>Dependencies</Filter>
+    </QtMoc>
+    <QtMoc Include="QHexEditor\commands.h">
+      <Filter>Dependencies</Filter>
+    </QtMoc>
+    <QtMoc Include="QHexEditor\qhexedit.h">
+      <Filter>Dependencies</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

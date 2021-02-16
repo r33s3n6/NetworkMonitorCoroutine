@@ -12,7 +12,7 @@ constexpr int _default_capacity = 256;
 //#include "../NetworkMonitorCoroutine/display_filter.h"
 
 #include <qtableview.h>
-
+#include <mutex>
 
 //using namespace proxy_tcp;
 namespace proxy_tcp {
@@ -93,6 +93,7 @@ private:
     vector<shared_ptr<session_info>> _data_vec;
     QTableView* _table;
     size_t id = 0;
+    mutex id_locker;
 
 signals:
     void info_updated(size_t update_id);

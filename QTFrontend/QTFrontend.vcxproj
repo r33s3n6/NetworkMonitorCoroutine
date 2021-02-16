@@ -43,11 +43,11 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;C:\Users\20115\source\repos\NetworkMonitorCoroutine\QTFrontend\x64\Debug;$(IncludePath)</IncludePath>
+    <IncludePath>./QHexEditor;F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;C:\Users\20115\source\repos\NetworkMonitorCoroutine\QTFrontend\x64\Debug;$(IncludePath)</IncludePath>
     <LibraryPath>F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;C:\Users\20115\source\repos\NetworkMonitorCoroutine\QTFrontend\x64\Debug;$(IncludePath)</IncludePath>
+    <IncludePath>./QHexEditor;F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;C:\Users\20115\source\repos\NetworkMonitorCoroutine\QTFrontend\x64\Debug;$(IncludePath)</IncludePath>
     <LibraryPath>F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,6 +118,9 @@
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_handler.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_server.cpp" />
     <ClCompile Include="display_filter.cpp" />
+    <ClCompile Include="QHexEditor\chunks.cpp" />
+    <ClCompile Include="QHexEditor\commands.cpp" />
+    <ClCompile Include="QHexEditor\qhexedit.cpp" />
     <ClCompile Include="SessionDataModel.cpp" />
     <QtRcc Include="QTFrontend.qrc" />
     <QtUic Include="QTFrontend.ui" />
@@ -137,6 +140,9 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\common_functions.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection_enums.h" />
+    <QtMoc Include="QHexEditor\qhexedit.h" />
+    <QtMoc Include="QHexEditor\commands.h" />
+    <QtMoc Include="QHexEditor\chunks.h" />
     <QtMoc Include="..\NetworkMonitorCoroutine\display_filter.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\error_response.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\io_context_pool.h" />

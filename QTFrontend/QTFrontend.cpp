@@ -3,7 +3,7 @@
 
 
 static int column_width[] = {
-    20,100,35,45,200,40,70
+    20,200,35,45,200,40,70
 };
 
 QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
@@ -30,7 +30,7 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
     for (int i = 0; i < sizeof(column_width) / sizeof(int); i++) {
         ui.table_session->setColumnWidth(i, column_width[i]); //TODO : config
     }
-
+    ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
     connect(ui.table_session->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &QTFrontend::display_full_info);
     connect(&_session_data, &SessionDataModel::info_updated, this, &QTFrontend::update_displayed_info);
@@ -60,30 +60,52 @@ void QTFrontend::_display_full_info(size_t display_id)
 {
 
     
-    //绕远路了，但先这样吧
-    auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
-    auto req = _session_info_ptr->req_data_for_display;
-    auto rsp = _session_info_ptr->rsp_data_for_display;
-    if (req)
-        ui.plaintext_req_text->setPlainText(QString::fromStdString(*req));
-    else
-        ui.plaintext_req_text->setPlainText(QString());
 
-    if (!rsp) {
+    auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
+
+    if (_session_info_ptr->req_data_for_display) {
+        ui.plaintext_req_text->setPlainText(
+            QString::fromStdString(*(_session_info_ptr->req_data_for_display)));
+    }  
+    else {
+        ui.plaintext_req_text->setPlainText(QString());
+    }
+
+    if (_session_info_ptr->raw_req_data) {
+        ui.hexEdit_req->setData(
+            QByteArray(_session_info_ptr->raw_req_data->c_str(),
+                _session_info_ptr->raw_req_data->size()));
+    }
+    else {
+        ui.hexEdit_req->setData(QByteArray());
+    }
+
+    if (_session_info_ptr->raw_rsp_data) {
+        ui.hexEdit_rsp->setData(
+            QByteArray(_session_info_ptr->raw_rsp_data->c_str(),
+                _session_info_ptr->raw_rsp_data->size()));
+    }
+    else {
+        ui.hexEdit_rsp->setData(QByteArray());
+    }
+
+    if (!(_session_info_ptr->rsp_data_for_display)) {
         ui.plaintext_rsp_text->setPlainText(QString());
         return;
     }
 
-    ui.plaintext_rsp_text->setPlainText(QString::fromStdString(*rsp));
+    ui.plaintext_rsp_text->setPlainText(
+        QString::fromStdString(*(_session_info_ptr->rsp_data_for_display)));
+
 
     try
     {
         if (_session_data.get_content_type(display_id).find("image") == 0) {//image
-            size_t header_end_pos = rsp->find("\r\n\r\n");
+            size_t header_end_pos = _session_info_ptr->rsp_data_for_display->find("\r\n\r\n");
 
             if (header_end_pos != string::npos) {
-                int length = rsp->size() - header_end_pos - 4;
-                const uchar* image_bytes = (const uchar*)(rsp->c_str() + header_end_pos + 4);
+                int length = _session_info_ptr->rsp_data_for_display->size() - header_end_pos - 4;
+                const uchar* image_bytes = (const uchar*)(_session_info_ptr->rsp_data_for_display->c_str() + header_end_pos + 4);
                 QImage img;
                 if (!img.loadFromData(image_bytes, length))
                     throw -1;
@@ -93,7 +115,6 @@ void QTFrontend::_display_full_info(size_t display_id)
                 ui.label_image->adjustSize();
                 ui.scrollAreaWidgetContents->adjustSize();
 
-                
                 
             }
             else {

@@ -103,7 +103,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_req_text">
          <attribute name="title">
@@ -123,7 +123,24 @@
          <attribute name="title">
           <string>原始数据</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_5"/>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="0">
+           <widget class="QHexEdit" name="hexEdit_req">
+            <property name="toolTip">
+             <string>QHexEditWidget</string>
+            </property>
+            <property name="whatsThis">
+             <string>QHexEdit widget allow to edit the data in hex view.</string>
+            </property>
+            <property name="overwriteMode">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </widget>
        <widget class="QTabWidget" name="tab_response">
@@ -134,7 +151,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_rsp_text">
          <attribute name="title">
@@ -154,7 +171,24 @@
          <attribute name="title">
           <string>原始数据</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_3"/>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QHexEdit" name="hexEdit_rsp">
+            <property name="toolTip">
+             <string>QHexEditWidget</string>
+            </property>
+            <property name="whatsThis">
+             <string>QHexEdit widget allow to edit the data in hex view.</string>
+            </property>
+            <property name="overwriteMode">
+             <bool>false</bool>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
         <widget class="QWidget" name="tab_rsp_image">
          <attribute name="title">
@@ -275,6 +309,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QHexEdit</class>
+   <extends>QFrame</extends>
+   <header>qhexedit.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="QTFrontend.qrc"/>
  </resources>

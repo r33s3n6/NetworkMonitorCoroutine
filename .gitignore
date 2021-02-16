@@ -346,3 +346,5 @@ healthchecksdb
 /NetworkMonitorCoroutine/libcrypto-1_1-x64.dll
 /NetworkMonitorCoroutine/dasync.dll
 /NetworkMonitorCoroutine/capi.dll
+/QTFrontend/QHexEditor/qhexedit.pro
+/QTFrontend/QHexEditor/qhexeditplugin.pro

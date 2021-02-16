@@ -83,12 +83,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(LibraryPath)</LibraryPath>
+    <LibraryPath>F:\Libraries\qhexedit2-master\build-qhexeditplugin-Desktop_Qt_5_12_10_MSVC2017_64bit-Release\release;F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>F:\OpenSSL-Win64\include;F:\Libraries\boost_1_75_0;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(LibraryPath)</LibraryPath>
+    <LibraryPath>F:\Libraries\qhexedit2-master\build-qhexeditplugin-Desktop_Qt_5_12_10_MSVC2017_64bit-Release\release;F:\Libraries\boost_1_75_0\stage\lib;F:\OpenSSL-Win64\lib\VC\static;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -137,7 +137,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libcrypto64MDd.lib;libssl64MDd.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto64MDd.lib;libssl64MDd.lib;Crypt32.lib;%(AdditionalDependencies);qhexeditplugin.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -155,7 +155,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libcrypto64MD.lib;libssl64MD.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto64MD.lib;libssl64MD.lib;Crypt32.lib;%(AdditionalDependencies);qhexeditplugin.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -94,9 +94,6 @@ QVariant SessionDataModel::headerData(int section, Qt::Orientation orientation, 
 void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 {
     
-    _session_info->id = id;
-    id++;//TODO:potention read/write conflict 
-    std::cout << _session_info->id <<":session_created\n";
 
     _session_info->req_data_for_display = make_shared<string>(*(_session_info->new_data));
 
@@ -123,9 +120,19 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 
     
     //emit dataChanged(createIndex(_session_info->id, 0), createIndex(_session_info->id, columnCount() - 1));
+
+    id_locker.lock();
+    _session_info->id = id;
+    id++;
+
     beginInsertRows(QModelIndex(), _session_info->id, _session_info->id);
     _data_vec.emplace_back(_session_info);
     endInsertRows();
+
+    id_locker.unlock();
+
+    std::cout << _session_info->id << ":session_created\n";
+    
 
 
 

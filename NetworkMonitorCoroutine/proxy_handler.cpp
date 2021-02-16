@@ -27,6 +27,7 @@ namespace proxy_tcp {
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
+		_session_info->raw_rsp_data = make_shared<string>(*result);
 		return respond_and_close;
 	}
 
