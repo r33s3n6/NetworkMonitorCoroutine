@@ -57,6 +57,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
 
+    inline string get_content_type(size_t rank) { return _data_vec[rank]->content_type; }
     inline shared_ptr<string> get_raw_req_data(size_t rank) { return _data_vec[rank]->raw_req_data; }
     inline shared_ptr<string> get_raw_rsp_data(size_t rank){ return _data_vec[rank]->raw_rsp_data; }
 
@@ -64,7 +65,10 @@ private:
     vector<session_info*> _data_vec;
     QTableView* _table;
 
-private://slot
+signals:
+    void info_updated(size_t update_id);
+
+private slots:
     void filter_updated(string filter);
 
     void session_created(shared_ptr<string> req_data, int update_id);

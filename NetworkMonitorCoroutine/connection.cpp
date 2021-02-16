@@ -118,17 +118,17 @@ awaitable<void> connection::_waitable_loop()
 			shared_ptr<string> res(new string(""));
 			
 
-			//若上次有一些剩余的尾巴，这次先不读而是先检查完整性，否则可能其中为最后一个报文而阻塞
+			
 			if (!_with_appendix) {
 				co_await _async_read(_is_tunnel_conn);
 			}
+			//若上次有一些剩余的尾巴，这次先不读而是先检查完整性，否则可能其中为最后一个报文而阻塞
 
 			
 			//_whole_request 都是解密完的http数据
-
-
-			
+	
 			size_t split_pos = 0;
+			//根据不同的协议使用不同的完整性检查函数
 			if ((last_status == chunked) || (last_status == wait_chunked))
 				_status = _chunked_integrity_check(_whole_request, split_pos);
 			else
@@ -137,12 +137,19 @@ awaitable<void> connection::_waitable_loop()
 
 			shared_ptr<string> remained_request;
 
+			//分割报文
 			if (split_pos < _whole_request->size()) {
 				remained_request.reset(new string(
 					_whole_request->substr(split_pos, _whole_request->size() - split_pos)));
 				_whole_request->resize(split_pos);//清除末尾
 				_with_appendix = true;
 			}
+
+#ifdef _DEBUG
+			if (_whole_request->find("wss://") != string::npos) {
+				cout << "DEBUG\n";
+			}
+#endif
 
 			connection_behaviour _behaviour;
 			switch (_status) {
@@ -186,7 +193,7 @@ awaitable<void> connection::_waitable_loop()
 					
 					_ssl_stream_ptr = make_shared<ssl_stream>(move(*_socket), _ssl_context);//一直继承这个socket
 					_socket = &_ssl_stream_ptr->next_layer();
-					//for ssl connection, disable Nagle's algorithm boost the performance
+					//for ssl connection, disable Nagle's algorithm to boost the performance
 					_socket->set_option(tcp::no_delay(true));
 					co_await _ssl_stream_ptr->async_handshake(boost::asio::ssl::stream_base::server
 						, boost::asio::redirect_error(use_awaitable, ec));
@@ -198,7 +205,9 @@ awaitable<void> connection::_waitable_loop()
 
 					_whole_request.reset(new string(""));
 					continue;
-				}
+				}//end if ==connect
+				//若不为connect
+
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked ||
@@ -220,9 +229,6 @@ awaitable<void> connection::_waitable_loop()
 
 
 
-
-
-
 			//reset to wait incoming data
 			if (_with_appendix) {
 				//还剩一部分留在里面
@@ -233,7 +239,7 @@ awaitable<void> connection::_waitable_loop()
 			}
 
 
-			//设置是否继续接收数据，是否直接出错返回
+			//根据behaviour设置是否继续接收数据，是否直接出错返回
 			switch (_behaviour) {
 			case respond_and_close:
 				_keep_alive = false;
@@ -265,7 +271,7 @@ awaitable<void> connection::_waitable_loop()
 			}
 
 
-			//指针可能直接变了，此处的res传的是引用
+			//res指针可能直接变了，此处的res传的是引用
 			_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn);
 
 			while (_behaviour == keep_receiving_data) {
@@ -342,9 +348,9 @@ awaitable<void> connection::_async_read(bool with_ssl)
 
 			cout << boost::this_thread::get_id() << ":" << ec.message() << endl;
 			throw std::runtime_error("read failed");
-		}//eof意味着无法写数据
+		}
 		else {
-			throw std::runtime_error("connection closed by peer");
+			throw std::runtime_error("connection closed by peer");//eof意味着无法写数据
 		}
 	}
 

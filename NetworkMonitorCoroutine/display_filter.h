@@ -65,7 +65,7 @@ private:
 	size_t update_id = 0;
 
 	//SessionDataModel* _session_data_model;
-	inline size_t get_temp_id() {
+	inline size_t get_temp_id() {//potential performance loss
 		update_id_lock.lock();
 		size_t temp_id = update_id;
 		update_id++;

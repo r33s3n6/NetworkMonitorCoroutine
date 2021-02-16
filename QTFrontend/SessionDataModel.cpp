@@ -90,22 +90,10 @@ void SessionDataModel::session_created(shared_ptr<string> req_data, int update_i
     std::cout << update_id<<":session_created\n";
     session_info* info;
 
-    bool data_change = false;
-    
-    if (update_id < _data_vec.size()) {
-        info = _data_vec[update_id];
-        data_change = true;
-        
-    }
-        
-    else {
-        beginInsertRows(QModelIndex(), _data_vec.size(), update_id);
-        _data_vec.resize(update_id+1);
-        info = new session_info;
-        _data_vec[update_id] = info;//TODO:potention read/write conflict
-        data_change = false;
-    }
-        
+   
+
+    info = new session_info;
+   
    
 
     shared_ptr<string> header= make_shared<string>();
@@ -128,14 +116,22 @@ void SessionDataModel::session_created(shared_ptr<string> req_data, int update_i
     info->raw_req_data = req_data;
 
 
-    
-    if (data_change) {
+
+
+
+    if (update_id < _data_vec.size()) {
+
+        _data_vec[update_id] = info;//TODO:potention read/write conflict 
         emit dataChanged(createIndex(update_id, 0), createIndex(update_id, columnCount() - 1));
     }
+
     else {
+        beginInsertRows(QModelIndex(), _data_vec.size(), update_id);
+        _data_vec.resize(update_id + 1);
+        _data_vec[update_id] = info;//TODO:potention read/write conflict
         endInsertRows();
+
     }
-    
 
 
 }
@@ -164,9 +160,9 @@ void SessionDataModel::session_rsp_updated(shared_ptr<string> rsp_data, int upda
 
     if (rsp_data->find("HTTP") != 0) {
         size_t body_start_pos = rsp_data->find("\r\n") + 2;
-        //beginInsertRows(QModelIndex(), update_id, update_id);
+
         info->raw_rsp_data->append(rsp_data->substr(body_start_pos,rsp_data->size()-2-body_start_pos));
-        //endInsertRows();
+        emit info_updated(update_id);
         return;
     }
 
@@ -181,7 +177,7 @@ void SessionDataModel::session_rsp_updated(shared_ptr<string> rsp_data, int upda
     size_t code_start_pos = (*header_vec_ptr)[0].find("HTTP/")+9;
     size_t code_end_pos = (*header_vec_ptr)[0].find(" ", code_start_pos);
 
-    //beginInsertRows(QModelIndex(), update_id, update_id);
+
     if (code_start_pos != string::npos &&
         code_end_pos != string::npos) {
         info->code = (*header_vec_ptr)[0].substr(code_start_pos, code_end_pos - code_start_pos);
@@ -198,7 +194,6 @@ void SessionDataModel::session_rsp_updated(shared_ptr<string> rsp_data, int upda
  
     info->raw_rsp_data = rsp_data;
     emit dataChanged(createIndex(update_id, 0), createIndex(update_id, columnCount() - 1));
-    //endInsertRows();
 
 
 }

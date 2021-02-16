@@ -40,6 +40,11 @@ auto_trust_ca
 * 
 */
 
+//TODO: websocket support
+/*
+websocket_integrity_check
+*/
+
 /*
 程序入口点
 作为界面程序的后台处理消息循环

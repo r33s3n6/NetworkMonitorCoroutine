@@ -10,9 +10,11 @@
 #include <QMetaType>
 
 
+
 int main(int argc, char *argv[])
 {
     qRegisterMetaType<QVector<int>>("QVector<int>");
+    qRegisterMetaType<size_t>("size_t");
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication a(argc, argv);

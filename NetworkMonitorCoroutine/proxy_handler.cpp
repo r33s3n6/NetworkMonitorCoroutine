@@ -148,9 +148,9 @@ namespace proxy_tcp {
 			"proxy-authenticate",
 			"proxy-connection",
 			"connection",
-			//"transfer-encoding","te","trailers"//可以原样转发，不要徒增麻烦
-			"upgrade",
+			//"upgrade",
 			"accept-encoding"//TODO: 解决gzip, br, deflate后再加回去吧
+			//"transfer-encoding","te","trailers"//可以原样转发，不要徒增麻烦
 		};
 
 
@@ -167,7 +167,7 @@ namespace proxy_tcp {
 
 
 		//get to be removed field
-
+		bool websocket_upgrade = false;
 		if (_conn_value.size() != 0) {
 			auto temp_vec_ptr = string_split(_conn_value, ",");
 
@@ -181,6 +181,16 @@ namespace proxy_tcp {
 				}
 				else if (t == "keep-alive") {
 					_keep_alive = true;
+				}
+				else if (t == "upgrade") {
+					if (string("websocket")
+						!= get_header_value(header_vec_ptr, "upgrade")) {
+
+						to_be_removed_header_list.emplace_back(t);
+					}
+					else {
+						websocket_upgrade = true;
+					}
 				}
 				else {
 					to_be_removed_header_list.emplace_back(t);
@@ -234,14 +244,21 @@ namespace proxy_tcp {
 		//添加到下一跳的头部
 
 		if (CLIENT_UNIT_KEEP_ALIVE)
-			result->append("Connection: keep-alive\r\n");//默认keep-alive
+			result->append("Connection: keep-alive");//默认keep-alive
 		else
-			result->append("Connection: close\r\n");
+			result->append("Connection: close");
 
+		if (websocket_upgrade) {
+			result->append(", upgrade");
+			_keep_alive = true;
+		}
+
+		result->append("\r\n");//header::connection end
 
 		result->append("\r\n");//header end
 		//append body
 		result->append(*body);
+
 		return _keep_alive;
 	}
 

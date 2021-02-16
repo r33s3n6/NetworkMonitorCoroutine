@@ -13,7 +13,7 @@ namespace proxy_tcp {
 
 	int display_filter::display(shared_ptr<string> req_data) //return update_id
 	{
-		size_t temp_id = get_temp_id();
+		size_t temp_id = get_temp_id();//TODO 改为获取一个指针，然后传一个指针过去，以达到更新的效果
 
 		emit session_created(req_data, temp_id);
 		
