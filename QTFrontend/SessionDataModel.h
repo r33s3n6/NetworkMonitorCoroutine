@@ -23,10 +23,12 @@ namespace proxy_tcp {
 using namespace proxy_tcp;
 
 typedef enum {
+    undefined,
     pass,
     intercept,
     pass_after_intercept,
     drop
+    
 }session_behaviour;
 
 struct session_info {
@@ -47,6 +49,8 @@ struct session_info {
     shared_ptr<const string> new_data;
     session_info() :body_length(0), id(0) { 
         proxy_handler_ptr.reset(); 
+        send_behaviour = undefined;
+        receive_behaviour = undefined;
     }
     /*
     session_info(string url, string code, string protocol,
@@ -97,6 +101,7 @@ private:
 
 signals:
     void info_updated(size_t update_id);
+    void session_intercepted(shared_ptr<session_info> _session_info,bool is_req);
 
 private slots:
     void session_created(shared_ptr<session_info> _session_info);
@@ -110,6 +115,8 @@ private slots:
 
     void session_error(shared_ptr<session_info> _session_info);
 
+    //void pass_session(shared_ptr<session_info> _session_info);
+    //void drop_session(shared_ptr<session_info> _session_info);
 
 };
 

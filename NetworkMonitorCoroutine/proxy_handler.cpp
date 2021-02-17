@@ -28,6 +28,7 @@ namespace proxy_tcp {
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
 		_session_info->raw_rsp_data = make_shared<string>(*result);
+		cout << *_session_info->new_data << endl;
 		return respond_and_close;
 	}
 
@@ -56,7 +57,7 @@ namespace proxy_tcp {
 			_session_info->new_data = _modified_data;
 			_session_info->raw_req_data = _modified_data;
 			_session_info->proxy_handler_ptr = shared_from_this();
-			if (_breakpoint_manager.check(*_modified_data)) {//通过请求头来拦截 以后再说body的事吧 TODO
+			if (_breakpoint_manager.check(_session_info,true)) {//通过请求头来拦截 以后再说body的事吧 TODO
 				//断点
 				_session_info->send_behaviour = intercept;
 			}
@@ -68,8 +69,16 @@ namespace proxy_tcp {
 		}
 		else {//是某次的后续，因此直接更新
 			_session_info->raw_req_data->append(*msg);
-			_display_filter.update_display_req(_session_info);
 			_modified_data = msg;
+			_session_info->new_data = _modified_data;
+			_display_filter.update_display_req(_session_info);
+			
+		}
+
+		
+
+		if (request_end) {
+			_display_filter.complete_req(_session_info);
 		}
 
 		connection_behaviour _behaviour = respond_and_keep_alive;
@@ -116,6 +125,7 @@ namespace proxy_tcp {
 			co_return respond_error;
 		}
 		else {
+			
 			if (_keep_alive)
 				co_return respond_and_keep_alive;
 			else
@@ -137,19 +147,21 @@ namespace proxy_tcp {
 		connection_behaviour _behaviour;
 		_behaviour = co_await _client->receive_response(rsp);
 		if (_behaviour == respond_error) {
-			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
+			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::receive_message::_client::receive_response ERROR : ");
 			complete_error_msg->append(*rsp);
 			_session_info->new_data = complete_error_msg;
 			_display_filter.update_display_error(_session_info);
 			co_return respond_error;
 		}
 
+		_session_info->new_data = rsp;
+
 		if (!chunked_body) {//response begin
 			
-			_session_info->new_data = rsp;
+			
 			_session_info->raw_rsp_data = rsp;
-
-			if (_breakpoint_manager.check(*rsp)) {
+			
+			if (_breakpoint_manager.check(_session_info,false)) {
 				_session_info->receive_behaviour = intercept;//断点
 			}
 			else {
@@ -166,8 +178,14 @@ namespace proxy_tcp {
 		}
 
 		
+
+		
+		if (_behaviour != keep_receiving_data) {
+			_display_filter.complete_rsp(_session_info);
+		}
+
 		if (_session_info->receive_behaviour == intercept) {
-			if (_behaviour == keep_receiving_data) {
+			if (_behaviour != keep_receiving_data) {
 				size_t retry_count = 0;
 				auto ex = co_await boost::asio::this_coro::executor;
 				boost::asio::steady_timer timer(ex);
@@ -197,6 +215,7 @@ namespace proxy_tcp {
 		}
 
 		if(_behaviour != keep_receiving_data){
+			
 			_session_info.reset();
 		}
 

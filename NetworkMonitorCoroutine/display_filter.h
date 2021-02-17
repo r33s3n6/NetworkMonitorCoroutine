@@ -61,9 +61,12 @@ public:
 
 	void display(shared_ptr<session_info> _session_info);
 	void update_display_req(shared_ptr<session_info> _session_info);
+	void complete_req(shared_ptr<session_info> _session_info);
 
 	void display_rsp(shared_ptr<session_info> _session_info);
 	void update_display_rsp(shared_ptr<session_info> _session_info);
+	void complete_rsp(shared_ptr<session_info> _session_info);
+
 	void update_display_error(shared_ptr<session_info> _session_info);
 
 

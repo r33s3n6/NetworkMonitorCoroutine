@@ -16,13 +16,14 @@ SessionDataModel::SessionDataModel(QObject* parent, display_filter* _disp_fil)
 
 {
     _data_vec.reserve(_default_capacity);
-    //_data_vec.resize(_default_capacity / 2);
+
     connect(_disp_fil, &display_filter::session_created, this, &SessionDataModel::session_created, Qt::DirectConnection);
     connect(_disp_fil, &display_filter::session_req_updated, this, &SessionDataModel::session_req_updated, Qt::DirectConnection);
+    connect(_disp_fil, &display_filter::session_req_completed, this, &SessionDataModel::session_req_completed, Qt::DirectConnection);
 
     connect(_disp_fil, &display_filter::session_rsp_begin, this, &SessionDataModel::session_rsp_begin, Qt::DirectConnection);
     connect(_disp_fil, &display_filter::session_rsp_updated, this, &SessionDataModel::session_rsp_updated, Qt::DirectConnection);
-
+    connect(_disp_fil, &display_filter::session_rsp_completed, this, &SessionDataModel::session_rsp_completed, Qt::DirectConnection);
     connect(_disp_fil, &display_filter::session_error, this, &SessionDataModel::session_error, Qt::DirectConnection);
 
 
@@ -131,9 +132,13 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 
     id_locker.unlock();
 
+    if (_session_info->send_behaviour == intercept) {
+        emit session_intercepted(_session_info,true);//request
+    }
+
+
     std::cout << _session_info->id << ":session_created\n";
     
-
 
 
 }
@@ -151,13 +156,15 @@ void SessionDataModel::session_req_updated(shared_ptr<session_info> _session_inf
     _session_info->req_data_for_display->append(
         _session_info->new_data->substr(
             body_start_pos, _session_info->new_data->size() - 2 - body_start_pos));
-    emit info_updated(_session_info->id);
+    
 
 
 }
 
 void SessionDataModel::session_req_completed(shared_ptr<session_info> _session_info)
 {
+    std::cout << _session_info->id << ":session_request_completed\n";
+    emit info_updated(_session_info->id);
 }
 
 
@@ -200,6 +207,12 @@ void SessionDataModel::session_rsp_begin(shared_ptr<session_info> _session_info)
 
 
     emit dataChanged(createIndex(_session_info->id, 0), createIndex(_session_info->id, columnCount() - 1));
+    emit info_updated(_session_info->id);
+
+    if (_session_info->receive_behaviour == intercept) {
+        emit session_intercepted(_session_info,false);//response
+    }
+
 }
 
 void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_info)
@@ -217,7 +230,7 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
         _session_info->new_data->substr(
             body_start_pos, _session_info->new_data->size()-2-body_start_pos));
 
-    emit info_updated(_session_info->id);
+    
 
 
 
@@ -227,6 +240,8 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
 
 void SessionDataModel::session_rsp_completed(shared_ptr<session_info> _session_info)
 {
+    std::cout << _session_info->id << ":session_response_completed\n";
+    emit info_updated(_session_info->id);
 }
 
 

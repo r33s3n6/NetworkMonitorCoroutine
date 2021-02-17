@@ -34,17 +34,27 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
 
     connect(ui.table_session->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &QTFrontend::display_full_info);
     connect(&_session_data, &SessionDataModel::info_updated, this, &QTFrontend::update_displayed_info);
+    connect(ui.actionShow_Hide_breakpoint_button, &QAction::triggered, this, &QTFrontend::_debug_function);
+
+    connect(ui.pass_session_button, &QPushButton::clicked, this, &QTFrontend::pass_session);
+    connect(ui.drop_session_button, &QPushButton::clicked, this, &QTFrontend::drop_session);
+
+    //connect(ui.actionShow_Hide_breakpoint_button, &QAction::triggered, this, &QTFrontend::_debug_function);
+    
 
     ui.table_session->show();
     //table settings end
 
     ui.scrollArea->setVisible(true);
+
+    _activate_breakpoint_box(false);
     
 }
 
 void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {
     
     _display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// 获取实际位置
+
     _display_full_info(_display_id);
 }
 
@@ -55,6 +65,81 @@ void QTFrontend::update_displayed_info(size_t update_id)
     }
 }
 
+//TODO: 
+void QTFrontend::pass_session() {
+    auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+    _activate_breakpoint_box(false);
+    _activate_editor(false, is_req_intercepted);//_disable_editor of request/response
+
+    
+    if (is_req_intercepted) {
+        _session_info_ptr->raw_req_data = make_shared<string>(
+            ui.hexEdit_req->data().constData(), ui.hexEdit_req->data().length());
+        _session_info_ptr->send_behaviour = pass_after_intercept;
+    }
+    else {
+
+        _session_info_ptr->raw_rsp_data = make_shared<string>(
+            ui.hexEdit_rsp->data().constData(), ui.hexEdit_rsp->data().length());
+        _session_info_ptr->receive_behaviour = pass_after_intercept;
+    }
+
+    
+
+}
+
+
+void QTFrontend::drop_session() {
+    auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+    _activate_breakpoint_box(false);
+    _activate_editor(false, is_req_intercepted);//_disable_editor of request/response
+
+    if (is_req_intercepted) {
+        _session_info_ptr->send_behaviour = drop;
+    }
+    else {
+        _session_info_ptr->receive_behaviour = drop;
+    }
+
+
+}
+
+
+void QTFrontend::_debug_function() {
+    
+    
+}
+
+
+void QTFrontend::_activate_breakpoint_box(bool active){
+
+    ui.pass_session_button->setDisabled(!active);
+    ui.drop_session_button->setDisabled(!active);
+
+    if (active) {
+        ui.breakpoint_button_box->setMaximumHeight(33);
+    }
+    else {
+        ui.breakpoint_button_box->setFixedHeight(0);
+    }
+    
+}
+
+
+
+void QTFrontend::_activate_editor(bool active,bool is_req) {
+    if (is_req) {
+        ui.hexEdit_req->setReadOnly(!active);
+        ui.plaintext_req_text->setReadOnly(!active);
+    }
+    else {
+        ui.hexEdit_rsp->setReadOnly(!active);
+        ui.plaintext_rsp_text->setReadOnly(!active);
+    }
+    
+
+}
+
 //TODO: 增加保存文件功能
 void QTFrontend::_display_full_info(size_t display_id)
 {
@@ -62,6 +147,26 @@ void QTFrontend::_display_full_info(size_t display_id)
     
 
     auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
+
+    if (_session_info_ptr->send_behaviour == intercept) {
+        ui.label_intercept->setText("Request has been intercepted");
+        _activate_breakpoint_box(true);
+        _activate_editor(true, true);//_activate_editor of request
+        is_req_intercepted = true;
+        
+    }
+    else if (_session_info_ptr->receive_behaviour == intercept) {
+        ui.label_intercept->setText("Response has been intercepted");
+        _activate_breakpoint_box(true);
+        _activate_editor(true, false);//_activate_editor of response
+        is_req_intercepted = false;
+    }
+    else {
+        _activate_breakpoint_box(false);
+    }
+
+    
+
 
     if (_session_info_ptr->req_data_for_display) {
         ui.plaintext_req_text->setPlainText(

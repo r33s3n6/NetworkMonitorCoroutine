@@ -27,6 +27,11 @@ namespace proxy_tcp {
 		emit session_req_updated(_session_info);
 	}
 
+	void display_filter::display_filter::complete_req(shared_ptr<session_info> _session_info)
+	{
+		emit session_req_completed(_session_info);
+	}
+
 	void display_filter::display_rsp(
 		shared_ptr<session_info> _session_info)
 	{
@@ -43,6 +48,11 @@ namespace proxy_tcp {
 
 		emit session_rsp_updated(_session_info);
 
+	}
+
+	void display_filter::display_filter::complete_rsp(shared_ptr<session_info> _session_info)
+	{
+		emit session_rsp_completed(_session_info);
 	}
 
 	void display_filter::update_display_error(

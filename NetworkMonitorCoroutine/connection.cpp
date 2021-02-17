@@ -153,7 +153,7 @@ awaitable<void> connection::_waitable_loop()
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked||
-							last_status == wait_chunked));//上一次是chunked/wait_chunked则需要强制使用旧连接
+							last_status == wait_chunked),false);//上一次是chunked/wait_chunked则需要强制使用旧连接,不是请求尾
 				break;
 			case integrity_status::intact:
 				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method 单独处理直接返回，应该不可能连缀
@@ -207,7 +207,7 @@ awaitable<void> connection::_waitable_loop()
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked ||
-							last_status == wait_chunked));//上一次是chunked/wait_chunked则需要强制使用旧连接
+							last_status == wait_chunked),true);//上一次是chunked/wait_chunked则需要强制使用旧连接,是请求尾
 				break;
 
 			case integrity_status::broken:
@@ -332,10 +332,13 @@ awaitable<void> connection::_async_read(bool with_ssl)
 	
 	size_t bytes_transferred;
 	if (with_ssl) {
+		auto& debug = _ssl_stream_ptr->next_layer();
+
 		bytes_transferred = co_await _ssl_stream_ptr->async_read_some(
 			boost::asio::buffer(_buffer),
 			boost::asio::redirect_error(use_awaitable, ec));
-		//_ssl_layer.decrypt_append(_whole_request, _buffer.data(), bytes_transferred);
+		
+		
 	}
 	else {
 		bytes_transferred = co_await _socket->async_read_some(

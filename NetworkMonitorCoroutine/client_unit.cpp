@@ -200,7 +200,7 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 		}
 		else {
 			_host = host.substr(0, host_port_pos);
-			_port = host.substr(host_port_pos, host.size() - host_port_pos);
+			_port = host.substr(host_port_pos+1, host.size() - host_port_pos-1);
 		}
 
 
@@ -292,7 +292,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 
 
 
-		while (true) {
+		while (_socket) {
 			integrity_status _status;
 
 

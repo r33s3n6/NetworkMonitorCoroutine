@@ -9,7 +9,15 @@
 
 #include <QMetaType>
 
-
+//TODO:
+/*
+* hex editor
+*   copy,modify,...
+* breakpoint
+*   set_breakpoint,ui_breakpoint
+* save_session
+* 
+*/
 
 int main(int argc, char *argv[])
 {
