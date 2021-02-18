@@ -9,7 +9,8 @@ namespace proxy_tcp {
 		wait, //继续接收
 		wait_chunked,//此chunked包不完整，继续接收
 		chunked,//此chunked完整，仍有后续chunked包
-		https_handshake //https握手包
+		https_handshake, //https握手包
+		websocket_intact//websocket
 	} integrity_status;
 
 	typedef enum {//deprecated
@@ -21,16 +22,20 @@ namespace proxy_tcp {
 		respond_and_keep_alive,//保持连接
 		respond_and_close,//
 		keep_receiving_data,//继续从远端读数据
+		protocol_websocket,
 		respond_error,
 		ignore
 	} connection_behaviour;
 
-	typedef enum {//deprecated
+	typedef enum {
 		http,
-		https,
-		error,
-		handshake
-	} request_protocol;
+		//https,
+		websocket,
+		websocket_handshake,
+		//websocket_with_ssl,
+		unknown
+
+	} connection_protocol;
 
 	typedef enum {
 		_OPTIONS,

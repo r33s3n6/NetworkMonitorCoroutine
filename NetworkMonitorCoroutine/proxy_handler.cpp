@@ -23,39 +23,72 @@ namespace proxy_tcp {
 		_session_info.reset();
 	}
 
-	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result)//TODO
+	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result,shared_ptr<string> err_data)//TODO:response,加入req信息
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
+		if (!_session_info) {
+			_session_info = make_shared<session_info>();
+			
+			_session_info->raw_req_data = err_data;
+			_display_filter.display(_session_info);
+			_session_info->new_data = make_shared<string>("Request Data Broken");
+		}
+
 		_session_info->raw_rsp_data = make_shared<string>(*result);
-		cout << *_session_info->new_data << endl;
+		_display_filter.update_display_error(_session_info);
+
+		//cout << *_session_info->new_data << endl;
 		return respond_and_close;
 	}
 
 	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg,
 		bool with_ssl, bool force_old_conn,bool request_end)
 	{
-		host.reset(new string(""));
+		
 
 		
 		//一定不是connect method
 
-		//TODO connection 若为chunked body 就不要再次修改自身的keepalive 标志了
+
 		bool _keep_alive = true;
 
 
 		shared_ptr<string> _modified_data(new string(""));
+
+		
+
 		if (!_session_info) {//说明是一次全新的请求
-			
-			_keep_alive = _process_header(msg, _modified_data);//在其中host被修改
+			host.reset(new string(""));
+			_conn_protocol = http;
+			_keep_alive = _process_header(msg, _modified_data);//在其中host,_conn_protocol被修改
 
 			if (_modified_data->size() == 0) {
 				co_return respond_error;
 			}
 
 			_session_info = make_shared<session_info>();
+
 			_session_info->new_data = _modified_data;
 			_session_info->raw_req_data = _modified_data;
+			if (_conn_protocol == http) {
+				if (with_ssl) {
+					_session_info->protocol = "https";
+				}
+				else {
+					_session_info->protocol = "http";
+				}
+			}
+			else if (_conn_protocol == websocket_handshake) {
+				if (with_ssl) {
+					_session_info->protocol = "wss";
+				}
+				else {
+					_session_info->protocol = "ws";
+				}
+			}
+			
+
 			_session_info->proxy_handler_ptr = shared_from_this();
 			if (_breakpoint_manager.check(_session_info,true)) {//通过请求头来拦截 以后再说body的事吧 TODO
 				//断点
@@ -70,9 +103,13 @@ namespace proxy_tcp {
 		else {//是某次的后续，因此直接更新
 			_session_info->raw_req_data->append(*msg);
 			_modified_data = msg;
+
 			_session_info->new_data = _modified_data;
+
 			_display_filter.update_display_req(_session_info);
-			
+			if (_conn_protocol==websocket) {
+				force_old_conn = true;
+			}
 		}
 
 		
@@ -101,10 +138,12 @@ namespace proxy_tcp {
 
 		switch (_session_info->send_behaviour) {
 		case pass:
-			_behaviour = co_await _client->send_request(*host, *_modified_data, _error_msg, with_ssl, force_old_conn);
+			_behaviour = co_await _client->send_request(
+				*host, *_modified_data, _error_msg, with_ssl, force_old_conn, _conn_protocol);
 			break;
 		case pass_after_intercept:
-			_behaviour = co_await _client->send_request(*host, *_session_info->raw_req_data, _error_msg, with_ssl, force_old_conn);
+			_behaviour = co_await _client->send_request(
+				*host, *_session_info->raw_req_data, _error_msg, with_ssl, force_old_conn, _conn_protocol);
 			_session_info->send_behaviour = pass;
 			break;
 		case drop:
@@ -125,7 +164,8 @@ namespace proxy_tcp {
 			co_return respond_error;
 		}
 		else {
-			
+			if (_conn_protocol == websocket_handshake)
+				co_return protocol_websocket;
 			if (_keep_alive)
 				co_return respond_and_keep_alive;
 			else
@@ -151,10 +191,16 @@ namespace proxy_tcp {
 			complete_error_msg->append(*rsp);
 			_session_info->new_data = complete_error_msg;
 			_display_filter.update_display_error(_session_info);
+
+			_session_info.reset();
+			_client->disconnect();
 			co_return respond_error;
 		}
 
 		_session_info->new_data = rsp;
+
+		if (_conn_protocol == websocket)
+			chunked_body = true;
 
 		if (!chunked_body) {//response begin
 			
@@ -169,7 +215,9 @@ namespace proxy_tcp {
 			}
 			
 			_display_filter.display_rsp(_session_info);
-		
+			if (_conn_protocol == websocket_handshake) {
+				_conn_protocol = websocket;
+			}
 
 		}
 		else {
@@ -180,7 +228,7 @@ namespace proxy_tcp {
 		
 
 		
-		if (_behaviour != keep_receiving_data) {
+		if (_conn_protocol != websocket && _behaviour != keep_receiving_data) {//end of the request
 			_display_filter.complete_rsp(_session_info);
 		}
 
@@ -214,7 +262,7 @@ namespace proxy_tcp {
 			break;
 		}
 
-		if(_behaviour != keep_receiving_data){
+		if((_conn_protocol==http)&&(_behaviour != keep_receiving_data)){
 			
 			_session_info.reset();
 		}
@@ -232,7 +280,7 @@ namespace proxy_tcp {
 	//return is keep_alive
 	bool http_proxy_handler::_process_header(shared_ptr<string> data, shared_ptr<string> result) {
 		bool _keep_alive = true;
-
+		_conn_protocol = http;
 		shared_ptr<string> header(new string(""));
 		shared_ptr<string> body(new string(""));
 
@@ -347,6 +395,7 @@ namespace proxy_tcp {
 		if (websocket_upgrade) {
 			result->append(", upgrade");
 			_keep_alive = true;
+			_conn_protocol = websocket_handshake;
 		}
 
 		result->append("\r\n");//header::connection end

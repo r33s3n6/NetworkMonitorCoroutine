@@ -45,6 +45,12 @@
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
+       <property name="styleSheet">
+        <string notr="true">alternate-background-color: #f9f9f9;</string>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectRows</enum>
        </property>
@@ -135,6 +141,9 @@
                <property name="whatsThis">
                 <string>QHexEdit widget allow to edit the data in hex view.</string>
                </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
                <property name="overwriteMode">
                 <bool>false</bool>
                </property>
@@ -179,8 +188,26 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="font">
+                 <font>
+                  <family>宋体</family>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <italic>false</italic>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: #5bbf5a;
+
+color: #ffffff;
+</string>
+                </property>
                 <property name="text">
                  <string>放行</string>
+                </property>
+                <property name="flat">
+                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -191,6 +218,19 @@
                   <horstretch>1</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color:#da4f49;
+
+color: #ffffff;
+</string>
                 </property>
                 <property name="text">
                  <string>丢弃</string>
@@ -207,6 +247,7 @@
                 </property>
                 <property name="font">
                  <font>
+                  <pointsize>11</pointsize>
                   <weight>75</weight>
                   <italic>false</italic>
                   <bold>true</bold>
@@ -218,6 +259,9 @@
                 </property>
                 <property name="autoFillBackground">
                  <bool>false</bool>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color:#3a87ad;</string>
                 </property>
                 <property name="text">
                  <string>Request/Response has been intercepted</string>
@@ -239,7 +283,7 @@
             </sizepolicy>
            </property>
            <property name="currentIndex">
-            <number>1</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="tab_rsp_text">
             <attribute name="title">
@@ -299,7 +343,7 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>555</width>
+                  <width>557</width>
                   <height>282</height>
                  </rect>
                 </property>
@@ -362,11 +406,7 @@
     <property name="title">
      <string>文件</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menu_2">
-    <property name="title">
-     <string>选项</string>
-    </property>
+    <addaction name="actionSave_all_sessions"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -388,7 +428,6 @@
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_4"/>
-   <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menuDebug"/>
   </widget>
@@ -414,6 +453,11 @@
   <action name="actionShow_Hide_breakpoint_button">
    <property name="text">
     <string>Show/Hide breakpoint_button</string>
+   </property>
+  </action>
+  <action name="actionSave_all_sessions">
+   <property name="text">
+    <string>保存所有会话</string>
    </property>
   </action>
  </widget>

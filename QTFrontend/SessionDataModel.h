@@ -93,6 +93,8 @@ public:
     inline shared_ptr<string> get_raw_req_data(size_t rank) { return _data_vec[rank]->raw_req_data; }
     inline shared_ptr<string> get_raw_rsp_data(size_t rank){ return _data_vec[rank]->raw_rsp_data; }
 
+    void force_refresh(size_t display_id);
+
 private:
     vector<shared_ptr<session_info>> _data_vec;
     QTableView* _table;

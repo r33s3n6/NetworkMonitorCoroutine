@@ -111,43 +111,58 @@ void client_unit::_error_handler(boost::system::error_code ec) {
 //返回错误时要同时返回错误信息
 //host 是可能有端口号的
 awaitable<connection_behaviour> client_unit::send_request(const string& host, 
-	const string& data, shared_ptr<string> error_msg, bool with_ssl,bool force_old_conn)
+	const string& data, shared_ptr<string> error_msg, bool with_ssl,bool force_old_conn, connection_protocol protocol)
 {
 	if (host.size() == 0) {
 		*error_msg = "host is empty";
 		co_return respond_error;
 	}
 		
-
+	if (!force_old_conn) {//若为新连接，重置protocol
+		this->protocol = protocol;
+	}
 
 	boost::system::error_code ec;
 
-	//try to reuse the old connection
 	shared_ptr<bool> is_connected(new bool(false));
-	if (_current_host == host && _socket) {
-		*is_connected = true;//maybe
 
-		//读取直到超时来检测连接是否仍存在，出错说明连接中断
-		boost::asio::steady_timer _deadline(_io_context);
+	if (!force_old_conn) {
 
-		_deadline.expires_after(std::chrono::milliseconds(100));//等待100ms
+		//try to reuse the old connection
+		
+		if (_current_host == host && _socket) {
+			*is_connected = true;//maybe
 
-		_deadline.async_wait(
-			[this, is_connected](boost::system::error_code ec) {
-				if (_socket && (*is_connected))//说明仍在等待读取
-					_socket->cancel();
-			});
+			//读取直到超时来检测连接是否仍存在，出错说明连接中断
+			boost::asio::steady_timer _deadline(_io_context);
 
-		std::size_t bytes_transferred = co_await _socket->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
+			_deadline.expires_after(std::chrono::milliseconds(100));//等待100ms
 
-		if (ec != boost::asio::error::operation_aborted) {//只要不是被cancel，就肯定是出错了
-			_deadline.cancel();
-			*is_connected = false;
+			_deadline.async_wait(
+				[this, is_connected](boost::system::error_code ec) {
+					if (_socket && (*is_connected))//说明仍在等待读取
+						_socket->cancel();
+				});
+
+			std::size_t bytes_transferred = co_await _socket->async_read_some(
+				boost::asio::buffer(_buffer),
+				boost::asio::redirect_error(use_awaitable, ec));
+
+			if (ec != boost::asio::error::operation_aborted) {//只要不是被cancel，就肯定是出错了
+				_deadline.cancel();
+
+				*is_connected = false;
+				*error_msg += ec.message();
+				*error_msg += "\n";
+			}
+
+
 		}
-
 	}
+	else {
+		(*is_connected) = true;//force_old_conn 不检查连接，直接使用
+	}
+	
 
 	//clear buffer
 	//_whole_response.reset(new string(""));
@@ -163,10 +178,7 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 			_socket_close();
 		}
 
-		if (force_old_conn) {
-			*error_msg = "old connection closed";
-			co_return respond_error;
-		}
+
 			
 
 		if (with_ssl) {
@@ -256,7 +268,7 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 
 
 	}
-
+	//connect end
 
 	//now _socket is set up
 
@@ -284,6 +296,8 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 //返回错误时要同时返回错误信息
 awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>& result) //不需要检查连接性，出错直接返回即可
 {
+	
+
 	boost::system::error_code ec;
 	try
 	{
@@ -338,10 +352,20 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 			
 
 			size_t split_pos = 0;
-			if ((last_status == chunked) || (last_status == wait_chunked))
-				_status = _chunked_integrity_check(_whole_response, split_pos);
-			else
+			if (protocol == websocket_handshake) {
 				_status = _http_integrity_check(_whole_response, split_pos);
+				protocol = websocket;
+			}
+			else if (protocol == websocket) {
+				_status = _websocket_integrity_check(_whole_response, split_pos);
+			}
+			else {
+				if ((last_status == chunked) || (last_status == wait_chunked))
+					_status = _chunked_integrity_check(_whole_response, split_pos);
+				else
+					_status = _http_integrity_check(_whole_response, split_pos);
+			}
+			
 			//appendix:[split_pos,_size)
 
 			connection_behaviour ret = respond_and_keep_alive;
@@ -349,6 +373,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 			last_status = _status;
 
 			switch (_status) {
+			case integrity_status::websocket_intact:
 			case integrity_status::intact:
 				ret = respond_and_keep_alive;//default
 				break;

@@ -13,13 +13,13 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
     ui.setupUi(this);
 
     //table settings start
-
+ 
     _proxy_session_data.setSourceModel(&_session_data);
-
+    
     ui.table_session->setModel(&_proxy_session_data);
     //ui.table_session->setSortingEnabled(true);
     ui.table_session->sortByColumn(0, Qt::AscendingOrder);
-
+    //ui.table_session->setAlternatingRowColors(true);
     //ui.table_session->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     //ui.table_session->verticalHeader()->setHidden(true);
@@ -39,7 +39,7 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
     connect(ui.pass_session_button, &QPushButton::clicked, this, &QTFrontend::pass_session);
     connect(ui.drop_session_button, &QPushButton::clicked, this, &QTFrontend::drop_session);
 
-    //connect(ui.actionShow_Hide_breakpoint_button, &QAction::triggered, this, &QTFrontend::_debug_function);
+    connect(ui.actionShow_Hide_breakpoint_button, &QAction::triggered, this, &QTFrontend::_debug_function);
     
 
     ui.table_session->show();
@@ -65,7 +65,7 @@ void QTFrontend::update_displayed_info(size_t update_id)
     }
 }
 
-//TODO: 
+
 void QTFrontend::pass_session() {
     auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
     _activate_breakpoint_box(false);
@@ -84,7 +84,7 @@ void QTFrontend::pass_session() {
         _session_info_ptr->receive_behaviour = pass_after_intercept;
     }
 
-    
+    _session_data.force_refresh(_display_id);
 
 }
 
@@ -101,6 +101,7 @@ void QTFrontend::drop_session() {
         _session_info_ptr->receive_behaviour = drop;
     }
 
+    _session_data.force_refresh(_display_id);
 
 }
 
@@ -108,6 +109,7 @@ void QTFrontend::drop_session() {
 void QTFrontend::_debug_function() {
     
     
+    //_activate_breakpoint_box(false);
 }
 
 
@@ -117,10 +119,12 @@ void QTFrontend::_activate_breakpoint_box(bool active){
     ui.drop_session_button->setDisabled(!active);
 
     if (active) {
-        ui.breakpoint_button_box->setMaximumHeight(33);
+        ui.breakpoint_button_box->show();
+        //ui.breakpoint_button_box->setMaximumHeight(33);
     }
     else {
-        ui.breakpoint_button_box->setFixedHeight(0);
+        ui.breakpoint_button_box->hide();
+        //ui.breakpoint_button_box->setFixedHeight(0);
     }
     
 }

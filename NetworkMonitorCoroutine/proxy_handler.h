@@ -49,13 +49,15 @@ public:
 	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
 		bool with_ssl, bool chunked_body = false);
 
-	connection_behaviour handle_error(shared_ptr<string> result);
+	
+
+	connection_behaviour handle_error(shared_ptr<string> result, shared_ptr<string> err_data= shared_ptr<string>());
 
 
 private:
 
-
 	bool _process_header(shared_ptr<string> data, shared_ptr<string> result);
+	//bool _process_header(shared_ptr<string> data, shared_ptr<string> result);
 
 	breakpoint_manager& _breakpoint_manager;
 	display_filter& _display_filter;
@@ -63,6 +65,8 @@ private:
 	
 	shared_ptr<string> host;
 	shared_ptr<session_info> _session_info;
+
+	connection_protocol _conn_protocol = http;
 
 	//int _update_id = -2;
 

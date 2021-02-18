@@ -100,6 +100,9 @@ private:
 	boost::asio::ssl::context _ssl_context;
 
 	shared_ptr<certificate_manager> _cert_mgr;
+
+	connection_protocol _conn_protocol = http;
+
 };
 
 

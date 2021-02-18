@@ -186,6 +186,15 @@ proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> ht
 
 }
 
+proxy_tcp::integrity_status _websocket_integrity_check(shared_ptr<const string> data, size_t& split_pos)
+{
+	split_pos = data->size();
+	if (data->size() > 0)
+		return integrity_status::websocket_intact;//todo
+	else
+		return integrity_status::wait;
+}
+
 
 
 shared_ptr<string> memory2hex_string(shared_ptr<const string> data)

@@ -35,7 +35,7 @@ public:
 
 	//awaitable<connection_behaviour> send_request(const string& host, const string& data, bool with_ssl, bool force_old_conn = false);
 	awaitable<connection_behaviour> send_request(const string& host,
-		const string& data, shared_ptr<string> error_msg, bool with_ssl, bool force_old_conn = false);
+		const string& data, shared_ptr<string> error_msg, bool with_ssl, bool force_old_conn = false,connection_protocol protocol=http);
 	awaitable<connection_behaviour> receive_response(shared_ptr<string>& result);//直接复用socket 不需要with_ssl 参数
 
 	void disconnect();
@@ -74,7 +74,7 @@ private:
 
 	void _socket_close();
 
-	
+	connection_protocol protocol = http;
 	//awaitable<bool> _check_connection(const string& host);
 };
 

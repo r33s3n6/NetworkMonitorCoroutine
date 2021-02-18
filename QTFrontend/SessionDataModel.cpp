@@ -44,8 +44,9 @@ int SessionDataModel::columnCount(const QModelIndex& /*parent*/) const
 
 QVariant SessionDataModel::data(const QModelIndex& index, int role) const
 {
+    shared_ptr<session_info> temp = _data_vec[index.row()];
     if (role == Qt::DisplayRole) {
-        shared_ptr<session_info> temp = _data_vec[index.row()];
+        
         if (temp == nullptr)
             return QString("N/A");
         switch (index.column()) {
@@ -57,7 +58,7 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
             return QString::fromStdString(temp->code);
         case 3://protocol
             if (temp->protocol.size() == 0)
-                return QString("todo");
+                return QString("unknown");
             return QString::fromStdString(temp->protocol);
         case 4://host
             return QString::fromStdString(temp->host);
@@ -67,6 +68,16 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
             return QString::fromStdString(temp->content_type);
         }
 
+    }
+    else if (role == Qt::BackgroundColorRole)
+    {
+        if (temp && ((temp->send_behaviour == intercept)
+            || (temp->receive_behaviour == intercept)))
+            return QColor(0xda, 0x4f, 0x49);
+    }else if(role == Qt::ForegroundRole){
+        if (temp && ((temp->send_behaviour == intercept)
+            || (temp->receive_behaviour == intercept)))
+            return QColor(0xff, 0xff, 0xff);
     }
 
 
@@ -86,6 +97,11 @@ QVariant SessionDataModel::headerData(int section, Qt::Orientation orientation, 
     return QVariant();
 }
 
+void SessionDataModel::force_refresh(size_t display_id)
+{
+    emit dataChanged(createIndex(display_id, 0), createIndex(display_id, columnCount() - 1));
+}
+
 
 
 
@@ -95,32 +111,32 @@ QVariant SessionDataModel::headerData(int section, Qt::Orientation orientation, 
 void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 {
     
+    if (_session_info->new_data) {
+        _session_info->req_data_for_display = make_shared<string>(*(_session_info->new_data));
 
-    _session_info->req_data_for_display = make_shared<string>(*(_session_info->new_data));
+        shared_ptr<string> header = make_shared<string>();
+        shared_ptr<string> body = make_shared<string>();
+        split_request(_session_info->req_data_for_display, header, body);
 
 
-    shared_ptr<string> header= make_shared<string>();
-    shared_ptr<string> body = make_shared<string>();
-    split_request(_session_info->req_data_for_display, header, body);
+        shared_ptr<vector<string>> header_vec_ptr
+            = string_split(*header, "\r\n");
+
+        size_t url_start_pos = (*header_vec_ptr)[0].find(" ");
+        size_t url_end_pos = (*header_vec_ptr)[0].find(" HTTP");
+        if (url_start_pos != string::npos &&
+            url_end_pos != string::npos) {
+            _session_info->url = (*header_vec_ptr)[0].substr(url_start_pos, url_end_pos - url_start_pos);
+        }
 
 
-    shared_ptr<vector<string>> header_vec_ptr
-        = string_split(*header, "\r\n");
-
-    size_t url_start_pos = (*header_vec_ptr)[0].find(" ");
-    size_t url_end_pos = (*header_vec_ptr)[0].find(" HTTP");
-    if (url_start_pos != string::npos &&
-        url_end_pos != string::npos) {
-        _session_info->url = (*header_vec_ptr)[0].substr(url_start_pos, url_end_pos - url_start_pos);
+        _session_info->host = get_header_value(header_vec_ptr, "host");
     }
-    //_session_info->protocol = "TODO";
-
-    _session_info->host = get_header_value(header_vec_ptr, "host");
-    
-
-
-    
-    //emit dataChanged(createIndex(_session_info->id, 0), createIndex(_session_info->id, columnCount() - 1));
+        
+    else {
+        _session_info->req_data_for_display = make_shared<string>("Data Broken");
+    }
+        
 
     id_locker.lock();
     _session_info->id = id;
@@ -134,6 +150,7 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 
     if (_session_info->send_behaviour == intercept) {
         emit session_intercepted(_session_info,true);//request
+
     }
 
 
@@ -225,10 +242,11 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
 
 
     size_t body_start_pos = _session_info->new_data->find("\r\n") + 2;
-    
-    _session_info->rsp_data_for_display->append(
-        _session_info->new_data->substr(
-            body_start_pos, _session_info->new_data->size()-2-body_start_pos));
+
+    string&& body = _session_info->new_data->substr(
+        body_start_pos, _session_info->new_data->size() - 2 - body_start_pos);
+    _session_info->body_length += body.size();
+    _session_info->rsp_data_for_display->append(body);
 
     
 
@@ -248,7 +266,7 @@ void SessionDataModel::session_rsp_completed(shared_ptr<session_info> _session_i
 
 void SessionDataModel::session_error(shared_ptr<session_info> _session_info)
 {
-    //TODO emit signal to main dialog
+
     _session_info->rsp_data_for_display = make_shared<string>(*(_session_info->new_data));
     emit info_updated(_session_info->id);
 }

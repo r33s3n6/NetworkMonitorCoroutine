@@ -129,10 +129,17 @@ awaitable<void> connection::_waitable_loop()
 	
 			size_t split_pos = 0;
 			//根据不同的协议使用不同的完整性检查函数
-			if ((last_status == chunked) || (last_status == wait_chunked))
-				_status = _chunked_integrity_check(_whole_request, split_pos);
-			else
-				_status = _http_integrity_check(_whole_request, split_pos);
+			if (_conn_protocol == websocket) {
+				_status = _websocket_integrity_check(_whole_request, split_pos);
+				cout << "websocket_check!\n";
+			}
+			else {
+				if ((last_status == chunked) || (last_status == wait_chunked))
+					_status = _chunked_integrity_check(_whole_request, split_pos);
+				else
+					_status = _http_integrity_check(_whole_request, split_pos);
+			}
+			
 			//appendix:[split_pos,_size)
 
 			shared_ptr<string> remained_request;
@@ -146,10 +153,14 @@ awaitable<void> connection::_waitable_loop()
 			}
 
 
-
+			//TODO: websocket 需要有read 和write的超时 ,需要wait/...
 			connection_behaviour _behaviour;
 			switch (_status) {
-			case integrity_status::chunked: //多次发包,只发不读
+			case integrity_status::websocket_intact:
+				_behaviour = co_await _request_handler->
+					send_message(_whole_request, _is_tunnel_conn,true, false);//强制使用旧连接,不是请求尾
+				break;
+			case integrity_status::chunked: //多次发包,只发不接收
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked||
@@ -161,17 +172,17 @@ awaitable<void> connection::_waitable_loop()
 					//format
 					//CONNECT www.example.com:443 HTTP/1.1\r\n ......
 					
-
-
 	
 					size_t host_end_pos = _whole_request->find(":");
-					if (host_end_pos == string::npos) {
+					if (host_end_pos == string::npos) {//没有端口的情况
 						host_end_pos = _whole_request->find(" HTTP");
+
 						if (host_end_pos == string::npos) {
 							throw std::runtime_error("cannot get host information");
 						}
+						//默认为443端口
 					}
-
+					//TODO: 不是所有的端口都需要握手
 					//now host_end_pos is properly set
 					host = _whole_request->substr(8, host_end_pos - 8);
 					//此处的host是没有端口的
@@ -226,13 +237,16 @@ awaitable<void> connection::_waitable_loop()
 
 
 			//reset to wait incoming data
-			if (_with_appendix) {
-				//还剩一部分留在里面
-				_whole_request = remained_request;
+			if (_status != integrity_status::broken) {
+				if (_with_appendix) {
+					//还剩一部分留在里面
+					_whole_request = remained_request;
+				}
+				else {
+					_whole_request.reset(new string(""));
+				}
 			}
-			else {
-				_whole_request.reset(new string(""));
-			}
+			
 
 
 			//根据behaviour设置是否继续接收数据，是否直接出错返回
@@ -250,7 +264,7 @@ awaitable<void> connection::_waitable_loop()
 			case respond_error:
 				_keep_alive = false;
 
-				_request_handler->handle_error(res); //很快，不需要异步进行
+				_request_handler->handle_error(res, _whole_request); //很快，不需要异步进行
 				cout << "connection::respond_error" << endl;
 				co_await _async_write(*res, _is_tunnel_conn);
 				continue;//自动就跳出循环了
@@ -258,8 +272,10 @@ awaitable<void> connection::_waitable_loop()
 			case ignore:
 				_keep_alive = false;
 				continue;//自动就跳出循环了
-
-
+			case protocol_websocket:
+				_conn_protocol = websocket;
+				_keep_alive = true;
+				break;
 			case keep_receiving_data://send函数不应返回此值
 				throw std::runtime_error("handler->send ERROR (presumably a bug)");
 				break;

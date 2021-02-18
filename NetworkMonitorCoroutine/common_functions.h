@@ -56,6 +56,8 @@ proxy_tcp::integrity_status _http_integrity_check(
 
 proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> http_data, size_t& split_pos);
 
+proxy_tcp::integrity_status _websocket_integrity_check(shared_ptr<const string> data, size_t& split_pos);
+
 static const char hex_char[] {"0123456789ABCDEF"};
 shared_ptr<string> memory2hex_string(shared_ptr<const string> data);
 
