@@ -117,12 +117,14 @@
     <ClCompile Include="..\NetworkMonitorCoroutine\io_context_pool.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_handler.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_server.cpp" />
+    <ClCompile Include="breakpoint_filter_window.cpp" />
     <ClCompile Include="display_filter.cpp" />
     <ClCompile Include="QHexEditor\chunks.cpp" />
     <ClCompile Include="QHexEditor\commands.cpp" />
     <ClCompile Include="QHexEditor\qhexedit.cpp" />
     <ClCompile Include="SessionDataModel.cpp" />
     <QtRcc Include="QTFrontend.qrc" />
+    <QtUic Include="breakpoint_filter_window.ui" />
     <QtUic Include="QTFrontend.ui" />
     <QtMoc Include="QTFrontend.h" />
     <ClCompile Include="QTFrontend.cpp" />
@@ -140,6 +142,7 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\common_functions.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection_enums.h" />
+    <QtMoc Include="breakpoint_filter_window.h" />
     <QtMoc Include="QHexEditor\qhexedit.h" />
     <QtMoc Include="QHexEditor\commands.h" />
     <QtMoc Include="QHexEditor\chunks.h" />

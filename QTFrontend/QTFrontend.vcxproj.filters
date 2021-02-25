@@ -86,6 +86,9 @@
     <ClCompile Include="QHexEditor\qhexedit.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="breakpoint_filter_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="SessionDataModel.h">
@@ -102,6 +105,9 @@
     </QtMoc>
     <QtMoc Include="QHexEditor\qhexedit.h">
       <Filter>Dependencies</Filter>
+    </QtMoc>
+    <QtMoc Include="breakpoint_filter_window.h">
+      <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -141,5 +147,10 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="breakpoint_filter_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
 </Project>

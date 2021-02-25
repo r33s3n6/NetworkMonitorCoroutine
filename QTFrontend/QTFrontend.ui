@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1070</width>
-    <height>732</height>
+    <width>988</width>
+    <height>749</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -30,364 +30,592 @@
     </sizepolicy>
    </property>
    <layout class="QGridLayout" name="gridLayout_8">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item row="0" column="0">
-     <widget class="QSplitter" name="splitter_2">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>1</number>
       </property>
-      <widget class="QTableView" name="table_session">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="layoutDirection">
-        <enum>Qt::LeftToRight</enum>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">alternate-background-color: #f9f9f9;</string>
-       </property>
-       <property name="alternatingRowColors">
-        <bool>true</bool>
-       </property>
-       <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectRows</enum>
-       </property>
-       <property name="sortingEnabled">
-        <bool>true</bool>
-       </property>
-       <attribute name="horizontalHeaderHighlightSections">
-        <bool>false</bool>
+      <widget class="QWidget" name="tab_session">
+       <attribute name="title">
+        <string>会话</string>
        </attribute>
-       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="verticalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>17</number>
-       </attribute>
-      </widget>
-      <widget class="QWidget" name="detailed_info_widget" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <layout class="QGridLayout" name="gridLayout">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <property name="spacing">
-         <number>0</number>
-        </property>
+       <layout class="QGridLayout" name="gridLayout_10">
         <item row="0" column="0">
-         <widget class="QSplitter" name="splitter">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <widget class="QTabWidget" name="tab_request">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>1</verstretch>
-            </sizepolicy>
+         <widget class="QWidget" name="widget" native="true">
+          <layout class="QGridLayout" name="gridLayout_11">
+           <property name="leftMargin">
+            <number>0</number>
            </property>
-           <property name="currentIndex">
-            <number>1</number>
+           <property name="topMargin">
+            <number>0</number>
            </property>
-           <widget class="QWidget" name="tab_req_text">
-            <attribute name="title">
-             <string>请求</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_4">
-             <item row="1" column="0">
-              <widget class="QPlainTextEdit" name="plaintext_req_text">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>1</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tab_req_hex">
-            <attribute name="title">
-             <string>原始数据</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_5">
-             <item row="0" column="0">
-              <widget class="QHexEdit" name="hexEdit_req">
-               <property name="toolTip">
-                <string>QHexEditWidget</string>
-               </property>
-               <property name="whatsThis">
-                <string>QHexEdit widget allow to edit the data in hex view.</string>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="overwriteMode">
-                <bool>false</bool>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
-          <widget class="QFrame" name="breakpoint_button_box">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-             <horstretch>0</horstretch>
-             <verstretch>1</verstretch>
-            </sizepolicy>
+           <property name="rightMargin">
+            <number>0</number>
            </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>33</height>
-            </size>
+           <property name="bottomMargin">
+            <number>0</number>
            </property>
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
+           <property name="spacing">
+            <number>0</number>
            </property>
-           <layout class="QGridLayout" name="gridLayout_9">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetMinimumSize</enum>
-            </property>
-            <item row="0" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <property name="sizeConstraint">
-               <enum>QLayout::SetDefaultConstraint</enum>
+           <item row="0" column="0">
+            <widget class="QSplitter" name="splitter_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <widget class="QTableView" name="table_session">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <item>
-               <widget class="QPushButton" name="pass_session_button">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>1</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <family>宋体</family>
-                  <pointsize>10</pointsize>
-                  <weight>75</weight>
-                  <italic>false</italic>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color: #5bbf5a;
-
-color: #ffffff;
-</string>
-                </property>
-                <property name="text">
-                 <string>放行</string>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="drop_session_button">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>1</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">background-color:#da4f49;
-
-color: #ffffff;
-</string>
-                </property>
-                <property name="text">
-                 <string>丢弃</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_intercept">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>2</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>11</pointsize>
-                  <weight>75</weight>
-                  <italic>false</italic>
-                  <bold>true</bold>
-                  <underline>false</underline>
-                 </font>
-                </property>
-                <property name="layoutDirection">
-                 <enum>Qt::LeftToRight</enum>
-                </property>
-                <property name="autoFillBackground">
-                 <bool>false</bool>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">color:#3a87ad;</string>
-                </property>
-                <property name="text">
-                 <string>Request/Response has been intercepted</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QTabWidget" name="tab_response">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>1</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="currentIndex">
-            <number>2</number>
-           </property>
-           <widget class="QWidget" name="tab_rsp_text">
-            <attribute name="title">
-             <string>响应</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_2">
-             <item row="0" column="0">
-              <widget class="QPlainTextEdit" name="plaintext_rsp_text">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>1</verstretch>
-                </sizepolicy>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">alternate-background-color: #f9f9f9;</string>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <attribute name="horizontalHeaderHighlightSections">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+               <bool>true</bool>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderDefaultSectionSize">
+               <number>17</number>
+              </attribute>
+             </widget>
+             <widget class="QWidget" name="detailed_info_widget" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <layout class="QGridLayout" name="gridLayout">
+               <property name="leftMargin">
+                <number>0</number>
                </property>
-               <property name="readOnly">
-                <bool>true</bool>
+               <property name="topMargin">
+                <number>0</number>
                </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tab_rsp_hex">
-            <attribute name="title">
-             <string>原始数据</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="0" column="0">
-              <widget class="QHexEdit" name="hexEdit_rsp">
-               <property name="toolTip">
-                <string>QHexEditWidget</string>
+               <property name="rightMargin">
+                <number>0</number>
                </property>
-               <property name="whatsThis">
-                <string>QHexEdit widget allow to edit the data in hex view.</string>
+               <property name="bottomMargin">
+                <number>0</number>
                </property>
-               <property name="overwriteMode">
-                <bool>true</bool>
+               <property name="spacing">
+                <number>0</number>
                </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QWidget" name="tab_rsp_image">
-            <attribute name="title">
-             <string>图像视图</string>
-            </attribute>
-            <layout class="QGridLayout" name="gridLayout_6">
-             <item row="0" column="0">
-              <widget class="QScrollArea" name="scrollArea">
-               <property name="widgetResizable">
-                <bool>true</bool>
-               </property>
-               <widget class="QWidget" name="scrollAreaWidgetContents">
-                <property name="geometry">
-                 <rect>
-                  <x>0</x>
-                  <y>0</y>
-                  <width>557</width>
-                  <height>282</height>
-                 </rect>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_7">
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_image">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>13</pointsize>
-                    </font>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color:white;</string>
-                   </property>
-                   <property name="text">
-                    <string>Cannot resolve it as image</string>
-                   </property>
-                   <property name="textFormat">
-                    <enum>Qt::PlainText</enum>
-                   </property>
-                   <property name="scaledContents">
-                    <bool>true</bool>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
+               <item row="0" column="0">
+                <widget class="QSplitter" name="splitter">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <widget class="QTabWidget" name="tab_request">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>1</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="currentIndex">
+                   <number>0</number>
+                  </property>
+                  <widget class="QWidget" name="tab_req_text">
+                   <attribute name="title">
+                    <string>请求</string>
+                   </attribute>
+                   <layout class="QGridLayout" name="gridLayout_4">
+                    <item row="1" column="0">
+                     <widget class="QPlainTextEdit" name="plaintext_req_text">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>1</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="readOnly">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
-                 </item>
-                </layout>
-               </widget>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </widget>
+                  <widget class="QWidget" name="tab_req_hex">
+                   <attribute name="title">
+                    <string>原始数据</string>
+                   </attribute>
+                   <layout class="QGridLayout" name="gridLayout_5">
+                    <item row="0" column="0">
+                     <widget class="QHexEdit" name="hexEdit_req">
+                      <property name="toolTip">
+                       <string>QHexEditWidget</string>
+                      </property>
+                      <property name="whatsThis">
+                       <string>QHexEdit widget allow to edit the data in hex view.</string>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true"/>
+                      </property>
+                      <property name="overwriteMode">
+                       <bool>false</bool>
+                      </property>
+                      <property name="readOnly">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                 <widget class="QFrame" name="breakpoint_button_box">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>1</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>33</height>
+                   </size>
+                  </property>
+                  <property name="frameShape">
+                   <enum>QFrame::StyledPanel</enum>
+                  </property>
+                  <layout class="QGridLayout" name="gridLayout_9">
+                   <property name="sizeConstraint">
+                    <enum>QLayout::SetMinimumSize</enum>
+                   </property>
+                   <item row="0" column="0">
+                    <layout class="QHBoxLayout" name="horizontalLayout_2">
+                     <property name="sizeConstraint">
+                      <enum>QLayout::SetDefaultConstraint</enum>
+                     </property>
+                     <item>
+                      <widget class="QPushButton" name="pass_session_button">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>1</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <family>宋体</family>
+                         <pointsize>10</pointsize>
+                         <weight>75</weight>
+                         <italic>false</italic>
+                         <bold>true</bold>
+                        </font>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background-color: #5bbf5a;
+
+color: #ffffff;
+</string>
+                       </property>
+                       <property name="text">
+                        <string>放行</string>
+                       </property>
+                       <property name="flat">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="drop_session_button">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>1</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <pointsize>10</pointsize>
+                         <weight>75</weight>
+                         <bold>true</bold>
+                        </font>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background-color:#da4f49;
+
+color: #ffffff;
+</string>
+                       </property>
+                       <property name="text">
+                        <string>丢弃</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="label_intercept">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                         <horstretch>2</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <pointsize>11</pointsize>
+                         <weight>75</weight>
+                         <italic>false</italic>
+                         <bold>true</bold>
+                         <underline>false</underline>
+                        </font>
+                       </property>
+                       <property name="layoutDirection">
+                        <enum>Qt::LeftToRight</enum>
+                       </property>
+                       <property name="autoFillBackground">
+                        <bool>false</bool>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">color:#3a87ad;</string>
+                       </property>
+                       <property name="text">
+                        <string>Request/Response has been intercepted</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QTabWidget" name="tab_response">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>1</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="currentIndex">
+                   <number>0</number>
+                  </property>
+                  <widget class="QWidget" name="tab_rsp_text">
+                   <attribute name="title">
+                    <string>响应</string>
+                   </attribute>
+                   <layout class="QGridLayout" name="gridLayout_2">
+                    <item row="0" column="0">
+                     <widget class="QPlainTextEdit" name="plaintext_rsp_text">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <horstretch>0</horstretch>
+                        <verstretch>1</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="readOnly">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="tab_rsp_hex">
+                   <attribute name="title">
+                    <string>原始数据</string>
+                   </attribute>
+                   <layout class="QGridLayout" name="gridLayout_3">
+                    <item row="0" column="0">
+                     <widget class="QHexEdit" name="hexEdit_rsp">
+                      <property name="toolTip">
+                       <string>QHexEditWidget</string>
+                      </property>
+                      <property name="whatsThis">
+                       <string>QHexEdit widget allow to edit the data in hex view.</string>
+                      </property>
+                      <property name="overwriteMode">
+                       <bool>true</bool>
+                      </property>
+                      <property name="readOnly">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                  <widget class="QWidget" name="tab_rsp_image">
+                   <attribute name="title">
+                    <string>图像视图</string>
+                   </attribute>
+                   <layout class="QGridLayout" name="gridLayout_6">
+                    <item row="0" column="0">
+                     <widget class="QScrollArea" name="scrollArea">
+                      <property name="widgetResizable">
+                       <bool>true</bool>
+                      </property>
+                      <widget class="QWidget" name="scrollAreaWidgetContents">
+                       <property name="geometry">
+                        <rect>
+                         <x>0</x>
+                         <y>0</y>
+                         <width>181</width>
+                         <height>28</height>
+                        </rect>
+                       </property>
+                       <layout class="QGridLayout" name="gridLayout_7">
+                        <item row="0" column="0">
+                         <widget class="QLabel" name="label_image">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="font">
+                           <font>
+                            <pointsize>13</pointsize>
+                           </font>
+                          </property>
+                          <property name="styleSheet">
+                           <string notr="true">background-color:white;</string>
+                          </property>
+                          <property name="text">
+                           <string>Cannot resolve it as image</string>
+                          </property>
+                          <property name="textFormat">
+                           <enum>Qt::PlainText</enum>
+                          </property>
+                          <property name="scaledContents">
+                           <bool>true</bool>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tab_breakpoint_filter">
+       <attribute name="title">
+        <string>断点设置</string>
+       </attribute>
+       <widget class="QGroupBox" name="groupBox_enable_breakpoint">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>20</y>
+          <width>241</width>
+          <height>51</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="title">
+         <string>启用断点</string>
+        </property>
+        <widget class="QCheckBox" name="checkBox_enable_req_breakpoint">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>20</y>
+           <width>54</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>请求</string>
+         </property>
+        </widget>
+        <widget class="QCheckBox" name="checkBox_enable_rsp_breakpoint">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>20</y>
+           <width>54</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>响应</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_breakpoint_settings">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>90</y>
+          <width>921</width>
+          <height>561</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="title">
+         <string>断点筛选器设置</string>
+        </property>
+        <widget class="QGroupBox" name="groupBox_breakpoint_filter_header">
+         <property name="geometry">
+          <rect>
+           <x>30</x>
+           <y>60</y>
+           <width>371</width>
+           <height>341</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="title">
+          <string>请求头</string>
+         </property>
+         <widget class="QLineEdit" name="lineEdit_breakpoint_host">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>20</y>
+            <width>241</width>
+            <height>20</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>20</y>
+            <width>31</width>
+            <height>21</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Host:</string>
+          </property>
+          <property name="buddy">
+           <cstring>lineEdit_breakpoint_host</cstring>
+          </property>
+         </widget>
+         <widget class="QPlainTextEdit" name="plainTextEdit_breakpoint_custom">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>60</y>
+            <width>241</width>
+            <height>141</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_2">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>120</y>
+            <width>51</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>自定义头:</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QRadioButton" name="radioButton_req_settings">
+         <property name="geometry">
+          <rect>
+           <x>50</x>
+           <y>30</y>
+           <width>68</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>请求</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="radioButton_rsp_settings">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>30</y>
+           <width>68</width>
+           <height>13</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>响应</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QPushButton" name="pushButton_set_config">
+        <property name="geometry">
+         <rect>
+          <x>780</x>
+          <y>660</y>
+          <width>56</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>保存</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>自定义请求</string>
+       </attribute>
       </widget>
      </widget>
     </item>
@@ -398,7 +626,7 @@ color: #ffffff;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1070</width>
+     <width>988</width>
      <height>18</height>
     </rect>
    </property>
@@ -419,6 +647,7 @@ color: #ffffff;
      <string>工具</string>
     </property>
     <addaction name="actionRequest"/>
+    <addaction name="actionBreakpoint_Settings"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -458,6 +687,11 @@ color: #ffffff;
   <action name="actionSave_all_sessions">
    <property name="text">
     <string>保存所有会话</string>
+   </property>
+  </action>
+  <action name="actionBreakpoint_Settings">
+   <property name="text">
+    <string>断点设置</string>
    </property>
   </action>
  </widget>

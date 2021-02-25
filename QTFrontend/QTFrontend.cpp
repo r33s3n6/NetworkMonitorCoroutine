@@ -2,9 +2,7 @@
 #include "qimage.h"
 
 
-static int column_width[] = {
-    20,200,35,45,200,40,70
-};
+
 
 QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
     : QMainWindow(parent),
@@ -12,23 +10,22 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
 {
     ui.setupUi(this);
 
+    _load_config_from_file("config.dat");
+    _set_config();//可视化config
+
     //table settings start
  
     _proxy_session_data.setSourceModel(&_session_data);
     
     ui.table_session->setModel(&_proxy_session_data);
-    //ui.table_session->setSortingEnabled(true);
+
+
     ui.table_session->sortByColumn(0, Qt::AscendingOrder);
-    //ui.table_session->setAlternatingRowColors(true);
-    //ui.table_session->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    //ui.table_session->verticalHeader()->setHidden(true);
-    //ui.table_session->verticalHeader()->setDefaultSectionSize(15);
 
-    //ui.table_session->horizontalHeader()->setHighlightSections(false);
 
-    for (int i = 0; i < sizeof(column_width) / sizeof(int); i++) {
-        ui.table_session->setColumnWidth(i, column_width[i]); //TODO : config
+    for (int i = 0; i < sizeof(_config.column_width) / sizeof(int); i++) {
+        ui.table_session->setColumnWidth(i, _config.column_width[i]);
     }
     ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
@@ -41,7 +38,12 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
 
     connect(ui.actionShow_Hide_breakpoint_button, &QAction::triggered, this, &QTFrontend::_debug_function);
     
+    connect(ui.radioButton_req_settings, &QRadioButton::toggled, this, &QTFrontend::_toggle_breakpoint_config);
+    connect(ui.radioButton_rsp_settings, &QRadioButton::toggled, this, &QTFrontend::_toggle_breakpoint_config);
 
+    connect(ui.pushButton_set_config, &QPushButton::clicked, this, &QTFrontend::_update_config);
+    //connect(ui.lineEdit_breakpoint_host, &QLineEdit::editingFinished, this, &QTFrontend::_set_config);
+    //connect(ui.plainTextEdit_breakpoint_custom, &QPlainTextEdit::finish, this, &QTFrontend::_set_config);
     ui.table_session->show();
     //table settings end
 
@@ -143,6 +145,10 @@ void QTFrontend::_activate_editor(bool active,bool is_req) {
     
 
 }
+
+
+
+
 
 //TODO: 增加保存文件功能
 void QTFrontend::_display_full_info(size_t display_id)
@@ -247,3 +253,86 @@ void QTFrontend::_display_full_info(size_t display_id)
     
 
 }
+
+
+//configuration
+
+void QTFrontend::_load_config_from_file(string path)
+{
+    _config.req_filter.raw_custom_header_filter = "user-agent: chrome";
+    _config.req_filter.raw_host_filter = "*.baidu.com";
+
+    _config.rsp_filter.raw_custom_header_filter = "user-agent: chrome";
+    _config.rsp_filter.raw_host_filter = "*.baidu.com";
+}
+
+void QTFrontend::_set_config()
+{
+    _config.req_filter.enable_breakpoint = 
+        ui.checkBox_enable_req_breakpoint->isChecked();
+
+    _config.rsp_filter.enable_breakpoint =
+        ui.checkBox_enable_rsp_breakpoint->isChecked();
+    
+    if (ui.radioButton_req_settings->isChecked()) {
+        _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+        _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+    }
+    else {
+        _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+        _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+    }
+}
+
+void QTFrontend::_toggle_breakpoint_config()
+{
+    /*
+    if (ui.radioButton_req_settings->isChecked() ^ last_breakpoint_req_checked) {//相同
+        
+    }
+    else {//不同
+       
+        last_breakpoint_req_checked = ui.radioButton_req_settings->isChecked();
+    }
+    */
+
+    if (ui.radioButton_req_settings->isChecked()) {
+        _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+        _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+    }
+    else {
+        _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+        _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+
+    }
+    _update_config();
+    
+
+}
+
+void QTFrontend::_update_config()
+{
+    ui.checkBox_enable_req_breakpoint->setChecked(_config.req_filter.enable_breakpoint);
+    ui.checkBox_enable_rsp_breakpoint->setChecked(_config.rsp_filter.enable_breakpoint);
+
+    if (ui.radioButton_req_settings->isChecked()) {
+        ui.plainTextEdit_breakpoint_custom->setPlainText(
+            QString::fromStdString(_config.req_filter.raw_custom_header_filter));
+        ui.lineEdit_breakpoint_host->setText(
+            QString::fromStdString(_config.req_filter.raw_host_filter));
+    }
+    else {
+        ui.plainTextEdit_breakpoint_custom->setPlainText(
+            QString::fromStdString(_config.rsp_filter.raw_custom_header_filter));
+        ui.lineEdit_breakpoint_host->setText(
+            QString::fromStdString(_config.rsp_filter.raw_host_filter));
+    }
+
+}
+
+void QTFrontend::_save_config()
+{
+
+}
+
+
