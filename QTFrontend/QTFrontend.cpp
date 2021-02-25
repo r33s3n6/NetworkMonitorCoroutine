@@ -4,14 +4,16 @@
 
 
 
-QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
+QTFrontend::QTFrontend(QWidget *parent, proxy_server* _backend_server)
     : QMainWindow(parent),
-    _session_data(nullptr,_disp)
+    _session_data(nullptr, _backend_server->get_display_filter()),
+    _config(_backend_server->get_config_ref())
 {
     ui.setupUi(this);
 
     _load_config_from_file("config.dat");
-    _set_config();//可视化config
+    _display_config();
+    //_set_config();//可视化config
 
     //table settings start
  
@@ -41,7 +43,10 @@ QTFrontend::QTFrontend(QWidget *parent,display_filter* _disp)
     connect(ui.radioButton_req_settings, &QRadioButton::toggled, this, &QTFrontend::_toggle_breakpoint_config);
     connect(ui.radioButton_rsp_settings, &QRadioButton::toggled, this, &QTFrontend::_toggle_breakpoint_config);
 
-    connect(ui.pushButton_set_config, &QPushButton::clicked, this, &QTFrontend::_update_config);
+    connect(ui.pushButton_set_config, &QPushButton::clicked, this, &QTFrontend::_set_config);
+
+    connect(ui.checkBox_enable_req_breakpoint, &QCheckBox::toggled,this, &QTFrontend::_set_enable_config);
+    connect(ui.checkBox_enable_rsp_breakpoint, &QCheckBox::toggled,this,&QTFrontend::_set_enable_config);
     //connect(ui.lineEdit_breakpoint_host, &QLineEdit::editingFinished, this, &QTFrontend::_set_config);
     //connect(ui.plainTextEdit_breakpoint_custom, &QPlainTextEdit::finish, this, &QTFrontend::_set_config);
     ui.table_session->show();
@@ -259,58 +264,103 @@ void QTFrontend::_display_full_info(size_t display_id)
 
 void QTFrontend::_load_config_from_file(string path)
 {
-    _config.req_filter.raw_custom_header_filter = "user-agent: chrome";
+    _config.req_filter.raw_custom_header_filter = "";
     _config.req_filter.raw_host_filter = "*.baidu.com";
+    _set_filter_map(true);
 
-    _config.rsp_filter.raw_custom_header_filter = "user-agent: chrome";
-    _config.rsp_filter.raw_host_filter = "*.baidu.com";
+    _config.rsp_filter.raw_custom_header_filter = "";
+    _config.rsp_filter.raw_host_filter = "*.sohu.com";
+    _set_filter_map(false);
 }
 
-void QTFrontend::_set_config()
-{
-    _config.req_filter.enable_breakpoint = 
+void QTFrontend::_set_enable_config() {
+    _config.req_filter.enable_breakpoint =
         ui.checkBox_enable_req_breakpoint->isChecked();
 
     _config.rsp_filter.enable_breakpoint =
         ui.checkBox_enable_rsp_breakpoint->isChecked();
+}
+void QTFrontend::_set_config()
+{
+    _set_enable_config();
     
-    if (ui.radioButton_req_settings->isChecked()) {
-        _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-        _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+    bool is_req = ui.radioButton_req_settings->isChecked();
+    auto& filter = is_req ? _config.req_filter : _config.rsp_filter;
+
+    bool update_filter_map = false;
+    string&& temp_custom = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+    string && temp_host = ui.lineEdit_breakpoint_host->text().toStdString();
+    if (filter.raw_custom_header_filter != temp_custom) {
+        filter.raw_custom_header_filter = temp_custom;
+        update_filter_map = true;
     }
-    else {
-        _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-        _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+    if (filter.raw_host_filter != temp_host) {
+        filter.raw_host_filter = temp_host;
+        update_filter_map = true;
+    }
+    if(update_filter_map)
+        _set_filter_map(is_req);
+
+}
+
+void QTFrontend::_set_filter_map(bool is_req) {
+
+    breakpoint_filter& filter = is_req ? _config.req_filter : _config.rsp_filter;
+
+    shared_ptr<vector<string>> header_vec_ptr
+        = string_split(filter.raw_custom_header_filter, "\r\n");
+
+    if(filter.raw_host_filter.size()>0)
+        header_vec_ptr->emplace_back("host:"+filter.raw_host_filter);
+    
+    filter.header_filter=make_shared<map<string,string>>();
+
+
+    for (auto header : *header_vec_ptr) {
+        size_t pos = header.find(":");
+        if (pos == string::npos || (pos + 1) == header.size())
+            continue;
+        string temp = header.substr(0, pos);
+        transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+
+        (*filter.header_filter)[string_trim(temp)] = 
+            string_trim(header.substr(pos + 1, header.size() - pos - 1));
+
     }
 }
 
 void QTFrontend::_toggle_breakpoint_config()
 {
-    /*
-    if (ui.radioButton_req_settings->isChecked() ^ last_breakpoint_req_checked) {//相同
+    
+    if (ui.radioButton_req_settings->isChecked() ^ last_breakpoint_req_checked) {//不同
         
-    }
-    else {//不同
-       
+
+        if (ui.radioButton_req_settings->isChecked()) {
+            _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+            _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+        }
+        else {
+            _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+            _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+
+        }
+        _display_config();
+
+
         last_breakpoint_req_checked = ui.radioButton_req_settings->isChecked();
     }
-    */
+    //相同不作处理
+       
+        
+    
+    
 
-    if (ui.radioButton_req_settings->isChecked()) {
-        _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-        _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
-    }
-    else {
-        _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-        _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
-
-    }
-    _update_config();
+    
     
 
 }
 
-void QTFrontend::_update_config()
+void QTFrontend::_display_config()
 {
     ui.checkBox_enable_req_breakpoint->setChecked(_config.req_filter.enable_breakpoint);
     ui.checkBox_enable_rsp_breakpoint->setChecked(_config.rsp_filter.enable_breakpoint);

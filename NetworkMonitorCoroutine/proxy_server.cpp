@@ -40,7 +40,7 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 	_new_proxy_conn(),
 	_new_proxy_handler(),
 	_display_filter(),
-	_breakpoint_manager()
+	_breakpoint_manager(_config.req_filter,_config.rsp_filter)
 
 {
 

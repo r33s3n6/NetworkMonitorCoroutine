@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
  
 
-    QTFrontend w(nullptr, _backend_proxy_server.get_display_filter());
+    QTFrontend w(nullptr, &_backend_proxy_server);
     w.show();
 
     a.exec();

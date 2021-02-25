@@ -329,7 +329,7 @@ namespace proxy_tcp {
 				else if (t == "upgrade") {
 					if (string("websocket")
 						!= get_header_value(header_vec_ptr, "upgrade")) {
-
+						transform(t.begin(), t.end(), t.begin(), ::tolower);
 						to_be_removed_header_list.emplace_back(t);
 					}
 					else {
@@ -337,6 +337,7 @@ namespace proxy_tcp {
 					}
 				}
 				else {
+					transform(t.begin(), t.end(), t.begin(), ::tolower);
 					to_be_removed_header_list.emplace_back(t);
 				}
 			}

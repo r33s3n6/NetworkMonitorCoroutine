@@ -27,8 +27,21 @@ using namespace boost::asio::ip;
 
 
 
+
+
+
 namespace proxy_tcp {
 
+struct config {
+	breakpoint_filter req_filter;
+	breakpoint_filter rsp_filter;
+
+	int column_width[sizeof(_table_header_name) / sizeof(const char*)] = {
+	20,200,35,45,200,40,70
+	};
+
+	bool ssl_decrypt = true;
+};
 
 class proxy_server
 {
@@ -39,7 +52,7 @@ public:
 
 	explicit proxy_server(const string& address, const string& port, size_t io_context_pool_size);
 
-	
+	config& get_config_ref() { return _config; }
 
 	
 
@@ -72,7 +85,7 @@ private:
 
 	display_filter _display_filter;
 
-
+	config _config;//不进行实际读取
 };
 
 }

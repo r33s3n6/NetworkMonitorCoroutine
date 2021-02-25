@@ -54,10 +54,14 @@ string get_header_value(
 		= string_split(*header_field, "\r\n");
 
 	for (auto header : *header_vec_ptr) {
-		transform(header.begin(), header.end(), header.begin(), ::tolower);
-		if (header.find(header_name) == 0) {
-			return string_trim(header.substr(header_name.size()+1,
-				header.size() - header_name.size()-1));//Ë³±ãÈ¥³ıÃ°ºÅ
+		size_t pos = header.find(":");
+		if (pos == string::npos || (pos + 1) == header.size())
+			continue;
+		string temp = header.substr(0, pos);
+		transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+		if (temp.find(header_name) == 0) {
+			return string_trim(header.substr(pos + 1,
+				header.size() - pos - 1));//Ë³±ãÈ¥³ıÃ°ºÅ
 		}
 	}
 	return "";
@@ -68,10 +72,14 @@ string get_header_value(
 	const shared_ptr<vector<string>>& header_vec_ptr, const string& header_name) {
 
 	for (auto header : *header_vec_ptr) {
-		transform(header.begin(), header.end(), header.begin(), ::tolower);
-		if (header.find(header_name) == 0) {
-			return string_trim(header.substr(header_name.size() + 1,
-				header.size() - header_name.size() - 1));//Ë³±ãÈ¥³ıÃ°ºÅ
+		size_t pos = header.find(":");
+		if (pos == string::npos || (pos + 1) == header.size())
+			continue;
+		string temp = header.substr(0, pos);
+		transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+		if (temp.find(header_name) == 0) {
+			return string_trim(header.substr(pos + 1,
+				header.size() - pos - 1));//Ë³±ãÈ¥³ıÃ°ºÅ
 		}
 	}
 	return "";

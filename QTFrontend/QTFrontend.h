@@ -7,31 +7,20 @@
 
 #include "SessionDataModel.h"
 
+
+#include "../NetworkMonitorCoroutine/proxy_server.h"
 using namespace proxy_tcp;
 
 #include <map>
 using namespace std;
 
 
-struct breakpoint_filter {
-    map<string, string> header_filter;
 
-    string raw_custom_header_filter;
-    string raw_host_filter;
 
-    bool enable_breakpoint = false;
-};
 
-struct config {
-    breakpoint_filter req_filter;
-    breakpoint_filter rsp_filter;
 
-    int column_width[sizeof(_table_header_name)/sizeof(const char*)] = {
-    20,200,35,45,200,40,70
-    };
 
-    bool ssl_decrypt = true;
-};
+
 
 
 class QTFrontend : public QMainWindow
@@ -39,10 +28,12 @@ class QTFrontend : public QMainWindow
     Q_OBJECT
 
 public:
-    QTFrontend(QWidget *parent = Q_NULLPTR, display_filter* _disp = nullptr);
+    QTFrontend(QWidget *parent = Q_NULLPTR, proxy_server* _backend_server = nullptr);
 
 
-
+    ~QTFrontend() {
+        _save_config();
+    }
 
 
 
@@ -64,7 +55,7 @@ private:
 
     size_t _display_id=0;
 
-    config _config;
+    config& _config;
 
     bool last_breakpoint_req_checked=true;
 
@@ -78,9 +69,10 @@ private:
     void _load_config_from_file(string path="config.dat");
 
     void _toggle_breakpoint_config();
-
+    void _set_enable_config();
+    void _set_filter_map(bool is_req);
     void _set_config();//write ui's data to _config
-    void _update_config();
+    void _display_config();
 
     void _save_config();
 
