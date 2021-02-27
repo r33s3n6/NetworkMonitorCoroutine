@@ -1,19 +1,13 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <list>
 using namespace std;
 
 #include "../QTFrontend/SessionDataModel.h"
 
+#include "config.h"
 
-struct breakpoint_filter {
-    shared_ptr<map<string, string>> header_filter;
-
-    string raw_custom_header_filter;
-    string raw_host_filter;
-
-    bool enable_breakpoint = false;
-};
 
 
 class breakpoint_manager

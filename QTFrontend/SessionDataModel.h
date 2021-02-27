@@ -14,6 +14,8 @@ constexpr int _default_capacity = 256;
 #include <qtableview.h>
 #include <mutex>
 
+#include "../NetworkMonitorCoroutine/config.h"
+
 //using namespace proxy_tcp;
 namespace proxy_tcp {
     class display_filter;
@@ -52,6 +54,8 @@ struct session_info {
         send_behaviour = undefined;
         receive_behaviour = undefined;
     }
+
+    
     /*
     session_info(string url, string code, string protocol,
         string host, int body_length, string content_type,
@@ -63,9 +67,7 @@ struct session_info {
 };
 
 
-static const char* _table_header_name[] = {
-    "#", "URL","Code","Protocol","Host","Body","Content-Type"
-};
+
 
 /*
 static session_info _test_data[3]{
@@ -116,6 +118,9 @@ private slots:
     void session_rsp_completed(shared_ptr<session_info> _session_info);
 
     void session_error(shared_ptr<session_info> _session_info);
+
+public slots:
+    //void session_replayed(const QModelIndex& index, bool with_bp);
 
     //void pass_session(shared_ptr<session_info> _session_info);
     //void drop_session(shared_ptr<session_info> _session_info);

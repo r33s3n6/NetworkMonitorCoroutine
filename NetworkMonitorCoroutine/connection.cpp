@@ -24,9 +24,10 @@ connection::connection(tcp::socket socket,
 }
 */
 
-connection::connection(boost::asio::io_context& _io_context,
+connection::connection(boost::asio::io_context& io,
 	shared_ptr<http_proxy_handler> handler_ptr,shared_ptr<certificate_manager> cert_mgr)
-	: _socket(new tcp::socket(_io_context)),
+	: _io_context(io),
+	_socket(new tcp::socket(_io_context)),
 	_request_handler(handler_ptr),
 	_whole_request(new string("")),
 	host(""),
@@ -53,7 +54,7 @@ void connection::start()
 {
 	//保证connection存在
 	auto self = this->shared_from_this();
-	co_spawn(_socket->get_executor(),
+	co_spawn(_io_context.get_executor(),//TODO:maybe socket->
 		[self]() {
 			return self->_waitable_loop();
 		}, detached);
@@ -64,7 +65,7 @@ void connection::start()
 
 void connection::stop()
 {
-	if (_socket->is_open()) {
+	if (_socket && _socket->is_open()) {
 		boost::system::error_code ignored_ec;
 		_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
 		_socket->close();
@@ -100,15 +101,21 @@ awaitable<void> connection::_waitable_loop()
 	*/
 
 	//cout << "executed by thread " << boost::this_thread::get_id() << endl;
+
+	if (!skip_socket_rw) {
+		boost::asio::socket_base::keep_alive option(true);
+		_socket->set_option(option);
+	}
 	
-	boost::asio::socket_base::keep_alive option(true);
-	_socket->set_option(option);
+	
+	
 
 	try
 	{
 		boost::system::error_code ec;
 
 		bool _with_appendix = false;
+
 		integrity_status _status= integrity_status::broken;
 
 		while (_keep_alive) { //循环读写
@@ -342,6 +349,8 @@ awaitable<void> connection::_waitable_loop()
 
 awaitable<void> connection::_async_read(bool with_ssl)
 {
+	if (skip_socket_rw)
+		co_return;
 
 	boost::system::error_code ec;
 	
@@ -380,6 +389,8 @@ awaitable<void> connection::_async_read(bool with_ssl)
 
 awaitable<void> connection::_async_write(const string& data, bool with_ssl)
 {
+	if (skip_socket_rw)
+		co_return;
 	boost::system::error_code ec;
 
 	if (with_ssl) {

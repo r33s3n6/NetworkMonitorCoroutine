@@ -113,6 +113,7 @@
     <ClCompile Include="..\NetworkMonitorCoroutine\client_manager.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\client_unit.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\common_functions.cpp" />
+    <ClCompile Include="..\NetworkMonitorCoroutine\config.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\connection.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\io_context_pool.cpp" />
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_handler.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\client_unit.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\common_coroutine.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\common_functions.h" />
+    <ClInclude Include="..\NetworkMonitorCoroutine\config.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection_enums.h" />
     <QtMoc Include="breakpoint_filter_window.h" />

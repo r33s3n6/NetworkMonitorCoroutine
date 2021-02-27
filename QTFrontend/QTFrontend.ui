@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>988</width>
-    <height>749</height>
+    <width>970</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -44,8 +44,13 @@
     </property>
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_session">
        <attribute name="title">
@@ -81,6 +86,9 @@
                 <horstretch>1</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
               </property>
               <property name="layoutDirection">
                <enum>Qt::LeftToRight</enum>
@@ -383,8 +391,8 @@ color: #ffffff;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>181</width>
-                         <height>28</height>
+                         <width>526</width>
+                         <height>279</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">
@@ -440,177 +448,427 @@ color: #ffffff;
        <attribute name="title">
         <string>断点设置</string>
        </attribute>
-       <widget class="QGroupBox" name="groupBox_enable_breakpoint">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>20</y>
-          <width>241</width>
-          <height>51</height>
-         </rect>
+       <layout class="QGridLayout" name="gridLayout_12">
+        <property name="leftMargin">
+         <number>0</number>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
+        <property name="topMargin">
+         <number>0</number>
         </property>
-        <property name="title">
-         <string>启用断点</string>
+        <property name="rightMargin">
+         <number>0</number>
         </property>
-        <widget class="QCheckBox" name="checkBox_enable_req_breakpoint">
-         <property name="geometry">
-          <rect>
-           <x>50</x>
-           <y>20</y>
-           <width>54</width>
-           <height>13</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>请求</string>
-         </property>
-        </widget>
-        <widget class="QCheckBox" name="checkBox_enable_rsp_breakpoint">
-         <property name="geometry">
-          <rect>
-           <x>140</x>
-           <y>20</y>
-           <width>54</width>
-           <height>13</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>响应</string>
-         </property>
-        </widget>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_breakpoint_settings">
-        <property name="geometry">
-         <rect>
-          <x>30</x>
-          <y>90</y>
-          <width>921</width>
-          <height>561</height>
-         </rect>
+        <property name="bottomMargin">
+         <number>0</number>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
+        <property name="spacing">
+         <number>0</number>
         </property>
-        <property name="title">
-         <string>断点筛选器设置</string>
-        </property>
-        <widget class="QGroupBox" name="groupBox_breakpoint_filter_header">
-         <property name="geometry">
-          <rect>
-           <x>30</x>
-           <y>60</y>
-           <width>371</width>
-           <height>341</height>
-          </rect>
-         </property>
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="title">
-          <string>请求头</string>
-         </property>
-         <widget class="QLineEdit" name="lineEdit_breakpoint_host">
-          <property name="geometry">
-           <rect>
-            <x>90</x>
-            <y>20</y>
-            <width>241</width>
-            <height>20</height>
-           </rect>
+        <item row="0" column="0">
+         <widget class="QScrollArea" name="scrollArea_2">
+          <property name="autoFillBackground">
+           <bool>false</bool>
           </property>
+          <property name="styleSheet">
+           <string notr="true">#scrollArea_2{background-color:white;}</string>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents_2">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>962</width>
+             <height>681</height>
+            </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>940</width>
+             <height>660</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#scrollAreaWidgetContents_2{ background-color:transparent; }</string>
+           </property>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="geometry">
+             <rect>
+              <x>520</x>
+              <y>30</y>
+              <width>381</width>
+              <height>231</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>381</width>
+              <height>181</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="title">
+             <string>通用设置</string>
+            </property>
+            <widget class="QLineEdit" name="lineEdit_port">
+             <property name="geometry">
+              <rect>
+               <x>70</x>
+               <y>30</y>
+               <width>81</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_3">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>30</y>
+               <width>31</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>端口：</string>
+             </property>
+             <property name="buddy">
+              <cstring>lineEdit_port</cstring>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_https_decrypt">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="geometry">
+              <rect>
+               <x>240</x>
+               <y>30</y>
+               <width>101</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>https流量解密</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="pushButton_trust_root_ca">
+             <property name="geometry">
+              <rect>
+               <x>230</x>
+               <y>150</y>
+               <width>121</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>信任https根证书</string>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="pushButton_restart_proxy_server">
+             <property name="geometry">
+              <rect>
+               <x>230</x>
+               <y>180</y>
+               <width>121</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>重启代理服务器</string>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_system_proxy">
+             <property name="geometry">
+              <rect>
+               <x>240</x>
+               <y>50</y>
+               <width>101</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>设置为系统代理</string>
+             </property>
+            </widget>
+            <widget class="QLineEdit" name="lineEdit_2nd_proxy">
+             <property name="geometry">
+              <rect>
+               <x>70</x>
+               <y>70</y>
+               <width>113</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_4">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>70</y>
+               <width>51</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>二级代理：</string>
+             </property>
+             <property name="buddy">
+              <cstring>lineEdit_2nd_proxy</cstring>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_allow_lan">
+             <property name="geometry">
+              <rect>
+               <x>240</x>
+               <y>70</y>
+               <width>111</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>允许来自局域网的连接</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_verify_certificate">
+             <property name="geometry">
+              <rect>
+               <x>240</x>
+               <y>100</y>
+               <width>101</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>验证服务器证书</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="groupBox_enable_breakpoint">
+            <property name="geometry">
+             <rect>
+              <x>30</x>
+              <y>30</y>
+              <width>241</width>
+              <height>51</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>241</width>
+              <height>51</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>241</width>
+              <height>51</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="title">
+             <string>启用断点</string>
+            </property>
+            <widget class="QCheckBox" name="checkBox_enable_req_breakpoint">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>20</y>
+               <width>54</width>
+               <height>13</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>请求</string>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_enable_rsp_breakpoint">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>20</y>
+               <width>54</width>
+               <height>13</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>响应</string>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QGroupBox" name="groupBox_breakpoint_settings">
+            <property name="geometry">
+             <rect>
+              <x>30</x>
+              <y>100</y>
+              <width>431</width>
+              <height>311</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="title">
+             <string>断点筛选器设置</string>
+            </property>
+            <widget class="QGroupBox" name="groupBox_breakpoint_filter_header">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>60</y>
+               <width>371</width>
+               <height>221</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="title">
+              <string>请求头</string>
+             </property>
+             <widget class="QLineEdit" name="lineEdit_breakpoint_host">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>20</y>
+                <width>241</width>
+                <height>20</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label">
+              <property name="geometry">
+               <rect>
+                <x>50</x>
+                <y>20</y>
+                <width>31</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Host:</string>
+              </property>
+              <property name="buddy">
+               <cstring>lineEdit_breakpoint_host</cstring>
+              </property>
+             </widget>
+             <widget class="QPlainTextEdit" name="plainTextEdit_breakpoint_custom">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>60</y>
+                <width>241</width>
+                <height>141</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="QLabel" name="label_2">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>120</y>
+                <width>51</width>
+                <height>16</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>自定义头:</string>
+              </property>
+             </widget>
+            </widget>
+            <widget class="QRadioButton" name="radioButton_req_settings">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>30</y>
+               <width>68</width>
+               <height>13</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>请求</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QRadioButton" name="radioButton_rsp_settings">
+             <property name="geometry">
+              <rect>
+               <x>140</x>
+               <y>30</y>
+               <width>68</width>
+               <height>13</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>响应</string>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QPushButton" name="pushButton_set_config">
+            <property name="geometry">
+             <rect>
+              <x>680</x>
+              <y>340</y>
+              <width>191</width>
+              <height>51</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>11</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>保存</string>
+            </property>
+           </widget>
+          </widget>
          </widget>
-         <widget class="QLabel" name="label">
-          <property name="geometry">
-           <rect>
-            <x>50</x>
-            <y>20</y>
-            <width>31</width>
-            <height>21</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Host:</string>
-          </property>
-          <property name="buddy">
-           <cstring>lineEdit_breakpoint_host</cstring>
-          </property>
-         </widget>
-         <widget class="QPlainTextEdit" name="plainTextEdit_breakpoint_custom">
-          <property name="geometry">
-           <rect>
-            <x>90</x>
-            <y>60</y>
-            <width>241</width>
-            <height>141</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_2">
-          <property name="geometry">
-           <rect>
-            <x>30</x>
-            <y>120</y>
-            <width>51</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>自定义头:</string>
-          </property>
-         </widget>
-        </widget>
-        <widget class="QRadioButton" name="radioButton_req_settings">
-         <property name="geometry">
-          <rect>
-           <x>50</x>
-           <y>30</y>
-           <width>68</width>
-           <height>13</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>请求</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-        <widget class="QRadioButton" name="radioButton_rsp_settings">
-         <property name="geometry">
-          <rect>
-           <x>140</x>
-           <y>30</y>
-           <width>68</width>
-           <height>13</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>响应</string>
-         </property>
-        </widget>
-       </widget>
-       <widget class="QPushButton" name="pushButton_set_config">
-        <property name="geometry">
-         <rect>
-          <x>780</x>
-          <y>660</y>
-          <width>56</width>
-          <height>17</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>保存</string>
-        </property>
-       </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -626,7 +884,7 @@ color: #ffffff;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>988</width>
+     <width>970</width>
      <height>18</height>
     </rect>
    </property>
@@ -653,7 +911,13 @@ color: #ffffff;
     <property name="title">
      <string>Debug</string>
     </property>
+    <widget class="QMenu" name="menutest_group">
+     <property name="title">
+      <string>test_group</string>
+     </property>
+    </widget>
     <addaction name="actionShow_Hide_breakpoint_button"/>
+    <addaction name="menutest_group"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_4"/>
@@ -661,6 +925,9 @@ color: #ffffff;
    <addaction name="menuDebug"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -668,7 +935,11 @@ color: #ffffff;
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+  </widget>
   <action name="actionLicense">
    <property name="text">
     <string>License</string>
@@ -692,6 +963,22 @@ color: #ffffff;
   <action name="actionBreakpoint_Settings">
    <property name="text">
     <string>断点设置</string>
+   </property>
+  </action>
+  <action name="action_replay_session">
+   <property name="text">
+    <string>重放请求</string>
+   </property>
+   <property name="toolTip">
+    <string>replay_session</string>
+   </property>
+  </action>
+  <action name="action_edit_and_replay">
+   <property name="text">
+    <string>编辑并重放请求</string>
+   </property>
+   <property name="toolTip">
+    <string>edit_and_replay</string>
    </property>
   </action>
  </widget>

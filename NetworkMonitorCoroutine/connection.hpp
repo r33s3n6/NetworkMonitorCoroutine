@@ -69,9 +69,15 @@ public:
 	tcp::socket& socket(){ return *_socket; }
 
 	
+	void set_replay_mode(shared_ptr<string> raw_req_data,bool is_tunnel_conn) {
+		skip_socket_rw = true;
+		_whole_request = raw_req_data;
+		_is_tunnel_conn = is_tunnel_conn;
+	}
 
 private:
-
+	bool skip_socket_rw = false;
+	boost::asio::io_context& _io_context;
 	awaitable<void> _waitable_loop();
 
 	awaitable<void> _async_read(bool with_ssl);
@@ -90,7 +96,7 @@ private:
 
 
 	shared_ptr<string> _whole_request;
-
+	
 
 	bool _is_tunnel_conn = false;
 

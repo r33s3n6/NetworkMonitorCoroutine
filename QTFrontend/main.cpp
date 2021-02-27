@@ -19,6 +19,8 @@
 * 
 */
 
+//TODO plaintext edit session(get rid of chunked flag...)
+
 int main(int argc, char *argv[])
 {
     qRegisterMetaType<QVector<int>>("QVector<int>");
@@ -32,16 +34,17 @@ int main(int argc, char *argv[])
 
 
 
-    proxy_tcp::proxy_server _backend_proxy_server("0.0.0.0","5559",16);
-    boost::thread backend_thread(boost::bind(
-        &proxy_tcp::proxy_server::start, &_backend_proxy_server));
+
+    //proxy_tcp::proxy_server _backend_proxy_server();
+    //boost::thread backend_thread(boost::bind(
+    //    &proxy_tcp::proxy_server::start, &_backend_proxy_server));
 
  
 
-    QTFrontend w(nullptr, &_backend_proxy_server);
+    QTFrontend w(nullptr);
     w.show();
 
     a.exec();
-    backend_thread.join();
+    //backend_thread.join();
     return 0;
 }

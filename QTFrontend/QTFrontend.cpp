@@ -4,32 +4,25 @@
 
 
 
-QTFrontend::QTFrontend(QWidget *parent, proxy_server* _backend_server)
+QTFrontend::QTFrontend(QWidget *parent)
     : QMainWindow(parent),
-    _session_data(nullptr, _backend_server->get_display_filter()),
-    _config(_backend_server->get_config_ref())
+    _backend_server(new proxy_server(&_display_filter,"config.dat")),
+    _session_data(nullptr, &_display_filter),
+    _config(_backend_server->get_config_ptr())
 {
     ui.setupUi(this);
+    
+    _backend_thread=make_shared<boost::thread>(boost::bind(
+        &proxy_tcp::proxy_server::start, _backend_server));
 
-    _load_config_from_file("config.dat");
     _display_config();
     //_set_config();//可视化config
 
+
+    _setup_table();
     //table settings start
  
-    _proxy_session_data.setSourceModel(&_session_data);
-    
-    ui.table_session->setModel(&_proxy_session_data);
-
-
-    ui.table_session->sortByColumn(0, Qt::AscendingOrder);
-
-
-
-    for (int i = 0; i < sizeof(_config.column_width) / sizeof(int); i++) {
-        ui.table_session->setColumnWidth(i, _config.column_width[i]);
-    }
-    ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+   
 
     connect(ui.table_session->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &QTFrontend::display_full_info);
     connect(&_session_data, &SessionDataModel::info_updated, this, &QTFrontend::update_displayed_info);
@@ -47,16 +40,76 @@ QTFrontend::QTFrontend(QWidget *parent, proxy_server* _backend_server)
 
     connect(ui.checkBox_enable_req_breakpoint, &QCheckBox::toggled,this, &QTFrontend::_set_enable_config);
     connect(ui.checkBox_enable_rsp_breakpoint, &QCheckBox::toggled,this,&QTFrontend::_set_enable_config);
+
+    connect(ui.pushButton_restart_proxy_server, &QPushButton::clicked, this, &QTFrontend::_restart_backend_server);
+    connect(ui.pushButton_trust_root_ca, &QPushButton::clicked, this, &QTFrontend::_trust_root_ca);
     //connect(ui.lineEdit_breakpoint_host, &QLineEdit::editingFinished, this, &QTFrontend::_set_config);
     //connect(ui.plainTextEdit_breakpoint_custom, &QPlainTextEdit::finish, this, &QTFrontend::_set_config);
-    ui.table_session->show();
-    //table settings end
+    
 
     ui.scrollArea->setVisible(true);
 
     _activate_breakpoint_box(false);
+    _set_filter_vec(true);
+    _set_filter_vec(false);
+    ui.statusBar->showMessage("TODO:Status Bar");
     
 }
+
+
+void QTFrontend::_setup_table() {
+    _proxy_session_data.setSourceModel(&_session_data);
+
+    ui.table_session->setModel(&_proxy_session_data);
+    ui.table_session->sortByColumn(0, Qt::AscendingOrder);
+
+    for (int i = 0; i < sizeof(_config->column_width) / sizeof(int); i++) {
+        ui.table_session->setColumnWidth(i, _config->column_width[i]);
+    }
+    ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui.table_session->show();
+    connect(ui.table_session, &QTableView::customContextMenuRequested, this, &QTFrontend::_display_table_context_menu);
+
+    table_session_context_menu = new QMenu(this);
+
+    table_session_context_menu->addAction(ui.action_edit_and_replay);
+    table_session_context_menu->addAction(ui.action_replay_session);
+    connect(ui.action_edit_and_replay, &QAction::triggered, this, &QTFrontend::_replay_session_with_bp);
+    connect(ui.action_replay_session, &QAction::triggered, this, &QTFrontend::_replay_session);
+
+    //connect(this, &QTFrontend::session_replayed, &_session_data, &SessionDataModel::session_replayed);
+    //table_session_context_menu->addAction();
+    //table_session_context_menu->addAction();
+    table_session_context_menu->addSeparator();
+    //table settings end
+
+}
+
+void QTFrontend::_display_table_context_menu(QPoint pos) {
+    context_menu_index = ui.table_session->indexAt(pos);
+    table_session_context_menu->popup(ui.table_session->viewport()->mapToGlobal(pos));
+}
+
+void QTFrontend::_replay_session_with_bp()
+{
+    _replay_session(true);
+}
+
+void QTFrontend::_replay_session(bool with_bp)
+{
+    
+    auto id = _proxy_session_data.data(_proxy_session_data.index(context_menu_index.row(), 0)).toInt();// 获取实际位置
+    auto _session_info_ptr = _session_data.get_session_info_ptr(id);
+    if (_session_info_ptr->protocol == "https")
+        _backend_server->replay(_session_info_ptr->raw_req_data, with_bp, true);//非阻塞
+    else if (_session_info_ptr->protocol == "http")
+        _backend_server->replay(_session_info_ptr->raw_req_data, with_bp, false);//非阻塞
+    else
+        return;//websocket 不重放
+
+
+}
+
 
 void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {
     
@@ -262,30 +315,23 @@ void QTFrontend::_display_full_info(size_t display_id)
 
 //configuration
 
-void QTFrontend::_load_config_from_file(string path)
-{
-    _config.req_filter.raw_custom_header_filter = "";
-    _config.req_filter.raw_host_filter = "*.baidu.com";
-    _set_filter_map(true);
 
-    _config.rsp_filter.raw_custom_header_filter = "";
-    _config.rsp_filter.raw_host_filter = "*.sohu.com";
-    _set_filter_map(false);
-}
 
 void QTFrontend::_set_enable_config() {
-    _config.req_filter.enable_breakpoint =
+    _config->req_filter.enable_breakpoint =
         ui.checkBox_enable_req_breakpoint->isChecked();
 
-    _config.rsp_filter.enable_breakpoint =
+    _config->rsp_filter.enable_breakpoint =
         ui.checkBox_enable_rsp_breakpoint->isChecked();
 }
+
+//save all config to _config, please call it carefully due to performance
 void QTFrontend::_set_config()
 {
     _set_enable_config();
     
     bool is_req = ui.radioButton_req_settings->isChecked();
-    auto& filter = is_req ? _config.req_filter : _config.rsp_filter;
+    auto& filter = is_req ? _config->req_filter : _config->rsp_filter;
 
     bool update_filter_map = false;
     string&& temp_custom = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
@@ -299,13 +345,42 @@ void QTFrontend::_set_config()
         update_filter_map = true;
     }
     if(update_filter_map)
-        _set_filter_map(is_req);
+        _set_filter_vec(is_req);
+
+    _config->port = ui.lineEdit_port->text().toStdString();
+
+    _config->secondary_proxy = ui.lineEdit_2nd_proxy->text().toStdString();
+    _config->ssl_decrypt = ui.checkBox_https_decrypt->isChecked();
+
+
+    _config->allow_lan_conn = ui.checkBox_allow_lan->isChecked();
+    _config->system_proxy = ui.checkBox_system_proxy->isChecked();
+    _config->verify_server_certificate = ui.checkBox_verify_certificate->isChecked();
 
 }
 
-void QTFrontend::_set_filter_map(bool is_req) {
+void QTFrontend::_restart_backend_server()
+{
+    _set_config();
+    _config->save_config();
+    if (_backend_server) {
+        _backend_server->stop();
+    }
+    _backend_server = make_shared<proxy_server>(&_display_filter,"config.dat");
+    _config = _backend_server->get_config_ptr();
+    _backend_thread = make_shared<boost::thread>(boost::bind(
+        &proxy_tcp::proxy_server::start, _backend_server));
 
-    breakpoint_filter& filter = is_req ? _config.req_filter : _config.rsp_filter;
+    _display_config();
+}
+
+void QTFrontend::_trust_root_ca()//TODO
+{
+}
+
+void QTFrontend::_set_filter_vec(bool is_req) {
+
+    breakpoint_filter& filter = is_req ? _config->req_filter : _config->rsp_filter;
 
     shared_ptr<vector<string>> header_vec_ptr
         = string_split(filter.raw_custom_header_filter, "\r\n");
@@ -313,18 +388,23 @@ void QTFrontend::_set_filter_map(bool is_req) {
     if(filter.raw_host_filter.size()>0)
         header_vec_ptr->emplace_back("host:"+filter.raw_host_filter);
     
-    filter.header_filter=make_shared<map<string,string>>();
+    filter.header_filter_vec.clear();
 
 
     for (auto header : *header_vec_ptr) {
         size_t pos = header.find(":");
         if (pos == string::npos || (pos + 1) == header.size())
             continue;
-        string temp = header.substr(0, pos);
-        transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+        http_header http_header;
+        http_header.key = string_trim(header.substr(0, pos));
+        transform(http_header.key.begin(), http_header.key.end(), http_header.key.begin(), ::tolower);
 
-        (*filter.header_filter)[string_trim(temp)] = 
-            string_trim(header.substr(pos + 1, header.size() - pos - 1));
+        shared_ptr<vector<string>> value_vec_ptr = string_split(header.substr(pos + 1, header.size() - pos - 1),";");
+        for (auto v : *value_vec_ptr) {
+            http_header.value.emplace_back(string_trim(v));
+        }
+
+        filter.header_filter_vec.emplace_back(http_header);
 
     }
 }
@@ -336,12 +416,12 @@ void QTFrontend::_toggle_breakpoint_config()
         
 
         if (ui.radioButton_req_settings->isChecked()) {
-            _config.rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-            _config.rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+            _config->rsp_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+            _config->rsp_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
         }
         else {
-            _config.req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
-            _config.req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
+            _config->req_filter.raw_custom_header_filter = ui.plainTextEdit_breakpoint_custom->toPlainText().toStdString();
+            _config->req_filter.raw_host_filter = ui.lineEdit_breakpoint_host->text().toStdString();
 
         }
         _display_config();
@@ -362,27 +442,32 @@ void QTFrontend::_toggle_breakpoint_config()
 
 void QTFrontend::_display_config()
 {
-    ui.checkBox_enable_req_breakpoint->setChecked(_config.req_filter.enable_breakpoint);
-    ui.checkBox_enable_rsp_breakpoint->setChecked(_config.rsp_filter.enable_breakpoint);
+    ui.checkBox_enable_req_breakpoint->setChecked(_config->req_filter.enable_breakpoint);
+    ui.checkBox_enable_rsp_breakpoint->setChecked(_config->rsp_filter.enable_breakpoint);
 
     if (ui.radioButton_req_settings->isChecked()) {
         ui.plainTextEdit_breakpoint_custom->setPlainText(
-            QString::fromStdString(_config.req_filter.raw_custom_header_filter));
+            QString::fromStdString(_config->req_filter.raw_custom_header_filter));
         ui.lineEdit_breakpoint_host->setText(
-            QString::fromStdString(_config.req_filter.raw_host_filter));
+            QString::fromStdString(_config->req_filter.raw_host_filter));
     }
     else {
         ui.plainTextEdit_breakpoint_custom->setPlainText(
-            QString::fromStdString(_config.rsp_filter.raw_custom_header_filter));
+            QString::fromStdString(_config->rsp_filter.raw_custom_header_filter));
         ui.lineEdit_breakpoint_host->setText(
-            QString::fromStdString(_config.rsp_filter.raw_host_filter));
+            QString::fromStdString(_config->rsp_filter.raw_host_filter));
     }
+    
+    ui.lineEdit_port->setText(QString::fromStdString(_config->port));
+    ui.lineEdit_2nd_proxy->setText(QString::fromStdString(_config->secondary_proxy));
+    ui.checkBox_https_decrypt->setChecked(_config->ssl_decrypt);
+    
+    ui.checkBox_allow_lan->setChecked(_config->allow_lan_conn);
+    ui.checkBox_system_proxy->setChecked(_config->system_proxy);
+    ui.checkBox_verify_certificate->setChecked(_config->verify_server_certificate);
 
 }
 
-void QTFrontend::_save_config()
-{
 
-}
 
 

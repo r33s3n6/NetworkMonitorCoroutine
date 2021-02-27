@@ -31,15 +31,15 @@ using namespace boost::asio::ip;
 
 
 
-proxy_server::proxy_server(const string& address, const string& port, size_t io_context_pool_size)
-	: _io_context_pool(io_context_pool_size),
-
+proxy_server::proxy_server(display_filter* df,const string& config_path)
+	: _config(config_path),
+	_io_context_pool(_config.io_context_pool_size),
 	_io_context(_io_context_pool.get_io_context()),
 	_signals(_io_context_pool.get_io_context()),
 	_acceptor(_io_context_pool.get_io_context()),
 	_new_proxy_conn(),
 	_new_proxy_handler(),
-	_display_filter(),
+	_display_filter(df),
 	_breakpoint_manager(_config.req_filter,_config.rsp_filter)
 
 {
@@ -54,8 +54,10 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 
 
 	tcp::resolver resolver(_acceptor.get_executor());
+
+	//TODO: 0.0.0.0 may accept connection from internet
 	tcp::endpoint endpoint =
-		*resolver.resolve(address, port).begin(); //iterator of result_type
+		*resolver.resolve(_config.allow_lan_conn? "0.0.0.0":"127.0.0.1", _config.port).begin(); //iterator of result_type
 
 	_acceptor.open(endpoint.protocol());//return ipv4/ipv6
 	_acceptor.set_option(tcp::acceptor::reuse_address(true));
@@ -64,10 +66,8 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 
 
 
-	
 
-	//client_unit::set_server_certificate_verify(false);
-	client_unit::set_server_certificate_verify(true);
+	client_unit::set_server_certificate_verify(_config.verify_server_certificate);
 
 
 	//ignore the error reported by intellisense
@@ -78,11 +78,10 @@ proxy_server::proxy_server(const string& address, const string& port, size_t io_
 
 
 
-
 awaitable<void> proxy_server::_listener()
 {
 	shared_ptr<certificate_manager> cert_mgr =
-		make_shared<certificate_manager>("F:/TEMP/CAcert.pem", "F:/TEMP/CAkey.pem");//TODO
+		make_shared<certificate_manager>("./cert/CAcert.pem", "./cert/CAkey.pem");//TODO
 	
 	try
 	{
@@ -93,7 +92,7 @@ awaitable<void> proxy_server::_listener()
 			shared_ptr<client_unit> _client(new client_unit(
 				_io_context_pool.get_io_context()));
 			_new_proxy_handler.reset(new http_proxy_handler(
-				_breakpoint_manager, _display_filter, _client));
+				_breakpoint_manager, *_display_filter, _client));
 
 
 			boost::system::error_code ec;
@@ -134,11 +133,37 @@ awaitable<void> proxy_server::_listener()
 }
 
 
+void proxy_server::replay(shared_ptr<string> raw_req_data, bool with_bp,bool is_tunnel_conn)
+{
+	shared_ptr<client_unit> _client(new client_unit(
+		_io_context_pool.get_io_context()));
+	shared_ptr<http_proxy_handler> handler = make_shared<http_proxy_handler>(_breakpoint_manager, *_display_filter, _client);
+	handler->force_breakpoint = with_bp;
+
+	shared_ptr<certificate_manager> cert_mgr;//nullptr
+
+	shared_ptr<connection> conn (new connection(_io_context_pool.get_io_context(), handler, cert_mgr));
+	conn->set_replay_mode(raw_req_data, is_tunnel_conn);
+
+	conn->start();
+	//co_spawn(_io_context_pool.get_io_context(), _replay(raw_req_data,with_bp), detached);
+}
+
+
+awaitable<void> proxy_server::_replay(shared_ptr<string> raw_req_data, bool with_bp) {
+
+	
+	co_return;
+}
+
+
+
 void proxy_server::start()
 {
 	_io_context_pool.run();
 
 }
+
 
 
 

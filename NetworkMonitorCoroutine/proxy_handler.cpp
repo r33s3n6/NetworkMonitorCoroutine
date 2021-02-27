@@ -90,7 +90,7 @@ namespace proxy_tcp {
 			
 
 			_session_info->proxy_handler_ptr = shared_from_this();
-			if (_breakpoint_manager.check(_session_info,true)) {//通过请求头来拦截 以后再说body的事吧 TODO
+			if (force_breakpoint||_breakpoint_manager.check(_session_info,true)) {//通过请求头来拦截 以后再说body的事吧 TODO
 				//断点
 				_session_info->send_behaviour = intercept;
 			}

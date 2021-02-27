@@ -131,10 +131,9 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 
 
         _session_info->host = get_header_value(header_vec_ptr, "host");
-    }
-        
+    } 
     else {
-        _session_info->req_data_for_display = make_shared<string>("Data Broken");
+        _session_info->req_data_for_display = make_shared<string>("Data Broken"); //TODO color
     }
         
 
@@ -270,3 +269,14 @@ void SessionDataModel::session_error(shared_ptr<session_info> _session_info)
     _session_info->rsp_data_for_display = make_shared<string>(*(_session_info->new_data));
     emit info_updated(_session_info->id);
 }
+
+/*
+void SessionDataModel::session_replayed(const QModelIndex& index,bool with_bp)
+{
+   //deprecated
+    //_session_info->rsp_data_for_display = make_shared<string>(*(_session_info->new_data));
+
+
+    //emit info_updated(_session_info->id);
+}*/
+

@@ -53,7 +53,7 @@ public:
 
 	connection_behaviour handle_error(shared_ptr<string> result, shared_ptr<string> err_data= shared_ptr<string>());
 
-
+	bool force_breakpoint = false;
 private:
 
 	bool _process_header(shared_ptr<string> data, shared_ptr<string> result);

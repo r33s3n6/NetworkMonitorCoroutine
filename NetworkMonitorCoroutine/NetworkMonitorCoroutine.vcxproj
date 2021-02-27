@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\QTFrontend\config.cpp" />
     <ClCompile Include="breakpoint_manager.cpp" />
     <ClCompile Include="certificate_manager.cpp" />
     <ClCompile Include="client_unit.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="proxy_server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\QTFrontend\config.h" />
     <ClInclude Include="breakpoint_manager.h" />
     <ClInclude Include="certificate_manager.h" />
     <ClInclude Include="client_unit.h" />

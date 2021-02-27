@@ -19,6 +19,8 @@ using namespace boost::asio::ip;
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <memory>
+using namespace std;
 
 #if defined(BOOST_ASIO_ENABLE_HANDLER_TRACKING)
 # define use_awaitable \
@@ -32,16 +34,7 @@ using namespace boost::asio::ip;
 
 namespace proxy_tcp {
 
-struct config {
-	breakpoint_filter req_filter;
-	breakpoint_filter rsp_filter;
 
-	int column_width[sizeof(_table_header_name) / sizeof(const char*)] = {
-	20,200,35,45,200,40,70
-	};
-
-	bool ssl_decrypt = true;
-};
 
 class proxy_server
 {
@@ -50,19 +43,25 @@ public:
 	proxy_server(const proxy_server&) = delete;
 	proxy_server& operator=(const proxy_server&) = delete;
 
-	explicit proxy_server(const string& address, const string& port, size_t io_context_pool_size);
-
-	config& get_config_ref() { return _config; }
+	explicit proxy_server(display_filter* df, const string& config_path="config.dat");
 
 	
 
+	config* get_config_ptr() { return &_config; }
+
+	
+	void stop() { _stop(); }
 	void start();//异步运行
-	display_filter* get_display_filter() { return &_display_filter; }
+	void replay(shared_ptr<string> raw_req_data,bool with_bp, bool is_tunnel_conn);
+	//display_filter* get_display_filter() { return &_display_filter; }
 
 private:
 
+	config _config;
+
 	// Initiate an asynchronous accept operation.
 	awaitable<void> _listener();
+	awaitable<void> _replay(shared_ptr<string> raw_req_data, bool with_bp);
 
 	void _stop();
 	io_context_pool _io_context_pool;
@@ -83,9 +82,9 @@ private:
 
 	breakpoint_manager _breakpoint_manager;
 
-	display_filter _display_filter;
+	display_filter* _display_filter;
 
-	config _config;//不进行实际读取
+	
 };
 
 }
