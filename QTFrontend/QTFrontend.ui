@@ -981,6 +981,39 @@ color: #ffffff;
     <string>edit_and_replay</string>
    </property>
   </action>
+  <action name="action_req_bp">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>在请求前下断点</string>
+   </property>
+   <property name="toolTip">
+    <string>req_bp</string>
+   </property>
+  </action>
+  <action name="action_rsp_bp">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>在响应后下断点</string>
+   </property>
+   <property name="toolTip">
+    <string>rsp_bp</string>
+   </property>
+  </action>
+  <action name="action_both_bp">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>同时下请求和响应的断点</string>
+   </property>
+   <property name="toolTip">
+    <string>both_bp</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

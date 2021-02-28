@@ -74,6 +74,7 @@ private:
     config* _config;
 
     QMenu* table_session_context_menu;
+    QMenu* table_session_bp_menu;
 
     bool last_breakpoint_req_checked=true;
 
@@ -81,7 +82,47 @@ private:
 
     
     void _setup_table();
-    QModelIndex context_menu_index;
+    shared_ptr<session_info> _context_menu_session;
+    //QModelIndex context_menu_index;
+    //QString context_menu_host;
+
+    void _add_bp(bool is_req);
+    void _delete_bp(bool is_req);
+
+    void _add_req_bp() { 
+        if (ui.action_req_bp->isChecked()) {
+            //if (ui.action_rsp_bp->isChecked()) {
+            //    ui.action_both_bp->setChecked(true);
+            //}
+
+            _add_bp(true);
+        }
+        else {
+            //ui.action_both_bp->setChecked(false);
+            _delete_bp(true);
+        }
+       
+    }
+    void _add_rsp_bp() {
+        if (ui.action_rsp_bp->isChecked()) {
+            //if (ui.action_req_bp->isChecked()) {
+            //    ui.action_both_bp->setChecked(true);
+            //}
+            _add_bp(false);
+        }
+        else {
+            //ui.action_both_bp->setChecked(false);
+            _delete_bp(false);
+        }
+    }
+    void _add_both_bp(){
+        ui.action_req_bp->setChecked(ui.action_both_bp->isChecked());
+        ui.action_rsp_bp->setChecked(ui.action_both_bp->isChecked());
+        _add_req_bp();
+        _add_rsp_bp();
+    }
+    
+
     void _replay_session(bool with_bp = false);
     void _replay_session_with_bp();
 

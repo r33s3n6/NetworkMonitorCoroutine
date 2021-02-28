@@ -41,33 +41,42 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 
         for (auto value_filter : header.value) {//对每一个value_filter都查找，性能有较大消耗
 
-            shared_ptr<vector<string>> keywords = string_split(value_filter, "*");
-            if (keywords->size() == 0)
+
+            if (value_filter.size() == 0)
                 continue;
-            string value = get_header_value(header_vec_ptr, header.key);
 
+            shared_ptr<vector<string>> keywords = string_split(value_filter, "*");
 
-            int last_pos = -1;
-
+            string value = string_trim(get_header_value(header_vec_ptr, header.key));
+            
             bool success = true;
 
-            //TODO:正则表达式，高效实现*
-            for (int i = 0; i < keywords->size(); i++) {//*的简单实现
-                if ((*keywords)[i].size() == 0)
-                    continue;
-                size_t pos = value.find((*keywords)[i]);
-                
-                if (pos != string::npos && ((int)pos > last_pos)) {
-                    last_pos = (int)pos;
-                    continue;
-                }
-                else {
+            if (keywords->size() == 1) {//完全匹配
+                if (value.find((*keywords)[0]) != 0)
                     success = false;
-                    break;
-                }
-
             }
-            if (success)
+            else {
+                size_t new_start_pos = 0;
+
+                //TODO:正则表达式
+                for (int i = 0; i < keywords->size(); i++) {//*的简单实现
+                    string& key = (*keywords)[i];
+                    if (key.size() == 0)
+                        continue;
+                    size_t pos = value.find(key,new_start_pos);
+
+                    if (pos != string::npos) {
+                        new_start_pos = pos + key.size();
+                        continue;
+                    }
+                    else {
+                        success = false;
+                    }
+
+                }
+            }
+
+            if(success)
                 return true;
 
         }

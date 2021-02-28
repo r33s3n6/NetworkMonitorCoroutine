@@ -30,6 +30,8 @@ size_t hex2decimal(const char* hex_str);
 
 inline string string_trim(const string& original)
 {
+    if (original.size() == 0)
+        return string();
     size_t _begin = original.find_first_not_of(" ");
     size_t _size = original.find_last_not_of(" ") - _begin + 1;
     return original.substr(_begin, _size);

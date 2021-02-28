@@ -131,7 +131,10 @@ awaitable<void> connection::_waitable_loop()
 			}
 			//若上次有一些剩余的尾巴，这次先不读而是先检查完整性，否则可能其中为最后一个报文而阻塞
 
-			
+			if (_whole_request->size() == 0)
+				continue;
+
+
 			//_whole_request 都是解密完的http数据
 	
 			size_t split_pos = 0;
@@ -355,7 +358,7 @@ awaitable<void> connection::_async_read(bool with_ssl)
 	boost::system::error_code ec;
 	
 	
-	size_t bytes_transferred;
+	size_t bytes_transferred=0;
 	if (with_ssl) {
 		auto& debug = _ssl_stream_ptr->next_layer();
 
@@ -381,8 +384,8 @@ awaitable<void> connection::_async_read(bool with_ssl)
 			throw std::runtime_error("connection closed by peer");//eof意味着无法写数据
 		}
 	}
-
-	_whole_request->append(_buffer.data(), bytes_transferred);
+	if(bytes_transferred >0)
+		_whole_request->append(_buffer.data(), bytes_transferred);
 	//cout << *_whole_request << endl;
 	co_return;
 }
