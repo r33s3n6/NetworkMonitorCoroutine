@@ -20,7 +20,9 @@
 */
 
 //TODO plaintext edit session(get rid of chunked flag...)
-//TODO 过滤某些host，meta-type 显示上/断点上
+//TODO （永久）过滤某些host，meta-type 显示上/断点上
+//TODO stream truncated
+
 
 int main(int argc, char *argv[])
 {

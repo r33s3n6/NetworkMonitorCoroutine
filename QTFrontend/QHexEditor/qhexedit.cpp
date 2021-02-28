@@ -775,7 +775,7 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
     }
 
     /* Copy */
-    if (event->matches(QKeySequence::Copy))
+    if (event->matches(QKeySequence::Copy))//TODO: copy original data
     {
         QByteArray ba = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();
         for (qint64 idx = 32; idx < ba.size(); idx +=33)
@@ -948,7 +948,7 @@ void QHexEdit::paintEvent(QPaintEvent *event)
             {
                 // every 2 hex there is 1 ascii
                 int asciiPositionInShowData = hexPositionInShowData / 2;
-                int ch = (uchar)_dataShown.at(asciiPositionInShowData);
+                int ch = (uchar)_dataShown.at(asciiPositionInShowData);//TODO '_' seems not to be shown properly
                 if (ch < ' ' || ch > '~')
                     ch = '.';
                 painter.drawText(_pxCursorX - pxOfsX, _pxCursorY, QChar(ch));

@@ -67,6 +67,8 @@ void QTFrontend::_setup_table() {
 		ui.table_session->setColumnWidth(i, _config->column_width[i]);
 	}
 	ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+	ui.table_session->setTextElideMode(Qt::ElideMiddle);
+	ui.table_session->setWordWrap(true);
 	ui.table_session->show();
 	connect(ui.table_session, &QTableView::customContextMenuRequested, this, &QTFrontend::_display_table_context_menu);
 
@@ -200,6 +202,11 @@ void QTFrontend::_replay_session(bool with_bp)
 
 void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {
 	
+	if (prev.row() != -1) {
+		ui.table_session->setRowHeight(prev.row(), ui.table_session->rowHeight(index.row()));
+	}
+	ui.table_session->resizeRowToContents(index.row());
+
 	_display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// 获取实际位置
 
 	_display_full_info(_display_id);
