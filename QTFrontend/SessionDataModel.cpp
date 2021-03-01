@@ -180,6 +180,7 @@ void SessionDataModel::session_req_updated(shared_ptr<session_info> _session_inf
 void SessionDataModel::session_req_completed(shared_ptr<session_info> _session_info)
 {
     std::cout << _session_info->id << ":session_request_completed\n";
+    _session_info->req_completed = true;
     emit info_updated(_session_info->id);
 }
 
@@ -258,6 +259,7 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
 void SessionDataModel::session_rsp_completed(shared_ptr<session_info> _session_info)
 {
     std::cout << _session_info->id << ":session_response_completed\n";
+    _session_info->rsp_completed = true;
     emit info_updated(_session_info->id);
 }
 

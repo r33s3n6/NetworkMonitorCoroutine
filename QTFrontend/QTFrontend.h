@@ -122,6 +122,8 @@ private:
         _add_rsp_bp();
     }
     
+    void _save_data_to_hexeditor(shared_ptr<session_info> _session_info_ptr);
+    string _raw_chunk_to_text(const string& data);
 
     void _replay_session(bool with_bp = false);
     void _replay_session_with_bp();

@@ -152,7 +152,7 @@ int QHexEdit::bytesPerLine()
     return _bytesPerLine;
 }
 
-void QHexEdit::setCursorPosition(qint64 position)
+void QHexEdit::setCursorPosition(qint64 position)//TODO when copy ascii
 {
     // 1. delete old cursor
     _blink = false;
@@ -413,7 +413,8 @@ qint64 QHexEdit::lastIndexOf(const QByteArray &ba, qint64 from)
 void QHexEdit::redo()
 {
     _undoStack->redo();
-    setCursorPosition(_chunks->pos()*(_editAreaIsAscii ? 1 : 2));
+    //setCursorPosition(_chunks->pos()*(_editAreaIsAscii ? 1 : 2));
+    setCursorPosition(_chunks->pos() * 2);
     refresh();
 }
 
@@ -458,7 +459,8 @@ QString QHexEdit::toReadableString()
 void QHexEdit::undo()
 {
     _undoStack->undo();
-    setCursorPosition(_chunks->pos()*(_editAreaIsAscii ? 1 : 2));
+    //setCursorPosition(_chunks->pos()*(_editAreaIsAscii ? 1 : 2));
+    setCursorPosition(_chunks->pos() * 2);
     refresh();
 }
 
@@ -602,10 +604,46 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
         /* Cut */
         if (event->matches(QKeySequence::Cut))
         {
+            
+            //modified code start
+            QClipboard* clipboard = QApplication::clipboard();
+            if (_editAreaIsAscii) {
+                clipboard->setText(_chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()));
+            }
+            else {
+                QString hex_data_f;
+                QByteArray hex_array = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();
+                if (hex_array.size() < 2) {
+                    clipboard->setText("");
+                }
+                else {
+                    hex_data_f.append((char)hex_array[0]);
+                    hex_data_f.append((char)hex_array[1]);
+                    for (int i = 2; i < hex_array.size();) {
+                        hex_data_f.append(' ');
+                        hex_data_f.append((char)hex_array[i++]);
+                        hex_data_f.append((char)hex_array[i++]);
+                    }
+                    clipboard->setText(hex_data_f);
+                }
+            }
+            //modified code end  
+
+            if (_overwriteMode)
+            {
+                qint64 len = getSelectionEnd() - getSelectionBegin();
+                replace(getSelectionBegin(), (int)len, QByteArray((int)len, char(0)));
+            }
+            else
+            {
+                remove(getSelectionBegin(), getSelectionEnd() - getSelectionBegin());
+            }
+            setCursorPosition(2 * getSelectionBegin());
+            resetSelection(2 * getSelectionBegin());
+            /*
             QByteArray ba = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();
-            for (qint64 idx = 32; idx < ba.size(); idx +=33)
+            for (qint64 idx = 32; idx < ba.size(); idx += 33)
                 ba.insert(idx, "\n");
-            QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(ba);
             if (_overwriteMode)
             {
@@ -618,11 +656,16 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
             }
             setCursorPosition(2 * getSelectionBegin());
             resetSelection(2 * getSelectionBegin());
+            */
+            
+
         } else
 
         /* Paste */
         if (event->matches(QKeySequence::Paste))
-        {
+        {//modified by Fu
+            //original code
+            /*
             QClipboard *clipboard = QApplication::clipboard();
             QByteArray ba = QByteArray().fromHex(clipboard->text().toLatin1());
             if (_overwriteMode)
@@ -634,6 +677,31 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
                 insert(_bPosCurrent, ba);
             setCursorPosition(_cursorPosition + 2 * ba.size());
             resetSelection(getSelectionBegin());
+            */
+            
+            //modified code start
+            QClipboard* clipboard = QApplication::clipboard();
+            QByteArray ba;
+            if (_editAreaIsAscii) {
+                ba = clipboard->text().toLatin1();
+            }
+            else {
+                ba = QByteArray::fromHex(clipboard->text().toLatin1());  
+            }
+
+            if (_overwriteMode)
+            {
+                ba = ba.left(std::min<qint64>(ba.size(), (_chunks->size() - _bPosCurrent)));
+                replace(_bPosCurrent, ba.size(), ba);
+            }
+            else
+                insert(_bPosCurrent, ba);
+
+            setCursorPosition(_cursorPosition + 2 * ba.size());
+            resetSelection(getSelectionBegin());
+            //modified code end
+
+
         } else
 
         /* Delete char */
@@ -775,13 +843,41 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
     }
 
     /* Copy */
-    if (event->matches(QKeySequence::Copy))//TODO: copy original data
-    {
+    if (event->matches(QKeySequence::Copy))//TODO: copy original data, (use cursor's pos)
+    {//Modified by Fu
+
+        //=========original code===========
+        /*
         QByteArray ba = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();
         for (qint64 idx = 32; idx < ba.size(); idx +=33)
             ba.insert(idx, "\n");
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText(ba);
+        */
+
+        //modified code start
+        QClipboard* clipboard = QApplication::clipboard();
+        if (_editAreaIsAscii) {
+            clipboard->setText(_chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()));
+        }
+        else {
+            QString hex_data_f;
+            QByteArray hex_array = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();
+            if (hex_array.size() < 2) {
+                clipboard->setText("");
+            }
+            else {
+                hex_data_f.append((char)hex_array[0]);
+                hex_data_f.append((char)hex_array[1]);
+                for (int i = 2; i < hex_array.size();) {
+                    hex_data_f.append(' ');
+                    hex_data_f.append((char)hex_array[i++]);
+                    hex_data_f.append((char)hex_array[i++]);
+                }
+                clipboard->setText(hex_data_f);
+            }      
+        }
+        //modified code end
     }
 
     // Switch between insert/overwrite mode

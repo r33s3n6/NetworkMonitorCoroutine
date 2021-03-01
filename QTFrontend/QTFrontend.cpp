@@ -22,7 +22,6 @@ QTFrontend::QTFrontend(QWidget *parent)
 	_setup_table();
 	//table settings start
  
-   
 
 	connect(ui.table_session->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &QTFrontend::display_full_info);
 	connect(&_session_data, &SessionDataModel::info_updated, this, &QTFrontend::update_displayed_info);
@@ -43,6 +42,37 @@ QTFrontend::QTFrontend(QWidget *parent)
 
 	connect(ui.pushButton_restart_proxy_server, &QPushButton::clicked, this, &QTFrontend::_restart_backend_server);
 	connect(ui.pushButton_trust_root_ca, &QPushButton::clicked, this, &QTFrontend::_trust_root_ca);
+
+	auto edited_handler = //deprecated
+		[this](bool modified) {
+		auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+
+		_session_info_ptr->edited = true;
+	};
+	//connect(ui.plaintext_req_text, &QPlainTextEdit::modificationChanged, edited_handler);
+	//connect(ui.plaintext_rsp_text, &QPlainTextEdit::modificationChanged, edited_handler);
+
+	auto tab_changed_handler = 
+		[this](int new_tab,bool is_req) {
+		auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+		if (_session_info_ptr->edited) {
+			auto hex_editor = is_req ? ui.hexEdit_req : ui.hexEdit_rsp;
+			auto text_editor = is_req ? ui.plaintext_req_text : ui.plaintext_rsp_text;
+
+			if (new_tab == 0) {//to display data
+				auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
+				display_data = _raw_chunk_to_text(hex_editor->data().toStdString());
+				text_editor->setPlainText(QString::fromStdString(display_data));
+
+			}
+			//_session_info_ptr->edited = false;
+		}
+		
+
+	};
+	//connect(ui.tab_request, &QTabWidget::currentChanged, [=](int x) {tab_changed_handler(x, true); });
+	//connect(ui.tab_response, &QTabWidget::currentChanged, [=](int x) {tab_changed_handler(x, false); });
+	
 	//connect(ui.lineEdit_breakpoint_host, &QLineEdit::editingFinished, this, &QTFrontend::_set_config);
 	//connect(ui.plainTextEdit_breakpoint_custom, &QPlainTextEdit::finish, this, &QTFrontend::_set_config);
 	
@@ -102,10 +132,15 @@ void QTFrontend::_setup_table() {
 }
 
 
-void QTFrontend::_add_bp(bool is_req) {//TODO ÈôÖ®Ç°Ã»Æô¶¯¶Ïµã£¬Ò²²»Ó¦¸Ã°Ñ¾ÉµÄ¶ÏµãfilterÆôÓÃ
+void QTFrontend::_add_bp(bool is_req) {
 	_set_config();
 	auto& filter = is_req ? _config->req_filter : _config->rsp_filter;
 	if (_context_menu_session->host.size() > 0) {
+		//ÈôÖ®Ç°Ã»Æô¶¯¶Ïµã£¬Ò²²»Ó¦¸Ã°Ñ¾ÉµÄ¶ÏµãfilterÆôÓÃ TODO:¿É¿ª¹Øfeature
+		if (!filter.enable_breakpoint) {//Ã»ÆôÓÃµÄÇé¿öÏÂ£¬Çå¿ÕÊı¾İ
+			filter.raw_custom_header_filter.clear();
+			filter.raw_host_filter.clear();
+		}
 		if (filter.raw_host_filter.size() == 0) {
 			filter.raw_host_filter = _context_menu_session->host;
 		}
@@ -123,7 +158,7 @@ void QTFrontend::_add_bp(bool is_req) {//TODO ÈôÖ®Ç°Ã»Æô¶¯¶Ïµã£¬Ò²²»Ó¦¸Ã°Ñ¾ÉµÄ¶Ï
 	_display_config();
 }
 
-void QTFrontend::_delete_bp(bool is_req) {//TODO ÈôÖ®Ç°Ã»Æô¶¯¶Ïµã£¬Ò²²»Ó¦¸Ã°Ñ¾ÉµÄ¶ÏµãfilterÆôÓÃ
+void QTFrontend::_delete_bp(bool is_req) {
 	_set_config();
 	auto& filter = is_req ? _config->req_filter : _config->rsp_filter;
 
@@ -147,6 +182,8 @@ void QTFrontend::_delete_bp(bool is_req) {//TODO ÈôÖ®Ç°Ã»Æô¶¯¶Ïµã£¬Ò²²»Ó¦¸Ã°Ñ¾Éµ
 	_set_filter_vec(is_req);
 	_display_config();
 }
+
+
 
 
 
@@ -199,6 +236,28 @@ void QTFrontend::_replay_session(bool with_bp)
 
 }
 
+void QTFrontend::_save_data_to_hexeditor(shared_ptr<session_info> _session_info_ptr) { //deprecated
+	
+	//<delete>TODO Á¬Í¬ÉÏÃæµÄÒ»Æğ£¬ÕâÀïÃæµÄ»»ĞĞ·ûËÆºõÓĞÎÊÌâ</delete>
+	auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
+	auto text_editor = is_req_intercepted ? ui.plaintext_req_text : ui.plaintext_rsp_text;
+	auto tab_widget = is_req_intercepted ? ui.tab_request : ui.tab_response;
+	auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
+	if (tab_widget->currentIndex() == 1) {//raw data now
+
+		display_data = _raw_chunk_to_text(hex_editor->data().toStdString());
+		text_editor->setPlainText(QString::fromStdString(display_data));
+
+	}
+	else if (tab_widget->currentIndex() == 0) {//text data now
+
+		hex_editor->setData(text_editor->toPlainText().toLatin1());
+
+	}
+
+		
+	
+}
 
 void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {
 	
@@ -207,7 +266,20 @@ void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& 
 	}
 	ui.table_session->resizeRowToContents(index.row());
 
-	_display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// »ñÈ¡Êµ¼ÊÎ»ÖÃ
+	auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+
+	
+	//if (_session_info_ptr->edited) {//Ôİ´æĞŞ¸Ä
+	//	_save_data_to_hexeditor(_session_info_ptr);
+		
+	//}
+	auto& temp_data = is_req_intercepted ? _session_info_ptr->temp_req_data : _session_info_ptr->temp_rsp_data;
+	auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
+	temp_data = string(hex_editor->data().constData(), hex_editor->data().length());
+	//_session_info_ptr->edited = false;
+	
+
+	_display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// »ñÈ¡ĞÂµÄÊµ¼ÊÎ»ÖÃ
 
 	_display_full_info(_display_id);
 }
@@ -223,9 +295,28 @@ void QTFrontend::update_displayed_info(size_t update_id)
 void QTFrontend::pass_session() {
 	auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
 	_activate_breakpoint_box(false);
-	_activate_editor(false, is_req_intercepted);//_disable_editor of request/response
+	//TODO potential design problem: is_req_intercepted ²»Ó¦¸ÃÓÉµ¥¶À±äÁ¿¹ÜÀí
+	_activate_editor(false, is_req_intercepted);//_disable_editor of request/response 
 
-	
+	//¸ù¾İµ±Ç°tabºÍÊÇ·ñ±»±à¼­¹ı¾ö¶¨·¢ËÍÄÄ¸öÄÚÈİ£¬
+	//TODOÓ¦¸Ã¼ÓÈëÒ»¸ö»¹Ô­Êı¾İ°´Å¥
+
+
+	//if (_session_info_ptr->edited) {
+	//if (_session_info_ptr->edited) {
+
+		//_save_data_to_hexeditor(_session_info_ptr);
+		//_session_info_ptr->edited = false;//reset for response
+	//}
+	auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
+	auto text_editor = is_req_intercepted ? ui.plaintext_req_text : ui.plaintext_rsp_text;
+
+
+	auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
+	display_data = _raw_chunk_to_text(hex_editor->data().toStdString());
+	text_editor->setPlainText(QString::fromStdString(display_data));
+
+
 	if (is_req_intercepted) {
 		_session_info_ptr->raw_req_data = make_shared<string>(
 			ui.hexEdit_req->data().constData(), ui.hexEdit_req->data().length());
@@ -242,6 +333,40 @@ void QTFrontend::pass_session() {
 
 }
 
+string QTFrontend::_raw_chunk_to_text(const string& data) {//TODO ÒÀÈ»ÓĞbug
+	size_t split_pos = data.size();
+	if (_http_integrity_check(make_shared<string>(data), split_pos) != integrity_status::chunked) {
+		return data;
+	}
+	string ret;
+	ret.append(data.substr(0, split_pos));
+
+	//²»¼ì²é±¨ÎÄÍêÕûĞÔ
+	while (split_pos<data.size()) {
+		size_t _chunk_length_end_pos =
+			data.find("\r\n",split_pos);
+
+		if (_chunk_length_end_pos == string::npos)
+			return ret;
+
+		//get length
+		size_t body_length = hex2decimal(data.substr(split_pos, _chunk_length_end_pos- split_pos).c_str());
+
+		size_t body_end_pos = _chunk_length_end_pos + 2 + body_length;
+
+		ret.append(_chunk_length_end_pos + 2, body_end_pos - (_chunk_length_end_pos + 2));
+		split_pos = body_end_pos + 2;//ÕıºÃ×îºóÒ»¸ö\r\nµÄºóÃæÒ»Î»
+
+
+
+		
+		
+	}
+
+	return data;
+	
+
+};
 
 void QTFrontend::drop_session() {
 	auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
@@ -305,6 +430,7 @@ void QTFrontend::_activate_editor(bool active,bool is_req) {
 //TODO: Ôö¼Ó±£´æÎÄ¼ş¹¦ÄÜ
 void QTFrontend::_display_full_info(size_t display_id)
 {
+	
 
 	
 
@@ -313,14 +439,15 @@ void QTFrontend::_display_full_info(size_t display_id)
 	if (_session_info_ptr->send_behaviour == intercept) {
 		ui.label_intercept->setText("Request has been intercepted");
 		_activate_breakpoint_box(true);
-		_activate_editor(true, true);//_activate_editor of request
+		_activate_editor(_session_info_ptr->req_completed, true);//_activate_editor of request	
+		
 		is_req_intercepted = true;
 		
 	}
 	else if (_session_info_ptr->receive_behaviour == intercept) {
 		ui.label_intercept->setText("Response has been intercepted");
 		_activate_breakpoint_box(true);
-		_activate_editor(true, false);//_activate_editor of response
+		_activate_editor(_session_info_ptr->rsp_completed, false);//_activate_editor of response
 		is_req_intercepted = false;
 	}
 	else {
@@ -328,9 +455,10 @@ void QTFrontend::_display_full_info(size_t display_id)
 	}
 
 	
-
+	
 
 	if (_session_info_ptr->req_data_for_display) {
+
 		ui.plaintext_req_text->setPlainText(
 			QString::fromStdString(*(_session_info_ptr->req_data_for_display)));
 	}  
@@ -339,18 +467,38 @@ void QTFrontend::_display_full_info(size_t display_id)
 	}
 
 	if (_session_info_ptr->raw_req_data) {
-		ui.hexEdit_req->setData(
-			QByteArray(_session_info_ptr->raw_req_data->c_str(),
-				_session_info_ptr->raw_req_data->size()));
+		//´¦ÀíÔİ´æµÄ¸ü¸Ä
+		if (is_req_intercepted&&_session_info_ptr->temp_req_data.size()>0 ) {
+			ui.hexEdit_req->setData(
+				QByteArray(_session_info_ptr->temp_req_data.c_str(),
+					_session_info_ptr->temp_req_data.size()));
+
+		}
+		else {
+			ui.hexEdit_req->setData(
+				QByteArray(_session_info_ptr->raw_req_data->c_str(),
+					_session_info_ptr->raw_req_data->size()));
+		}
+		
 	}
 	else {
 		ui.hexEdit_req->setData(QByteArray());
 	}
 
 	if (_session_info_ptr->raw_rsp_data) {
+		//´¦ÀíÔİ´æµÄ¸ü¸Ä
+		if (!is_req_intercepted && _session_info_ptr->temp_rsp_data.size() > 0) {
+			ui.hexEdit_rsp->setData(
+				QByteArray(_session_info_ptr->temp_rsp_data.c_str(),
+					_session_info_ptr->temp_rsp_data.size()));
+		}
+		else {
+
+		
 		ui.hexEdit_rsp->setData(
 			QByteArray(_session_info_ptr->raw_rsp_data->c_str(),
 				_session_info_ptr->raw_rsp_data->size()));
+		}
 	}
 	else {
 		ui.hexEdit_rsp->setData(QByteArray());
