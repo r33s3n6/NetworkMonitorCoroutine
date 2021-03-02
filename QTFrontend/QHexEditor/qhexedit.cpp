@@ -799,16 +799,20 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
             {
                 if (getSelectionBegin() != getSelectionEnd())
                 {
+                    _bPosCurrent = getSelectionBegin();
+                    setCursorPosition(2 * _bPosCurrent);
                     if (_overwriteMode)
                     {
                         qint64 len = getSelectionEnd() - getSelectionBegin();
                         replace(getSelectionBegin(), (int)len, QByteArray((int)len, char(0)));
+                        //setCursorPosition(2 * _bPosCurrent);
                     } else
                     {
                         remove(getSelectionBegin(), getSelectionEnd() - getSelectionBegin());
-                        _bPosCurrent = getSelectionBegin();
+                        
+                        //setCursorPosition(2 * _bPosCurrent);
                     }
-                    setCursorPosition(2 * _bPosCurrent);
+                    
                     resetSelection(2 * _bPosCurrent);
                 }
 

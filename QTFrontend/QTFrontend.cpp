@@ -273,11 +273,17 @@ void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& 
 	//	_save_data_to_hexeditor(_session_info_ptr);
 		
 	//}
-	auto& temp_data = is_req_intercepted ? _session_info_ptr->temp_req_data : _session_info_ptr->temp_rsp_data;
-	auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
-	temp_data = string(hex_editor->data().constData(), hex_editor->data().length());
-	//_session_info_ptr->edited = false;
+	if (_session_info_ptr->send_behaviour == intercept || _session_info_ptr->receive_behaviour == intercept) {
+		auto& temp_data = is_req_intercepted ? _session_info_ptr->temp_req_data : _session_info_ptr->temp_rsp_data;
+		auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
+		temp_data = string(hex_editor->data().constData(), hex_editor->data().length());
+
+		auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
+		display_data = _raw_chunk_to_text(temp_data);
+	}
 	
+
+
 
 	_display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// 获取新的实际位置
 
@@ -333,7 +339,7 @@ void QTFrontend::pass_session() {
 
 }
 
-string QTFrontend::_raw_chunk_to_text(const string& data) {//TODO 依然有bug
+string QTFrontend::_raw_chunk_to_text(const string& data) {
 	size_t split_pos = data.size();
 	if (_http_integrity_check(make_shared<string>(data), split_pos) != integrity_status::chunked) {
 		return data;
@@ -354,7 +360,7 @@ string QTFrontend::_raw_chunk_to_text(const string& data) {//TODO 依然有bug
 
 		size_t body_end_pos = _chunk_length_end_pos + 2 + body_length;
 
-		ret.append(_chunk_length_end_pos + 2, body_end_pos - (_chunk_length_end_pos + 2));
+		ret.append(data.substr(_chunk_length_end_pos + 2, body_end_pos - (_chunk_length_end_pos + 2)));
 		split_pos = body_end_pos + 2;//正好最后一个\r\n的后面一位
 
 
@@ -362,8 +368,9 @@ string QTFrontend::_raw_chunk_to_text(const string& data) {//TODO 依然有bug
 		
 		
 	}
-
-	return data;
+	//if (ret.size() > data.size())
+	//	throw "fuck";
+	return ret;
 	
 
 };
@@ -468,7 +475,7 @@ void QTFrontend::_display_full_info(size_t display_id)
 
 	if (_session_info_ptr->raw_req_data) {
 		//处理暂存的更改
-		if (is_req_intercepted&&_session_info_ptr->temp_req_data.size()>0 ) {
+		if (_session_info_ptr->send_behaviour == intercept &&_session_info_ptr->temp_req_data.size()>0 ) {
 			ui.hexEdit_req->setData(
 				QByteArray(_session_info_ptr->temp_req_data.c_str(),
 					_session_info_ptr->temp_req_data.size()));
@@ -487,7 +494,7 @@ void QTFrontend::_display_full_info(size_t display_id)
 
 	if (_session_info_ptr->raw_rsp_data) {
 		//处理暂存的更改
-		if (!is_req_intercepted && _session_info_ptr->temp_rsp_data.size() > 0) {
+		if (_session_info_ptr->receive_behaviour == intercept && _session_info_ptr->temp_rsp_data.size() > 0) {
 			ui.hexEdit_rsp->setData(
 				QByteArray(_session_info_ptr->temp_rsp_data.c_str(),
 					_session_info_ptr->temp_rsp_data.size()));

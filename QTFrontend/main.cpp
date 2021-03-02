@@ -26,6 +26,8 @@
 
 //TODO 更好的更改头的办法
 
+//TODO config
+
 
 int main(int argc, char *argv[])
 {
