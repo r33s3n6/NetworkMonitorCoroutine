@@ -25,10 +25,10 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
         */
     if (!split_request(_session_info->raw_req_data , header, body))//TODO:目前只查找请求头
         return false;
-	shared_ptr<vector<string>> header_vec_ptr
-		= string_split(*header, "\r\n");
-
-
+	//shared_ptr<vector<string>> header_vec_ptr
+	//	= string_split(*header, "\r\n");
+    
+    map<string, string> h_map = split_header_into_map(*_session_info->raw_req_data);
 
     if (filter.header_filter_vec.empty())
         return false;
@@ -47,8 +47,8 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 
             shared_ptr<vector<string>> keywords = string_split(value_filter, "*");
 
-            string value = string_trim(get_header_value(header_vec_ptr, header.key));
-            
+            //string&& value = string_trim(get_header_value(header_vec_ptr, header.key));
+            string value = h_map[header.key];
             bool success = true;
 
             if (keywords->size() == 1) {//完全匹配
@@ -73,6 +73,14 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
                         success = false;
                     }
 
+                }
+                if (success && header.key == "host") {
+                    if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cn不能匹配*.baidu.com
+                        success = true;
+                    }
+                    else {
+                        success = false;
+                    }
                 }
             }
 

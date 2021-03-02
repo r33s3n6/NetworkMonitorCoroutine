@@ -354,8 +354,9 @@ namespace proxy_tcp {
 		if (pos1 != string::npos) {//非透明代理
 			size_t pos0 = first_line.find(" ");
 			size_t pos2 = first_line.find("/", pos1 + 3);
-			(*header_vec_ptr)[0] = first_line.substr(0, pos0 + 1) +
-				first_line.substr(pos2, first_line.size() - pos2);
+			if(pos0!=string::npos&&pos2!=string::npos)
+				(*header_vec_ptr)[0] = first_line.substr(0, pos0 + 1) +
+					first_line.substr(pos2, first_line.size() - pos2);
 		}
 		//透明代理什么都不用做
 

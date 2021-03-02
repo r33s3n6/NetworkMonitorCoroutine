@@ -420,11 +420,11 @@ void QTFrontend::_activate_breakpoint_box(bool active){
 void QTFrontend::_activate_editor(bool active,bool is_req) {
 	if (is_req) {
 		ui.hexEdit_req->setReadOnly(!active);
-		ui.plaintext_req_text->setReadOnly(!active);
+		//ui.plaintext_req_text->setReadOnly(!active);
 	}
 	else {
 		ui.hexEdit_rsp->setReadOnly(!active);
-		ui.plaintext_rsp_text->setReadOnly(!active);
+		//ui.plaintext_rsp_text->setReadOnly(!active);
 	}
 	
 
@@ -606,6 +606,7 @@ void QTFrontend::_set_config()
 	_config->system_proxy = ui.checkBox_system_proxy->isChecked();
 	_config->verify_server_certificate = ui.checkBox_verify_certificate->isChecked();
 
+	_config->save_config("config.dat");
 }
 
 void QTFrontend::_restart_backend_server()

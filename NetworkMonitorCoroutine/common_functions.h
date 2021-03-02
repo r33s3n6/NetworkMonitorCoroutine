@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 using namespace std;
 
 #include "connection_enums.h"
@@ -9,6 +10,8 @@ using namespace std;
 namespace common {
 
 
+
+    map<string, string> split_header_into_map(const string& header);
 
     shared_ptr<vector<string>> string_split(const string& str, const string& pattern);
 
@@ -39,6 +42,8 @@ inline string string_trim(const string& original)
 
 inline string string_trim(const string&& original)
 {
+    if (original.size() == 0)
+        return string();
     size_t _begin = original.find_first_not_of(" ");
     size_t _size = original.find_last_not_of(" ") - _begin + 1;
     return original.substr(_begin, _size);

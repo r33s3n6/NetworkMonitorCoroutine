@@ -1,8 +1,23 @@
 #include "common_functions.h"
 #include <algorithm>
+
 using namespace std;
 namespace common {
-	using namespace proxy_tcp;
+using namespace proxy_tcp;
+
+map<string, string> split_header_into_map(const string& header) {
+	shared_ptr<vector<string>> vec=string_split(header, "\r\n");
+	map<string, string> ret;
+	for (auto h : *vec) {
+		size_t s_pos = h.find(":");
+		if (s_pos == string::npos)
+			continue;
+		string&& key = string_trim(h.substr(0, s_pos));
+		string&& value = string_trim(h.substr(s_pos+1, h.size()- s_pos-1));
+		ret[key] = value;
+	}
+	return ret;
+}
 
 
 shared_ptr<vector<string>> string_split(const string& str, const string& pattern) {
