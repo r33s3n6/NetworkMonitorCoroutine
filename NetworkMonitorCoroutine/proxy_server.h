@@ -39,7 +39,7 @@ namespace proxy_tcp {
 class proxy_server
 {
 public:
-	//½ûÖ¹¿½±´ºÍ¸³Öµ
+	//ç¦æ­¢æ‹·è´å’Œèµ‹å€¼
 	proxy_server(const proxy_server&) = delete;
 	proxy_server& operator=(const proxy_server&) = delete;
 
@@ -51,7 +51,7 @@ public:
 
 	
 	void stop() { _stop(); }
-	void start();//Òì²½ÔËĞĞ
+	void start();//å¼‚æ­¥è¿è¡Œ
 	void replay(shared_ptr<string> raw_req_data,bool with_bp, bool is_tunnel_conn);
 	//display_filter* get_display_filter() { return &_display_filter; }
 

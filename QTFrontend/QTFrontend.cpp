@@ -4,7 +4,7 @@
 
 
 
-QTFrontend::QTFrontend(QWidget *parent)
+QTFrontend::QTFrontend(QWidget *parent,bool debug)
 	: QMainWindow(parent),
 	_backend_server(new proxy_server(&_display_filter,"config.dat")),
 	_session_data(nullptr, &_display_filter),
@@ -18,6 +18,9 @@ QTFrontend::QTFrontend(QWidget *parent)
 	_display_config();
 	//_set_config();//可视化config
 
+	if (!debug) {
+		ui.menuDebug->setEnabled(false);
+	}
 
 	_setup_table();
 	//table settings start
@@ -83,7 +86,7 @@ QTFrontend::QTFrontend(QWidget *parent)
 	_set_filter_vec(true);
 	_set_filter_vec(false);
 	ui.statusBar->showMessage("TODO:Status Bar");
-	
+	ui.label_server_restart_required->hide();
 }
 
 
@@ -617,6 +620,7 @@ void QTFrontend::_set_config()
 	_config->verify_server_certificate = ui.checkBox_verify_certificate->isChecked();
 
 	_config->save_config("config.dat");
+	
 }
 
 void QTFrontend::_restart_backend_server()
@@ -630,11 +634,11 @@ void QTFrontend::_restart_backend_server()
 	_config = _backend_server->get_config_ptr();
 	_backend_thread = make_shared<boost::thread>(boost::bind(
 		&proxy_tcp::proxy_server::start, _backend_server));
-
+	ui.label_server_restart_required->hide();
 	_display_config();
 }
 
-void QTFrontend::_trust_root_ca()//TODO
+void QTFrontend::_trust_root_ca()
 {
 	system(string("certutil -addstore -f -enterprise -user root ./cert/CAcert.pem").c_str());
 }

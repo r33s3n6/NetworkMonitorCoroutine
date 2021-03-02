@@ -27,9 +27,9 @@ using boost::asio::ip::tcp;
 //#include "TestServer.h"
 #include "proxy_server.h"
 
-/*Î´Íê³ÉµÄ²¿·Ö:
+/*æœªå®Œæˆçš„éƒ¨åˆ†:
 * 
-* logging Àà
+* logging ç±»
 * 
 * 
 * 
@@ -46,9 +46,9 @@ websocket_integrity_check
 */
 
 /*
-³ÌĞòÈë¿Úµã
-×÷Îª½çÃæ³ÌĞòµÄºóÌ¨´¦ÀíÏûÏ¢Ñ­»·
-¿ÉÒÔµ¥¶Àµ÷ÊÔ
+ç¨‹åºå…¥å£ç‚¹
+ä½œä¸ºç•Œé¢ç¨‹åºçš„åå°å¤„ç†æ¶ˆæ¯å¾ªç¯
+å¯ä»¥å•ç‹¬è°ƒè¯•
 */
 
 int main(int argc, char* argv[])

@@ -6,7 +6,7 @@ using namespace std;
 
 #include "common_functions.h"
 using namespace common;
-void config::load_config_from_file(string path)//TODO:¿ÉÒÔÊ¹ÓÃÆäËû¿âÖØ¹¹´úÂë
+void config::load_config_from_file(string path)//TODO:å¯ä»¥ä½¿ç”¨å…¶ä»–åº“é‡æ„ä»£ç 
 {
 	ifstream conf_file;
 	conf_file.open(path, ios::in);
@@ -41,7 +41,7 @@ void config::load_config_from_file(string path)//TODO:¿ÉÒÔÊ¹ÓÃÆäËû¿âÖØ¹¹´úÂë
 			else if (entry.type == typeid(string).name()) {
 				*(string*)entry.address = value;
 			}
-			else if (array_pos != string::npos) {//TODO
+			else if (array_pos != string::npos) {
 				int* arr = (int*)entry.address;
 				size_t pos2 = entry.type.find("]");
 				if (pos2 == string::npos)
@@ -89,7 +89,7 @@ void config::save_config(string path)
 			else if (entry.type == typeid(string).name()) {
 				conf_file << *(string*)entry.address;
 			}
-			else if (array_pos != string::npos) {//TODO
+			else if (array_pos != string::npos) {
 				int* arr = (int*)entry.address;
 				size_t pos2 = entry.type.find("]");
 				if (pos2 == string::npos)

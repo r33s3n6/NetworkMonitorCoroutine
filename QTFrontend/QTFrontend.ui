@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>970</width>
+    <width>982</width>
     <height>750</height>
    </rect>
   </property>
@@ -44,6 +44,9 @@
     </property>
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="font">
        <font>
         <pointsize>10</pointsize>
@@ -256,6 +259,9 @@
                       <property name="styleSheet">
                        <string notr="true"/>
                       </property>
+                      <property name="dynamicBytesPerLine">
+                       <bool>true</bool>
+                      </property>
                       <property name="overwriteMode">
                        <bool>false</bool>
                       </property>
@@ -430,6 +436,9 @@ color: #ffffff;
                       <property name="whatsThis">
                        <string>QHexEdit widget allow to edit the data in hex view.</string>
                       </property>
+                      <property name="dynamicBytesPerLine">
+                       <bool>true</bool>
+                      </property>
                       <property name="overwriteMode">
                        <bool>true</bool>
                       </property>
@@ -455,8 +464,8 @@ color: #ffffff;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>526</width>
-                         <height>279</height>
+                         <width>181</width>
+                         <height>28</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">
@@ -544,8 +553,8 @@ color: #ffffff;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>962</width>
-             <height>681</height>
+             <width>940</width>
+             <height>660</height>
             </rect>
            </property>
            <property name="minimumSize">
@@ -584,7 +593,7 @@ color: #ffffff;
              </font>
             </property>
             <property name="title">
-             <string>通用设置</string>
+             <string>后端通用设置</string>
             </property>
             <widget class="QLineEdit" name="lineEdit_port">
              <property name="geometry">
@@ -658,12 +667,15 @@ color: #ffffff;
              </property>
             </widget>
             <widget class="QCheckBox" name="checkBox_system_proxy">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="geometry">
               <rect>
                <x>240</x>
                <y>50</y>
                <width>101</width>
-               <height>21</height>
+               <height>16</height>
               </rect>
              </property>
              <property name="text">
@@ -702,7 +714,7 @@ color: #ffffff;
                <x>240</x>
                <y>70</y>
                <width>111</width>
-               <height>21</height>
+               <height>16</height>
               </rect>
              </property>
              <property name="text">
@@ -716,7 +728,7 @@ color: #ffffff;
              <property name="geometry">
               <rect>
                <x>240</x>
-               <y>100</y>
+               <y>90</y>
                <width>101</width>
                <height>16</height>
               </rect>
@@ -726,6 +738,22 @@ color: #ffffff;
              </property>
              <property name="checked">
               <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_server_restart_required">
+             <property name="geometry">
+              <rect>
+               <x>260</x>
+               <y>210</y>
+               <width>81</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color:#ff0000;</string>
+             </property>
+             <property name="text">
+              <string>服务器需要重启</string>
              </property>
             </widget>
            </widget>
@@ -935,6 +963,9 @@ color: #ffffff;
        </layout>
       </widget>
       <widget class="QWidget" name="tab">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <attribute name="title">
         <string>自定义请求</string>
        </attribute>
@@ -948,7 +979,7 @@ color: #ffffff;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>970</width>
+     <width>982</width>
      <height>18</height>
     </rect>
    </property>
@@ -969,9 +1000,11 @@ color: #ffffff;
      <string>工具</string>
     </property>
     <addaction name="actionRequest"/>
-    <addaction name="actionBreakpoint_Settings"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="title">
      <string>Debug</string>
     </property>
@@ -1005,11 +1038,17 @@ color: #ffffff;
    </property>
   </widget>
   <action name="actionLicense">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>License</string>
    </property>
   </action>
   <action name="actionRequest">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>自定义请求</string>
    </property>
@@ -1018,8 +1057,14 @@ color: #ffffff;
    <property name="text">
     <string>Show/Hide breakpoint_button</string>
    </property>
+   <property name="visible">
+    <bool>true</bool>
+   </property>
   </action>
   <action name="actionSave_all_sessions">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>保存所有会话</string>
    </property>
@@ -1090,5 +1135,102 @@ color: #ffffff;
  <resources>
   <include location="QTFrontend.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>lineEdit_port</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>612</x>
+     <y>113</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>803</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_2nd_proxy</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>652</x>
+     <y>152</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>818</x>
+     <y>296</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_allow_lan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>786</x>
+     <y>156</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>839</x>
+     <y>292</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_verify_certificate</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>803</x>
+     <y>183</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>830</x>
+     <y>294</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_system_proxy</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>798</x>
+     <y>138</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>821</x>
+     <y>294</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_https_decrypt</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>799</x>
+     <y>116</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>851</x>
+     <y>295</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

@@ -23,7 +23,7 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 		_session_info->raw_rsp_data, header, body))
 		return false;
         */
-    if (!split_request(_session_info->raw_req_data , header, body))//TODO:Ä¿Ç°Ö»²éÕÒÇëÇóÍ·
+    if (!split_request(_session_info->raw_req_data , header, body))//TODO:ç›®å‰åªæŸ¥æ‰¾è¯·æ±‚å¤´
         return false;
 	//shared_ptr<vector<string>> header_vec_ptr
 	//	= string_split(*header, "\r\n");
@@ -39,7 +39,7 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
         if (header.value.size() == 0)
             continue;
 
-        for (auto value_filter : header.value) {//¶ÔÃ¿Ò»¸övalue_filter¶¼²éÕÒ£¬ĞÔÄÜÓĞ½Ï´óÏûºÄ
+        for (auto value_filter : header.value) {//å¯¹æ¯ä¸€ä¸ªvalue_filteréƒ½æŸ¥æ‰¾ï¼Œæ€§èƒ½æœ‰è¾ƒå¤§æ¶ˆè€—
 
 
             if (value_filter.size() == 0)
@@ -51,15 +51,15 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
             string value = h_map[header.key];
             bool success = true;
 
-            if (keywords->size() == 1) {//ÍêÈ«Æ¥Åä
+            if (keywords->size() == 1) {//å®Œå…¨åŒ¹é…
                 if (value.find((*keywords)[0]) != 0)
                     success = false;
             }
             else {
                 size_t new_start_pos = 0;
 
-                //TODO:ÕıÔò±í´ïÊ½
-                for (int i = 0; i < keywords->size(); i++) {//*µÄ¼òµ¥ÊµÏÖ
+                //TODO:æ­£åˆ™è¡¨è¾¾å¼
+                for (int i = 0; i < keywords->size(); i++) {//*çš„ç®€å•å®ç°
                     string& key = (*keywords)[i];
                     if (key.size() == 0)
                         continue;
@@ -75,7 +75,7 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 
                 }
                 if (success && header.key == "host") {
-                    if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cn²»ÄÜÆ¥Åä*.baidu.com
+                    if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cnä¸èƒ½åŒ¹é…*.baidu.com
                         success = true;
                     }
                     else {

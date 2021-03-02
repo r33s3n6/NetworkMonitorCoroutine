@@ -1,6 +1,3 @@
-
-#pragma warning disable 0304
-
 #include "proxy_server.h"
 
 #include <boost/thread/thread.hpp>
@@ -91,6 +88,7 @@ awaitable<void> proxy_server::_listener()
 
 			shared_ptr<client_unit> _client(new client_unit(
 				_io_context_pool.get_io_context()));
+			_client->secondary_proxy = _config.secondary_proxy;
 			_new_proxy_handler.reset(new http_proxy_handler(
 				_breakpoint_manager, *_display_filter, _client));
 

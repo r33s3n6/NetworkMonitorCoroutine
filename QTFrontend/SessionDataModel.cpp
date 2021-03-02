@@ -77,7 +77,7 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
             }
             else if ((temp->send_behaviour == intercept)
                 || (temp->receive_behaviour == intercept)) {
-                //return QColor(0xff, 0x7a, 0x37);//³ÈÉ«
+                //return QColor(0xff, 0x7a, 0x37);//æ©™è‰²
                 return QColor(0xff, 0xaa, 0xff);
                 //return QColor(0xda, 0x4f, 0x49);
 
@@ -89,8 +89,8 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
     }else if(role == Qt::ForegroundRole){
         if (temp) {
             if (temp->failed) {
-                //return QColor(0xda, 0x4f, 0x49);//ÉÔÇ³Ò»µãµÄºìÉ«
-                return QColor(0xff, 0x00, 0x00);//´óºì
+                //return QColor(0xda, 0x4f, 0x49);//ç¨æµ…ä¸€ç‚¹çš„çº¢è‰²
+                return QColor(0xff, 0x00, 0x00);//å¤§çº¢
             }
             else if ((temp->send_behaviour == intercept)
                 || (temp->receive_behaviour == intercept)) {
@@ -157,7 +157,7 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
         _session_info->host = get_header_value(header_vec_ptr, "host");
     } 
     else {
-        _session_info->req_data_for_display = make_shared<string>("Data Broken"); //TODO color
+        _session_info->req_data_for_display = make_shared<string>("Data Broken"); 
     }
         
 

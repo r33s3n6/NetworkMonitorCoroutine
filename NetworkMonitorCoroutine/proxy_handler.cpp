@@ -23,11 +23,11 @@ namespace proxy_tcp {
 		_session_info.reset();
 	}
 
-	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result,shared_ptr<string> err_data)//TODO:response,¼ÓÈëreqĞÅÏ¢
+	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result,shared_ptr<string> err_data)//TODO:response,åŠ å…¥reqä¿¡æ¯
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
-		if (!_session_info) {//ÉõÖÁ»¹Ã»ÇëÇó¾ÍÊ§°ÜÁË
+		if (!_session_info) {//ç”šè‡³è¿˜æ²¡è¯·æ±‚å°±å¤±è´¥äº†
 			_session_info = make_shared<session_info>();
 			
 			_session_info->raw_req_data = err_data;
@@ -48,7 +48,7 @@ namespace proxy_tcp {
 		
 
 		
-		//Ò»¶¨²»ÊÇconnect method
+		//ä¸€å®šä¸æ˜¯connect method
 
 
 		bool _keep_alive = true;
@@ -58,10 +58,10 @@ namespace proxy_tcp {
 
 		
 
-		if (!_session_info) {//ËµÃ÷ÊÇÒ»´ÎÈ«ĞÂµÄÇëÇó
+		if (!_session_info) {//è¯´æ˜æ˜¯ä¸€æ¬¡å…¨æ–°çš„è¯·æ±‚
 			host.reset(new string(""));
 			_conn_protocol = http;
-			_keep_alive = _process_header(msg, _modified_data);//ÔÚÆäÖĞhost,_conn_protocol±»ĞŞ¸Ä
+			_keep_alive = _process_header(msg, _modified_data);//åœ¨å…¶ä¸­host,_conn_protocolè¢«ä¿®æ”¹
 
 			if (_modified_data->size() == 0) {
 				co_return respond_error;
@@ -90,17 +90,17 @@ namespace proxy_tcp {
 			
 
 			_session_info->proxy_handler_ptr = shared_from_this();
-			if (force_breakpoint||_breakpoint_manager.check(_session_info,true)) {//Í¨¹ıÇëÇóÍ·À´À¹½Ø ÒÔºóÔÙËµbodyµÄÊÂ°É TODO
-				//¶Ïµã
+			if (force_breakpoint||_breakpoint_manager.check(_session_info,true)) {//é€šè¿‡è¯·æ±‚å¤´æ¥æ‹¦æˆª ä»¥åå†è¯´bodyçš„äº‹å§ TODO
+				//æ–­ç‚¹
 				_session_info->send_behaviour = intercept;
 			}
-			else {//ĞÂÏÔÊ¾ 
+			else {//æ–°æ˜¾ç¤º 
 				_session_info->send_behaviour = pass;
 				
 			}
 			_display_filter.display(_session_info);
 		}
-		else {//ÊÇÄ³´ÎµÄºóĞø£¬Òò´ËÖ±½Ó¸üĞÂ
+		else {//æ˜¯æŸæ¬¡çš„åç»­ï¼Œå› æ­¤ç›´æ¥æ›´æ–°
 			_session_info->raw_req_data->append(*msg);
 			_modified_data = msg;
 
@@ -181,7 +181,7 @@ namespace proxy_tcp {
 	awaitable<connection_behaviour> http_proxy_handler::receive_message(
 		shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
 	{
-		//±ØÈ»ÓĞ_session_info
+		//å¿…ç„¶æœ‰_session_info
 		//assert(!_session_info)
 
 		connection_behaviour _behaviour;
@@ -208,7 +208,7 @@ namespace proxy_tcp {
 			_session_info->raw_rsp_data = rsp;
 			
 			if (_breakpoint_manager.check(_session_info,false)) {
-				_session_info->receive_behaviour = intercept;//¶Ïµã
+				_session_info->receive_behaviour = intercept;//æ–­ç‚¹
 			}
 			else {
 				_session_info->receive_behaviour = pass;
@@ -258,7 +258,7 @@ namespace proxy_tcp {
 			_client->disconnect();
 			co_return connection_behaviour::ignore;
 		case intercept://not end of response
-			rsp.reset(new string(""));//TODO: connection ÈôrspÎª¿ÕÔò²»Ğ´Èë
+			rsp.reset(new string(""));
 			break;
 		}
 
@@ -288,13 +288,13 @@ namespace proxy_tcp {
 			return false;
 
 
-		list<string> to_be_removed_header_list{//Ğ¡Ğ´
+		list<string> to_be_removed_header_list{//å°å†™
 			"proxy-authenticate",
 			"proxy-connection",
 			"connection",
 			//"upgrade",
-			"accept-encoding"//TODO: ½â¾ögzip, br, deflateºóÔÙ¼Ó»ØÈ¥°É
-			//"transfer-encoding","te","trailers"//¿ÉÒÔÔ­Ñù×ª·¢£¬²»ÒªÍ½ÔöÂé·³
+			"accept-encoding"//TODO: è§£å†³gzip, br, deflateåå†åŠ å›å»å§
+			//"transfer-encoding","te","trailers"//å¯ä»¥åŸæ ·è½¬å‘ï¼Œä¸è¦å¾’å¢éº»çƒ¦
 		};
 
 
@@ -351,18 +351,18 @@ namespace proxy_tcp {
 		string first_line = (*header_vec_ptr)[0];
 
 		size_t pos1 = first_line.find("://");
-		if (pos1 != string::npos) {//·ÇÍ¸Ã÷´úÀí
+		if (pos1 != string::npos) {//éé€æ˜ä»£ç†
 			size_t pos0 = first_line.find(" ");
 			size_t pos2 = first_line.find("/", pos1 + 3);
 			if(pos0!=string::npos&&pos2!=string::npos)
 				(*header_vec_ptr)[0] = first_line.substr(0, pos0 + 1) +
 					first_line.substr(pos2, first_line.size() - pos2);
 		}
-		//Í¸Ã÷´úÀíÊ²Ã´¶¼²»ÓÃ×ö
+		//é€æ˜ä»£ç†ä»€ä¹ˆéƒ½ä¸ç”¨åš
 
 
 
-		for (auto header : *header_vec_ptr) {//Çå³ıÖğÌøÍ·²¿
+		for (auto header : *header_vec_ptr) {//æ¸…é™¤é€è·³å¤´éƒ¨
 			string temp;
 			temp.resize(header.size());
 			transform(header.begin(), header.end(), temp.begin(), ::tolower);
@@ -387,10 +387,10 @@ namespace proxy_tcp {
 
 		}
 
-		//Ìí¼Óµ½ÏÂÒ»ÌøµÄÍ·²¿
+		//æ·»åŠ åˆ°ä¸‹ä¸€è·³çš„å¤´éƒ¨
 
 		if (CLIENT_UNIT_KEEP_ALIVE)
-			result->append("Connection: keep-alive");//Ä¬ÈÏkeep-alive
+			result->append("Connection: keep-alive");//é»˜è®¤keep-alive
 		else
 			result->append("Connection: close");
 

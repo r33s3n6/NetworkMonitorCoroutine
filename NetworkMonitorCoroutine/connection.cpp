@@ -52,7 +52,7 @@ connection::connection(boost::asio::io_context& io,
 
 void connection::start()
 {
-	//±£Ö¤connection´æÔÚ
+	//ä¿è¯connectionå­˜åœ¨
 	auto self = this->shared_from_this();
 	co_spawn(_io_context.get_executor(),//TODO:maybe socket->
 		[self]() {
@@ -83,20 +83,20 @@ awaitable<void> connection::_waitable_loop()
 {
 	/*
 	* 
-	* ÕûÌåÂß¼­
-	* Èç¹ûÓĞÉÏ´ÎÊ£Óà£¬Ôò²»¶ÁÈ¡
-	* ¶ÁÈ¡
-	* ¼ì²éÍêÕûĞÔ
-	* ÈôÎªwaitÖ±½ÓÌøµ½¿ªÍ·
-	* ÈôÎªchunkedÔò.....
+	* æ•´ä½“é€»è¾‘
+	* å¦‚æœæœ‰ä¸Šæ¬¡å‰©ä½™ï¼Œåˆ™ä¸è¯»å–
+	* è¯»å–
+	* æ£€æŸ¥å®Œæ•´æ€§
+	* è‹¥ä¸ºwaitç›´æ¥è·³åˆ°å¼€å¤´
+	* è‹¥ä¸ºchunkedåˆ™.....
 	
 	
 	*/
 
 	/*
 	* 
-	* Ö»ÅĞ¶ÏÊÇ·ñ¶à´Î·¢°ü
-	* ¶à´Î½ÓÊÕÓÉhandler¿ØÖÆ£¬ÕâÑù¿ÉÒÔ¼õÉÙÒ»±éÅĞ¶Ï
+	* åªåˆ¤æ–­æ˜¯å¦å¤šæ¬¡å‘åŒ…
+	* å¤šæ¬¡æ¥æ”¶ç”±handleræ§åˆ¶ï¼Œè¿™æ ·å¯ä»¥å‡å°‘ä¸€éåˆ¤æ–­
 	
 	*/
 
@@ -118,7 +118,7 @@ awaitable<void> connection::_waitable_loop()
 
 		integrity_status _status= integrity_status::broken;
 
-		while (_keep_alive) { //Ñ­»·¶ÁĞ´
+		while (_keep_alive) { //å¾ªç¯è¯»å†™
 
 			integrity_status last_status = _status;
 
@@ -129,16 +129,16 @@ awaitable<void> connection::_waitable_loop()
 			if (!_with_appendix) {
 				co_await _async_read(_is_tunnel_conn);
 			}
-			//ÈôÉÏ´ÎÓĞÒ»Ğ©Ê£ÓàµÄÎ²°Í£¬Õâ´ÎÏÈ²»¶Á¶øÊÇÏÈ¼ì²éÍêÕûĞÔ£¬·ñÔò¿ÉÄÜÆäÖĞÎª×îºóÒ»¸ö±¨ÎÄ¶ø×èÈû
+			//è‹¥ä¸Šæ¬¡æœ‰ä¸€äº›å‰©ä½™çš„å°¾å·´ï¼Œè¿™æ¬¡å…ˆä¸è¯»è€Œæ˜¯å…ˆæ£€æŸ¥å®Œæ•´æ€§ï¼Œå¦åˆ™å¯èƒ½å…¶ä¸­ä¸ºæœ€åä¸€ä¸ªæŠ¥æ–‡è€Œé˜»å¡
 
 			if (_whole_request->size() == 0)
 				continue;
 
 
-			//_whole_request ¶¼ÊÇ½âÃÜÍêµÄhttpÊı¾İ
+			//_whole_request éƒ½æ˜¯è§£å¯†å®Œçš„httpæ•°æ®
 	
 			size_t split_pos = 0;
-			//¸ù¾İ²»Í¬µÄĞ­ÒéÊ¹ÓÃ²»Í¬µÄÍêÕûĞÔ¼ì²éº¯Êı
+			//æ ¹æ®ä¸åŒçš„åè®®ä½¿ç”¨ä¸åŒçš„å®Œæ•´æ€§æ£€æŸ¥å‡½æ•°
 			if (_conn_protocol == websocket) {
 				_status = _websocket_integrity_check(_whole_request, split_pos);
 				cout << "websocket_check!\n";
@@ -154,48 +154,48 @@ awaitable<void> connection::_waitable_loop()
 
 			shared_ptr<string> remained_request;
 
-			//·Ö¸î±¨ÎÄ
+			//åˆ†å‰²æŠ¥æ–‡
 			if (split_pos < _whole_request->size()) {
 				remained_request.reset(new string(
 					_whole_request->substr(split_pos, _whole_request->size() - split_pos)));
-				_whole_request->resize(split_pos);//Çå³ıÄ©Î²
+				_whole_request->resize(split_pos);//æ¸…é™¤æœ«å°¾
 				_with_appendix = true;
 			}
 
 
-			//TODO: websocket ĞèÒªÓĞread ºÍwriteµÄ³¬Ê± ,ĞèÒªwait/...
+			//TODO: websocket éœ€è¦æœ‰read å’Œwriteçš„è¶…æ—¶ ,éœ€è¦wait/...
 			connection_behaviour _behaviour;
 			switch (_status) {
 			case integrity_status::websocket_intact:
 				_behaviour = co_await _request_handler->
-					send_message(_whole_request, _is_tunnel_conn,true, false);//Ç¿ÖÆÊ¹ÓÃ¾ÉÁ¬½Ó,²»ÊÇÇëÇóÎ²
+					send_message(_whole_request, _is_tunnel_conn,true, false);//å¼ºåˆ¶ä½¿ç”¨æ—§è¿æ¥,ä¸æ˜¯è¯·æ±‚å°¾
 				break;
-			case integrity_status::chunked: //¶à´Î·¢°ü,Ö»·¢²»½ÓÊÕ
+			case integrity_status::chunked: //å¤šæ¬¡å‘åŒ…,åªå‘ä¸æ¥æ”¶
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked||
-							last_status == wait_chunked),false);//ÉÏÒ»´ÎÊÇchunked/wait_chunkedÔòĞèÒªÇ¿ÖÆÊ¹ÓÃ¾ÉÁ¬½Ó,²»ÊÇÇëÇóÎ²
+							last_status == wait_chunked),false);//ä¸Šä¸€æ¬¡æ˜¯chunked/wait_chunkedåˆ™éœ€è¦å¼ºåˆ¶ä½¿ç”¨æ—§è¿æ¥,ä¸æ˜¯è¯·æ±‚å°¾
 				break;
 			case integrity_status::intact:
-				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method µ¥¶À´¦ÀíÖ±½Ó·µ»Ø£¬Ó¦¸Ã²»¿ÉÄÜÁ¬×º
+				if (_get_request_type(*_whole_request) == _CONNECT) {//connect method å•ç‹¬å¤„ç†ç›´æ¥è¿”å›ï¼Œåº”è¯¥ä¸å¯èƒ½è¿ç¼€
 					//DISPLAY IS NOT NECESSARY
 					//format
 					//CONNECT www.example.com:443 HTTP/1.1\r\n ......
 					
 	
 					size_t host_end_pos = _whole_request->find(":");
-					if (host_end_pos == string::npos) {//Ã»ÓĞ¶Ë¿ÚµÄÇé¿ö
+					if (host_end_pos == string::npos) {//æ²¡æœ‰ç«¯å£çš„æƒ…å†µ
 						host_end_pos = _whole_request->find(" HTTP");
 
 						if (host_end_pos == string::npos) {
 							throw std::runtime_error("cannot get host information");
 						}
-						//Ä¬ÈÏÎª443¶Ë¿Ú
+						//é»˜è®¤ä¸º443ç«¯å£
 					}
-					//TODO: ²»ÊÇËùÓĞµÄ¶Ë¿Ú¶¼ĞèÒªÎÕÊÖ
+					//TODO: ä¸æ˜¯æ‰€æœ‰çš„ç«¯å£éƒ½éœ€è¦æ¡æ‰‹,æ­¤å¤„åº”è¯¥ç›´æ¥è®©client_unit connect
 					//now host_end_pos is properly set
 					host = _whole_request->substr(8, host_end_pos - 8);
-					//´Ë´¦µÄhostÊÇÃ»ÓĞ¶Ë¿ÚµÄ
+					//æ­¤å¤„çš„hostæ˜¯æ²¡æœ‰ç«¯å£çš„
 
 					_is_tunnel_conn = true;
 					*res = "HTTP/1.1 200 Connection Established\r\n\r\n";
@@ -208,7 +208,7 @@ awaitable<void> connection::_waitable_loop()
 					//_ssl_context.use_certificate_file("F:/for_all.pem", boost::asio::ssl::context::pem);
 					//_ssl_context.use_private_key_file("F:/for_all.key", boost::asio::ssl::context::pem);
 					
-					_ssl_stream_ptr = make_shared<ssl_stream>(move(*_socket), _ssl_context);//Ò»Ö±¼Ì³ĞÕâ¸ösocket
+					_ssl_stream_ptr = make_shared<ssl_stream>(move(*_socket), _ssl_context);//ä¸€ç›´ç»§æ‰¿è¿™ä¸ªsocket
 					_socket = &_ssl_stream_ptr->next_layer();
 					//for ssl connection, disable Nagle's algorithm to boost the performance
 					_socket->set_option(tcp::no_delay(true));
@@ -223,12 +223,12 @@ awaitable<void> connection::_waitable_loop()
 					_whole_request.reset(new string(""));
 					continue;
 				}//end if ==connect
-				//Èô²»Îªconnect
+				//è‹¥ä¸ä¸ºconnect
 
 				_behaviour = co_await _request_handler->
 					send_message(_whole_request, _is_tunnel_conn,
 						(last_status == chunked ||
-							last_status == wait_chunked),true);//ÉÏÒ»´ÎÊÇchunked/wait_chunkedÔòĞèÒªÇ¿ÖÆÊ¹ÓÃ¾ÉÁ¬½Ó,ÊÇÇëÇóÎ²
+							last_status == wait_chunked),true);//ä¸Šä¸€æ¬¡æ˜¯chunked/wait_chunkedåˆ™éœ€è¦å¼ºåˆ¶ä½¿ç”¨æ—§è¿æ¥,æ˜¯è¯·æ±‚å°¾
 				break;
 
 			case integrity_status::broken:
@@ -249,7 +249,7 @@ awaitable<void> connection::_waitable_loop()
 			//reset to wait incoming data
 			if (_status != integrity_status::broken) {
 				if (_with_appendix) {
-					//»¹Ê£Ò»²¿·ÖÁôÔÚÀïÃæ
+					//è¿˜å‰©ä¸€éƒ¨åˆ†ç•™åœ¨é‡Œé¢
 					_whole_request = remained_request;
 				}
 				else {
@@ -259,11 +259,11 @@ awaitable<void> connection::_waitable_loop()
 			
 
 
-			//¸ù¾İbehaviourÉèÖÃÊÇ·ñ¼ÌĞø½ÓÊÕÊı¾İ£¬ÊÇ·ñÖ±½Ó³ö´í·µ»Ø
+			//æ ¹æ®behaviourè®¾ç½®æ˜¯å¦ç»§ç»­æ¥æ”¶æ•°æ®ï¼Œæ˜¯å¦ç›´æ¥å‡ºé”™è¿”å›
 			switch (_behaviour) {
 			case respond_and_close:
 				if((last_status != chunked &&
-					last_status != wait_chunked))//chunked body ²»ÔÙ´ÎĞŞ¸Äkeep_alive Öµ
+					last_status != wait_chunked))//chunked body ä¸å†æ¬¡ä¿®æ”¹keep_alive å€¼
 					_keep_alive = false;
 				break;
 			case respond_and_keep_alive:
@@ -274,30 +274,30 @@ awaitable<void> connection::_waitable_loop()
 			case respond_error:
 				_keep_alive = false;
 
-				_request_handler->handle_error(res, _whole_request); //ºÜ¿ì£¬²»ĞèÒªÒì²½½øĞĞ
+				_request_handler->handle_error(res, _whole_request); //å¾ˆå¿«ï¼Œä¸éœ€è¦å¼‚æ­¥è¿›è¡Œ
 				cout << "connection::respond_error" << endl;
 				co_await _async_write(*res, _is_tunnel_conn);
-				continue;//×Ô¶¯¾ÍÌø³öÑ­»·ÁË
+				continue;//è‡ªåŠ¨å°±è·³å‡ºå¾ªç¯äº†
 
 			case ignore:
 				_keep_alive = false;
-				continue;//×Ô¶¯¾ÍÌø³öÑ­»·ÁË
+				continue;//è‡ªåŠ¨å°±è·³å‡ºå¾ªç¯äº†
 			case protocol_websocket:
 				_conn_protocol = websocket;
 				_keep_alive = true;
 				break;
-			case keep_receiving_data://sendº¯Êı²»Ó¦·µ»Ø´ËÖµ
+			case keep_receiving_data://sendå‡½æ•°ä¸åº”è¿”å›æ­¤å€¼
 				throw std::runtime_error("handler->send ERROR (presumably a bug)");
 				break;
 			}
 
-			//ÄÜµ½ÕâÀïÒ»¶¨Ã»ÓĞ³ö´í
+			//èƒ½åˆ°è¿™é‡Œä¸€å®šæ²¡æœ‰å‡ºé”™
 			if (_status == integrity_status::chunked) {
-				continue;//Ìø¹ıĞ´Èë£¬¼ÌĞø¶ÁÊı¾İ·¢ËÍ
+				continue;//è·³è¿‡å†™å…¥ï¼Œç»§ç»­è¯»æ•°æ®å‘é€
 			}
 
 
-			//resÖ¸Õë¿ÉÄÜÖ±½Ó±äÁË£¬´Ë´¦µÄres´«µÄÊÇÒıÓÃ
+			//resæŒ‡é’ˆå¯èƒ½ç›´æ¥å˜äº†ï¼Œæ­¤å¤„çš„resä¼ çš„æ˜¯å¼•ç”¨
 			_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn);
 
 			while (_behaviour == keep_receiving_data) {
@@ -305,21 +305,21 @@ awaitable<void> connection::_waitable_loop()
 				co_await _async_write(*res, _is_tunnel_conn);
 
 				res.reset(new string(""));
-				_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn,true);//´ËÊ±½ÓÊÕchunked body
+				_behaviour = co_await _request_handler->receive_message(res, _is_tunnel_conn,true);//æ­¤æ—¶æ¥æ”¶chunked body
 			}
 
 
 			switch (_behaviour) {
 			case respond_error:
 				_keep_alive = false;
-				_request_handler->handle_error(res); //ºÜ¿ì£¬²»ĞèÒªÒì²½½øĞĞ
+				_request_handler->handle_error(res); //å¾ˆå¿«ï¼Œä¸éœ€è¦å¼‚æ­¥è¿›è¡Œ
 				cout << "error" << endl;
 				co_await _async_write(*res, _is_tunnel_conn);
-				continue;//×Ô¶¯¾ÍÌø³öÑ­»·ÁË
+				continue;//è‡ªåŠ¨å°±è·³å‡ºå¾ªç¯äº†
 
 			case ignore:
 				_keep_alive = false;
-				continue;//×Ô¶¯¾ÍÌø³öÑ­»·ÁË
+				continue;//è‡ªåŠ¨å°±è·³å‡ºå¾ªç¯äº†
 
 
 			case respond_and_close:
@@ -328,14 +328,14 @@ awaitable<void> connection::_waitable_loop()
 						"write back is close (presumably a bug)");
 				break;
 			case respond_and_keep_alive:
-				//Ã»ÓĞÈÎºÎÎÊÌâ
+				//æ²¡æœ‰ä»»ä½•é—®é¢˜
 				break;
-			case keep_receiving_data://´Ë´¦²»Ó¦¸Ã´æÔÚ´ËÖµ
+			case keep_receiving_data://æ­¤å¤„ä¸åº”è¯¥å­˜åœ¨æ­¤å€¼
 				throw std::runtime_error("switch(_behaviour) ERROR when handle write back (presumably a bug)");
 				break;
 			}
 
-			//»¹Ê£Ò»¸ömessage Ã»Ğ´
+			//è¿˜å‰©ä¸€ä¸ªmessage æ²¡å†™
 			co_await _async_write(*res, _is_tunnel_conn);
 		}
 
@@ -381,7 +381,7 @@ awaitable<void> connection::_async_read(bool with_ssl)
 			throw std::runtime_error("read failed");
 		}
 		else {
-			throw std::runtime_error("connection closed by peer");//eofÒâÎ¶×ÅÎŞ·¨Ğ´Êı¾İ
+			throw std::runtime_error("connection closed by peer");//eofæ„å‘³ç€æ— æ³•å†™æ•°æ®
 		}
 	}
 	if(bytes_transferred >0)
@@ -392,7 +392,7 @@ awaitable<void> connection::_async_read(bool with_ssl)
 
 awaitable<void> connection::_async_write(const string& data, bool with_ssl)
 {
-	if (skip_socket_rw)
+	if (skip_socket_rw||data.size()==0)
 		co_return;
 	boost::system::error_code ec;
 

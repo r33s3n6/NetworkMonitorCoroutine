@@ -34,15 +34,15 @@ public:
 	
 
 	//awaitable<connection_behaviour> send_request(const string& host, const string& data, bool with_ssl, bool force_old_conn = false);
-	awaitable<connection_behaviour> send_request(const string& host,
+	awaitable<connection_behaviour> send_request(string host,
 		const string& data, shared_ptr<string> error_msg, bool with_ssl, bool force_old_conn = false,connection_protocol protocol=http);
-	awaitable<connection_behaviour> receive_response(shared_ptr<string>& result);//直接复用socket 不需要with_ssl 参数
+	awaitable<connection_behaviour> receive_response(shared_ptr<string>& result,bool force_not_ssl = false);//鐩存帴澶嶇敤socket 涓嶉渶瑕亀ith_ssl 鍙傛暟
 
 	void disconnect();
 	
 	
 	static void set_server_certificate_verify(bool verify);
-
+	string secondary_proxy;
 private:
 
 	static bool server_certificate_verify;
@@ -75,6 +75,8 @@ private:
 	void _socket_close();
 
 	connection_protocol protocol = http;
+
+	
 	//awaitable<bool> _check_connection(const string& host);
 };
 

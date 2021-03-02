@@ -41,19 +41,19 @@ public:
 #ifndef QT_CORE_LIB
 	void display(shared_ptr<string> req_data, shared_ptr<string> rsp_data);
 	void _temp_display(shared_ptr<string> data);
-	//³õÊ¼ÏÔÊ¾
+	//åˆå§‹æ˜¾ç¤º
 	int display(shared_ptr<string> req_data);
 
-	//ÏÔÊ¾requestµÄÊ±ºòÊÇ²»»áÓĞ´íµÄ
+	//æ˜¾ç¤ºrequestçš„æ—¶å€™æ˜¯ä¸ä¼šæœ‰é”™çš„
 	void update_display_req(int id, shared_ptr<string> req_data);
 
 	void update_display_rsp(int id, shared_ptr<string> rsp_data);
-	//Ö»ÔÚ¸üĞÂresponseµÄÊ±ºòË³±ãÏÔÊ¾´íÎó
+	//åªåœ¨æ›´æ–°responseçš„æ—¶å€™é¡ºä¾¿æ˜¾ç¤ºé”™è¯¯
 	void update_display_error(int id, shared_ptr<string> rsp_data);
 
-	//¶ÔÓÚchunked data£¬Ö»ÔÚµÚÒ»´Îµ÷ÓÃbreakpoint
-	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//ÀïÃæÒªÏÔÊ¾³öÀ´
-	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);//ÀïÃæÒªÏÔÊ¾³öÀ´
+	//å¯¹äºchunked dataï¼Œåªåœ¨ç¬¬ä¸€æ¬¡è°ƒç”¨breakpoint
+	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//é‡Œé¢è¦æ˜¾ç¤ºå‡ºæ¥
+	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);//é‡Œé¢è¦æ˜¾ç¤ºå‡ºæ¥
 #else
 
 	//shared_ptr<session_info> display(
@@ -93,7 +93,7 @@ signals://signal
 	void session_error(shared_ptr<session_info> _session_info);
 
 //private slots:
-	//void session_passed(int update_id,bool is_req);//×´Ì¬²»ÖªµÀÓ¦¸ÃÓÃbitmap»¹ÊÇhashmap
+	//void session_passed(int update_id,bool is_req);//çŠ¶æ€ä¸çŸ¥é“åº”è¯¥ç”¨bitmapè¿˜æ˜¯hashmap
 
 #endif
 };

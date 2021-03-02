@@ -30,7 +30,7 @@ class QTFrontend : public QMainWindow
     Q_OBJECT
 
 public:
-    QTFrontend(QWidget *parent = Q_NULLPTR);
+    QTFrontend(QWidget *parent = Q_NULLPTR,bool debug=false);
 
 
     ~QTFrontend() {
@@ -79,7 +79,7 @@ private:
     bool last_breakpoint_req_checked=true;
 
     bool is_req_intercepted = true;
-
+    
     
     void _setup_table();
     shared_ptr<session_info> _context_menu_session;

@@ -16,13 +16,13 @@
 */
 
 
-//TODO ¹ýÂËÆ÷£º¹ýÂËÄ³Ð©host£¬meta-type ÏÔÊ¾ÉÏ/¶ÏµãÉÏ
+//TODO è¿‡æ»¤å™¨ï¼šè¿‡æ»¤æŸäº›hostï¼Œmeta-type æ˜¾ç¤ºä¸Š/æ–­ç‚¹ä¸Š
 //TODO stream truncated
-//TODO Ç°ºó¶Ë½âñî¸ü¼Ó³¹µ×Ð©£¬ºóÐø¿ÉÒÔ¼ÓÉÏwebui,×ö³ÉÔ¶³Ìµ÷ÊÔÆ÷
+//TODO å‰åŽç«¯è§£è€¦æ›´åŠ å½»åº•äº›ï¼ŒåŽç»­å¯ä»¥åŠ ä¸Šwebui,åšæˆè¿œç¨‹è°ƒè¯•å™¨
 
-//TODO ¸üºÃµÄ¸ü¸ÄÍ·µÄ°ì·¨
+//TODO æ›´å¥½çš„æ›´æ”¹å¤´çš„åŠžæ³•
 
-//TODO É¾³ýËùÓÐsession£¬´ÖÌå±ê×¢Î´±»²é¿´µÄsession
+//TODO åˆ é™¤æ‰€æœ‰sessionï¼Œç²—ä½“æ ‡æ³¨æœªè¢«æŸ¥çœ‹çš„session
 
 
 int main(int argc, char *argv[])
@@ -45,15 +45,17 @@ int main(int argc, char *argv[])
 
  
 
-    QTFrontend w(nullptr);
-
+    
+    bool debug = false;
     if (argc > 1) {
         if (string(argv[1]) == "--debug") {
             AllocConsole();
             freopen("CON", "w", stdout);
+            debug = true;
         }
     }
-
+    
+    QTFrontend w(nullptr,debug);
     w.show();
 
     a.exec();

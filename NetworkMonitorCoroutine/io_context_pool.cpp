@@ -18,10 +18,10 @@ io_context_pool::io_context_pool(std::size_t pool_size)
 	{
 		io_context_ptr io_context(new boost::asio::io_context(1));
 		_io_contexts.push_back(io_context);
-		//executor Ìá¹©ÁËÈÎÎñÖ´ĞĞµÄÉÏÏÂÎÄ£¬¾ßÌå±íÏÖÎª¿ØÖÆÈÎÎñµÄ3w ¼´ when where how
+		//executor æä¾›äº†ä»»åŠ¡æ‰§è¡Œçš„ä¸Šä¸‹æ–‡ï¼Œå…·ä½“è¡¨ç°ä¸ºæ§åˆ¶ä»»åŠ¡çš„3w å³ when where how
 
 		// Obtain an executor with the @c outstanding_work.tracked property.
-		// µ±executorÎ´±»Îö¹¹Ê±£¬io_context ²»»áÍ£Ö¹ÔËĞĞ
+		// å½“executoræœªè¢«ææ„æ—¶ï¼Œio_context ä¸ä¼šåœæ­¢è¿è¡Œ
 		// if visual studio reports error here, please ignore it.
 
 		

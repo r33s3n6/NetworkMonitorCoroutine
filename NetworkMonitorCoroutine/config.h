@@ -4,7 +4,7 @@
 #include <map>
 #include <typeinfo>
 using namespace std;
-
+constexpr char default_config_path[] = "./config.dat";
 #define    NAME(name)    (#name)
 
 /*
@@ -86,9 +86,9 @@ public:
 	string port="5559";
 
 
-	void load_config_from_file(string path = "config.dat");//TODO
-	void save_config(string path = "config.dat");//TODO
-	config(string path = "config.dat") { 
+	void load_config_from_file(string path = default_config_path);
+	void save_config(string path = default_config_path);
+	config(string path = default_config_path) {
 		_setup_conf_entry_vec();
 		load_config_from_file(path); }
 private:

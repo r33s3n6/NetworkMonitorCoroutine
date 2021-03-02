@@ -33,7 +33,7 @@ typedef enum {
     
 }session_behaviour;
 
-struct session_info {//Ó¦¸Ã°Ñreq/rspµÄÊı¾İµ¥¶À³éÏó³öÒ»¸östruct ¸ü¼Ó·½±ã¹ÜÀí
+struct session_info {//åº”è¯¥æŠŠreq/rspçš„æ•°æ®å•ç‹¬æŠ½è±¡å‡ºä¸€ä¸ªstruct æ›´åŠ æ–¹ä¾¿ç®¡ç†
     size_t id;
     shared_ptr<http_proxy_handler> proxy_handler_ptr;
     session_behaviour send_behaviour;
@@ -51,10 +51,10 @@ struct session_info {//Ó¦¸Ã°Ñreq/rspµÄÊı¾İµ¥¶À³éÏó³öÒ»¸östruct ¸ü¼Ó·½±ã¹ÜÀí
     shared_ptr<string> req_data_for_display;
     shared_ptr<string> rsp_data_for_display;
     shared_ptr<const string> new_data;
-    bool edited = false;//req rsp ¹²ÓÃ //deprecated
+    bool edited = false;//req rsp å…±ç”¨ //deprecated
     bool failed = false;
     string temp_req_data;
-    string temp_rsp_data;//ÇĞ»»Ê±ÔİÊ±±£´æ
+    string temp_rsp_data;//åˆ‡æ¢æ—¶æš‚æ—¶ä¿å­˜
     session_info() :body_length(0), id(0) { 
         proxy_handler_ptr.reset(); 
         send_behaviour = undefined;

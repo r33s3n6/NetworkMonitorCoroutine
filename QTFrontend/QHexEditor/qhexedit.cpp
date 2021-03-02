@@ -152,7 +152,7 @@ int QHexEdit::bytesPerLine()
     return _bytesPerLine;
 }
 
-void QHexEdit::setCursorPosition(qint64 position)//TODO when copy ascii
+void QHexEdit::setCursorPosition(qint64 position)
 {
     // 1. delete old cursor
     _blink = false;
@@ -847,9 +847,8 @@ void QHexEdit::keyPressEvent(QKeyEvent *event)
     }
 
     /* Copy */
-    if (event->matches(QKeySequence::Copy))//TODO: copy original data, (use cursor's pos)
+    if (event->matches(QKeySequence::Copy))
     {//Modified by Fu
-
         //=========original code===========
         /*
         QByteArray ba = _chunks->data(getSelectionBegin(), getSelectionEnd() - getSelectionBegin()).toHex();

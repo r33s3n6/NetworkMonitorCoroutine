@@ -76,7 +76,7 @@ string get_header_value(
 		transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 		if (temp.find(header_name) == 0) {
 			return string_trim(header.substr(pos + 1,
-				header.size() - pos - 1));//Ë³±ãÈ¥³ıÃ°ºÅ
+				header.size() - pos - 1));//é¡ºä¾¿å»é™¤å†’å·
 		}
 	}
 	return "";
@@ -94,14 +94,14 @@ string get_header_value(
 		transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 		if (temp.find(header_name) == 0) {
 			return string_trim(header.substr(pos + 1,
-				header.size() - pos - 1));//Ë³±ãÈ¥³ıÃ°ºÅ
+				header.size() - pos - 1));//é¡ºä¾¿å»é™¤å†’å·
 		}
 	}
 	return "";
 }
 
 
-//½ö½ö¸ù¾İÍ·µÄĞÅÏ¢·Ö¸î±¨ÎÄ£¬ÎŞ·¨¶ÔÄÚÈİÍêÕûĞÔ×ö³öÈÎºÎ±£Ö¤
+//ä»…ä»…æ ¹æ®å¤´çš„ä¿¡æ¯åˆ†å‰²æŠ¥æ–‡ï¼Œæ— æ³•å¯¹å†…å®¹å®Œæ•´æ€§åšå‡ºä»»ä½•ä¿è¯
 proxy_tcp::integrity_status _http_integrity_check(shared_ptr<const string> http_data,size_t& split_pos)
 {
 	using namespace proxy_tcp;
@@ -149,8 +149,8 @@ proxy_tcp::integrity_status _http_integrity_check(shared_ptr<const string> http_
 		
 		return integrity_status::wait;
 	}
-	else{//¼¸ºõÊÇÍêÕûµÄ
-		split_pos = _request_length + header_end_pos + 4; //ÈôÕıºÃÎªsize() ÔòÕıºÃÍêÕû£¬ÒÑÔÚÍâ²¿ÅĞ¶Ï
+	else{//å‡ ä¹æ˜¯å®Œæ•´çš„
+		split_pos = _request_length + header_end_pos + 4; //è‹¥æ­£å¥½ä¸ºsize() åˆ™æ­£å¥½å®Œæ•´ï¼Œå·²åœ¨å¤–éƒ¨åˆ¤æ–­
 		return integrity_status::intact;
 	}
 
@@ -165,7 +165,7 @@ proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> ht
 	using namespace proxy_tcp;
 
 	/*
-* ½á¹¹
+* ç»“æ„
 * [HEADER1]\r\n
 * [HEADER2]\r\n
 * \r\n
@@ -185,15 +185,15 @@ proxy_tcp::integrity_status _chunked_integrity_check(shared_ptr<const string> ht
 
 	size_t body_end_pos = _chunk_length_end_pos + 2 + body_length + 2;
 
-	split_pos = body_end_pos;//ÕıºÃ×îºóÒ»¸ö\r\nµÄºóÃæÒ»Î»
+	split_pos = body_end_pos;//æ­£å¥½æœ€åä¸€ä¸ª\r\nçš„åé¢ä¸€ä½
 
 	if (http_data->size() < body_end_pos)
 		return integrity_status::wait_chunked;
 
-	//´ËÊ±¿ÉÄÜÕıºÃÊÇÒ»¸öÍêÕûµÄmessage£¬Ò²ÓĞ¿ÉÄÜºóÃæÁ¬×º×ÅÏÂÒ»¸ö±¨ÎÄµÄÒ»Ğ©¶«Î÷
-	//Òò´ËÏÈ¼ì²éÕâ¸ö±¨ÎÄµÄÍêÕûĞÔ
+	//æ­¤æ—¶å¯èƒ½æ­£å¥½æ˜¯ä¸€ä¸ªå®Œæ•´çš„messageï¼Œä¹Ÿæœ‰å¯èƒ½åé¢è¿ç¼€ç€ä¸‹ä¸€ä¸ªæŠ¥æ–‡çš„ä¸€äº›ä¸œè¥¿
+	//å› æ­¤å…ˆæ£€æŸ¥è¿™ä¸ªæŠ¥æ–‡çš„å®Œæ•´æ€§
 	if ((*http_data)[body_end_pos - 2] == '\r' &&
-		(*http_data)[body_end_pos - 1] == '\n') {//Õâ¸ö±¨ÎÄÍêÕû
+		(*http_data)[body_end_pos - 1] == '\n') {//è¿™ä¸ªæŠ¥æ–‡å®Œæ•´
 		if (body_length == 0)
 			return integrity_status::intact;//the last chunked message
 		else

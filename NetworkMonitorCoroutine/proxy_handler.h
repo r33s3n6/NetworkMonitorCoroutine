@@ -1,10 +1,10 @@
 #pragma once
 /*
 * 
-* ´úÀíÖĞ¼ä²ã
-* ÓÃÓÚ´¦Àí¶ÏµãºÍÏÔÊ¾
+* ä»£ç†ä¸­é—´å±‚
+* ç”¨äºå¤„ç†æ–­ç‚¹å’Œæ˜¾ç¤º
 * 
-* ¶ÁÈ¡À´×Ô¿Í»§¶ËµÄÇëÇó£¬ÔÙ×ª·¢
+* è¯»å–æ¥è‡ªå®¢æˆ·ç«¯çš„è¯·æ±‚ï¼Œå†è½¬å‘
 
 
 
@@ -43,9 +43,9 @@ public:
 
 	//unified entrypoint
 	awaitable<connection_behaviour> send_message(shared_ptr<string> msg,bool with_ssl,
-		bool force_old_conn = false, bool request_end=false); //force_old_connÓÃÓÚchunked data£¬Èç¹û¾ÉÁ¬½Ó¶ªÊ§¾ÍÖ±½ÓÊ§°Ü
+		bool force_old_conn = false, bool request_end=false); //force_old_connç”¨äºchunked dataï¼Œå¦‚æœæ—§è¿æ¥ä¸¢å¤±å°±ç›´æ¥å¤±è´¥
 
-	//receive ²»ĞèÒªÖ¸¶¨ÊÇ·ñÊ¹ÓÃ¾ÉÁ¬½Ó£¬ÒòÎª¶Ï¿ªÖ±½ÓÊ§°Ü
+	//receive ä¸éœ€è¦æŒ‡å®šæ˜¯å¦ä½¿ç”¨æ—§è¿æ¥ï¼Œå› ä¸ºæ–­å¼€ç›´æ¥å¤±è´¥
 	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
 		bool with_ssl, bool chunked_body = false);
 

@@ -9,8 +9,8 @@ using namespace std;
 namespace proxy_tcp {
 
 /*
-ÕâÆäÖÐµÄio_context È«²¿ÔËÐÐÐ­³Ì
-½ûÖ¹ÆÕÍ¨µÄÒì²½º¯ÊýÖ±½ÓÔËÐÐÔÚÆäÉÏ
+è¿™å…¶ä¸­çš„io_context å…¨éƒ¨è¿è¡Œåç¨‹
+ç¦æ­¢æ™®é€šçš„å¼‚æ­¥å‡½æ•°ç›´æŽ¥è¿è¡Œåœ¨å…¶ä¸Š
 */
 class io_context_pool
 {

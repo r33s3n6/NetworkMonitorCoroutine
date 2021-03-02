@@ -1,8 +1,8 @@
 #pragma once
 
 /*
-* ¹ÜÀíÁ¬½Ó£¬¶Ï¿ª×Ô¶¯Ïú»Ù
-* ½âÃÜhttpsÁ÷Á¿£¬È·±£°üµÄÍêÕûĞÔºó²Å»á×ª·¢¸øhandler
+* ç®¡ç†è¿æ¥ï¼Œæ–­å¼€è‡ªåŠ¨é”€æ¯
+* è§£å¯†httpsæµé‡ï¼Œç¡®ä¿åŒ…çš„å®Œæ•´æ€§åæ‰ä¼šè½¬å‘ç»™handler
 * 
 */
 
@@ -50,7 +50,7 @@ public:
 	//explicit connection(tcp::socket socket,
 	//	shared_ptr<http_proxy_handler> handler_ptr);
 
-	//ÓÉ¸ø¶¨µÄio_contextÀ´½¨Á¢Á¬½Ó
+	//ç”±ç»™å®šçš„io_contextæ¥å»ºç«‹è¿æ¥
 	explicit connection(boost::asio::io_context& _io_context,
 		shared_ptr<http_proxy_handler> handler_ptr, shared_ptr<certificate_manager> cert_mgr);
 
@@ -61,7 +61,7 @@ public:
 
 	~connection() {
 		if (_ssl_stream_ptr)
-			_socket = nullptr;//±ÜÃâÁ½´ÎÊÍ·Å
+			_socket = nullptr;//é¿å…ä¸¤æ¬¡é‡Šæ”¾
 		else if (_socket)
 			delete _socket;
 		//cout << "lost connection" << endl;
@@ -86,7 +86,7 @@ private:
 	//ssl_layer _ssl_layer;
 
 	//shared_ptr<tcp::socket> _socket;
-	tcp::socket* _socket;//³öÓÚÎŞÄÎ
+	tcp::socket* _socket;//å‡ºäºæ— å¥ˆ
 	
 	bool _keep_alive = true;
 
