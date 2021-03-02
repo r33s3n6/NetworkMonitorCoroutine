@@ -71,13 +71,37 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
     }
     else if (role == Qt::BackgroundColorRole)
     {
-        if (temp && ((temp->send_behaviour == intercept)
-            || (temp->receive_behaviour == intercept)))
-            return QColor(0xda, 0x4f, 0x49);
+        if (temp) {
+            if (temp->failed) {
+                //return QColor(0xff, 0x7a, 0x37);
+            }
+            else if ((temp->send_behaviour == intercept)
+                || (temp->receive_behaviour == intercept)) {
+                //return QColor(0xff, 0x7a, 0x37);//橙色
+                return QColor(0xff, 0xaa, 0xff);
+                //return QColor(0xda, 0x4f, 0x49);
+
+            }
+                
+            
+        }
+        
     }else if(role == Qt::ForegroundRole){
-        if (temp && ((temp->send_behaviour == intercept)
-            || (temp->receive_behaviour == intercept)))
-            return QColor(0xff, 0xff, 0xff);
+        if (temp) {
+            if (temp->failed) {
+                //return QColor(0xda, 0x4f, 0x49);//稍浅一点的红色
+                return QColor(0xff, 0x00, 0x00);//大红
+            }
+            else if ((temp->send_behaviour == intercept)
+                || (temp->receive_behaviour == intercept)) {
+                return QColor(0xff, 0xff, 0xff);
+                //return QColor(0xda, 0x4f, 0x49);
+
+            }
+
+
+        }
+
     }
 
 

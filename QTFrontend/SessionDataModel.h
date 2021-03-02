@@ -51,7 +51,8 @@ struct session_info {//应该把req/rsp的数据单独抽象出一个struct 更加方便管理
     shared_ptr<string> req_data_for_display;
     shared_ptr<string> rsp_data_for_display;
     shared_ptr<const string> new_data;
-    bool edited = false;//req rsp 共用
+    bool edited = false;//req rsp 共用 //deprecated
+    bool failed = false;
     string temp_req_data;
     string temp_rsp_data;//切换时暂时保存
     session_info() :body_length(0), id(0) { 

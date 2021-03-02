@@ -11,22 +11,18 @@
 
 //TODO:
 /*
-* hex editor
-*   copy,modify,...
-* breakpoint
-*   set_breakpoint,ui_breakpoint
 * save_session
 * 
 */
 
-//TODO plaintext edit session(get rid of chunked flag...)
-//TODO （永久）过滤某些host，meta-type 显示上/断点上
+
+//TODO 过滤器：过滤某些host，meta-type 显示上/断点上
 //TODO stream truncated
 //TODO 前后端解耦更加彻底些，后续可以加上webui,做成远程调试器
 
 //TODO 更好的更改头的办法
 
-//TODO config
+//TODO 删除所有session，粗体标注未被查看的session
 
 
 int main(int argc, char *argv[])
@@ -50,6 +46,14 @@ int main(int argc, char *argv[])
  
 
     QTFrontend w(nullptr);
+
+    if (argc > 1) {
+        if (string(argv[1]) == "--debug") {
+            AllocConsole();
+            freopen("CON", "w", stdout);
+        }
+    }
+
     w.show();
 
     a.exec();

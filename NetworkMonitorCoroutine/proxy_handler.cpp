@@ -27,7 +27,7 @@ namespace proxy_tcp {
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
-		if (!_session_info) {
+		if (!_session_info) {//甚至还没请求就失败了
 			_session_info = make_shared<session_info>();
 			
 			_session_info->raw_req_data = err_data;
@@ -37,7 +37,7 @@ namespace proxy_tcp {
 
 		_session_info->raw_rsp_data = make_shared<string>(*result);
 		_display_filter.update_display_error(_session_info);
-
+		_session_info->failed = true;
 		//cout << *_session_info->new_data << endl;
 		return respond_and_close;
 	}
