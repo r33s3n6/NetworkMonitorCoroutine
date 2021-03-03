@@ -1,0 +1,23 @@
+<UI version="4.0" >
+ <class>breakpoint_filter_window</class>
+ <widget class="QWidget" name="breakpoint_filter_window" >
+  <property name="objectName" >
+   <string notr="true">breakpoint_filter_window</string>
+  </property>
+  <property name="geometry" >
+   <rect>
+	<x>0</x>
+	<y>0</y>
+	<width>400</width>
+	<height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>breakpoint_filter_window</string>
+  </property>
+ </widget>
+ <layoutDefault spacing="6" margin="11" />
+ <pixmapfunction></pixmapfunction>
+ <resources/>
+ <connections/>
+</UI>

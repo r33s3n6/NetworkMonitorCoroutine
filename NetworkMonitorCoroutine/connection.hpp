@@ -1,8 +1,8 @@
 #pragma once
 
 /*
-* ¹ÜÀíÁ¬½Ó£¬¶Ï¿ª×Ô¶¯Ïú»Ù
-* ½âÃÜhttpsÁ÷Á¿£¬È·±£°üµÄÍêÕûĞÔºó²Å»á×ª·¢¸øhandler
+* ç®¡ç†è¿æ¥ï¼Œæ–­å¼€è‡ªåŠ¨é”€æ¯
+* è§£å¯†httpsæµé‡ï¼Œç¡®ä¿åŒ…çš„å®Œæ•´æ€§åæ‰ä¼šè½¬å‘ç»™handler
 * 
 */
 
@@ -25,7 +25,7 @@ using namespace common;
 #include "connection_enums.h"
 #include "certificate_manager.h"
 
-namespace proxy_server{
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;
@@ -50,7 +50,7 @@ public:
 	//explicit connection(tcp::socket socket,
 	//	shared_ptr<http_proxy_handler> handler_ptr);
 
-	//ÓÉ¸ø¶¨µÄio_contextÀ´½¨Á¢Á¬½Ó
+	//ç”±ç»™å®šçš„io_contextæ¥å»ºç«‹è¿æ¥
 	explicit connection(boost::asio::io_context& _io_context,
 		shared_ptr<http_proxy_handler> handler_ptr, shared_ptr<certificate_manager> cert_mgr);
 
@@ -61,7 +61,7 @@ public:
 
 	~connection() {
 		if (_ssl_stream_ptr)
-			_socket = nullptr;//±ÜÃâÁ½´ÎÊÍ·Å
+			_socket = nullptr;//é¿å…ä¸¤æ¬¡é‡Šæ”¾
 		else if (_socket)
 			delete _socket;
 		//cout << "lost connection" << endl;
@@ -69,9 +69,15 @@ public:
 	tcp::socket& socket(){ return *_socket; }
 
 	
+	void set_replay_mode(shared_ptr<string> raw_req_data,bool is_tunnel_conn) {
+		skip_socket_rw = true;
+		_whole_request = raw_req_data;
+		_is_tunnel_conn = is_tunnel_conn;
+	}
 
 private:
-
+	bool skip_socket_rw = false;
+	boost::asio::io_context& _io_context;
 	awaitable<void> _waitable_loop();
 
 	awaitable<void> _async_read(bool with_ssl);
@@ -80,7 +86,7 @@ private:
 	//ssl_layer _ssl_layer;
 
 	//shared_ptr<tcp::socket> _socket;
-	tcp::socket* _socket;//³öÓÚÎŞÄÎ
+	tcp::socket* _socket;//å‡ºäºæ— å¥ˆ
 	
 	bool _keep_alive = true;
 
@@ -90,7 +96,7 @@ private:
 
 
 	shared_ptr<string> _whole_request;
-
+	
 
 	bool _is_tunnel_conn = false;
 
@@ -100,9 +106,12 @@ private:
 	boost::asio::ssl::context _ssl_context;
 
 	shared_ptr<certificate_manager> _cert_mgr;
+
+	connection_protocol _conn_protocol = http;
+
 };
 
 
 
 
-}// namespace proxy_server
+}// namespace proxy_tcp

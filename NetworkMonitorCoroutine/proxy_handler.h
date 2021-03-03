@@ -1,10 +1,10 @@
 #pragma once
 /*
 * 
-* ´úÀíÖĞ¼ä²ã
-* ÓÃÓÚ´¦Àí¶ÏµãºÍÏÔÊ¾
+* ä»£ç†ä¸­é—´å±‚
+* ç”¨äºå¤„ç†æ–­ç‚¹å’Œæ˜¾ç¤º
 * 
-* ¶ÁÈ¡À´×Ô¿Í»§¶ËµÄÇëÇó£¬ÔÙ×ª·¢
+* è¯»å–æ¥è‡ªå®¢æˆ·ç«¯çš„è¯·æ±‚ï¼Œå†è½¬å‘
 
 
 
@@ -21,7 +21,9 @@ using namespace std;
 #include "display_filter.h"
 #include "client_unit.h"
 
-namespace proxy_server{
+constexpr size_t timeout = 600;//10min
+
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;
@@ -30,7 +32,7 @@ namespace proxy_server{
 	using boost::asio::use_awaitable;
 	namespace this_coro = boost::asio::this_coro;
 
-class http_proxy_handler
+class http_proxy_handler : public std::enable_shared_from_this<http_proxy_handler>
 {
 public:
 	http_proxy_handler(const http_proxy_handler&) = delete;
@@ -41,28 +43,32 @@ public:
 
 	//unified entrypoint
 	awaitable<connection_behaviour> send_message(shared_ptr<string> msg,bool with_ssl,
-		bool force_old_conn = false); //×îºóÒ»¸ö²ÎÊıÓÃÓÚchunked data£¬Èç¹û¾ÉÁ¬½Ó¶ªÊ§¾ÍÖ±½ÓÊ§°Ü
+		bool force_old_conn = false, bool request_end=false); //force_old_connç”¨äºchunked dataï¼Œå¦‚æœæ—§è¿æ¥ä¸¢å¤±å°±ç›´æ¥å¤±è´¥
 
-	//receive ²»ĞèÒªÖ¸¶¨ÊÇ·ñÊ¹ÓÃ¾ÉÁ¬½Ó£¬ÒòÎª¶Ï¿ªÖ±½ÓÊ§°Ü
+	//receive ä¸éœ€è¦æŒ‡å®šæ˜¯å¦ä½¿ç”¨æ—§è¿æ¥ï¼Œå› ä¸ºæ–­å¼€ç›´æ¥å¤±è´¥
 	awaitable<connection_behaviour> receive_message(shared_ptr<string>& rsp, 
 		bool with_ssl, bool chunked_body = false);
 
-	connection_behaviour handle_error(shared_ptr<string> result);
+	
 
+	connection_behaviour handle_error(shared_ptr<string> result, shared_ptr<string> err_data= shared_ptr<string>());
 
+	bool force_breakpoint = false;
 private:
 
-
 	bool _process_header(shared_ptr<string> data, shared_ptr<string> result);
+	//bool _process_header(shared_ptr<string> data, shared_ptr<string> result);
 
 	breakpoint_manager& _breakpoint_manager;
 	display_filter& _display_filter;
 	shared_ptr<client_unit> _client;
 	
 	shared_ptr<string> host;
+	shared_ptr<session_info> _session_info;
 
+	connection_protocol _conn_protocol = http;
 
-	int _update_id = -2;
+	//int _update_id = -2;
 
 };
 

@@ -6,7 +6,7 @@
 #include <list>
 using namespace common;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	
 
@@ -20,62 +20,152 @@ namespace proxy_server {
 		_display_filter(disp_fil),
 		_client(_client)
 	{
+		_session_info.reset();
 	}
 
-	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result)//TODO
+	connection_behaviour http_proxy_handler::handle_error(shared_ptr<string> result,shared_ptr<string> err_data)//TODO:response,åŠ å…¥reqä¿¡æ¯
 	{
 		*result = "HTTP/1.1 400 Bad Request\r\n\r\n";
 
+		if (!_session_info) {//ç”šè‡³è¿˜æ²¡è¯·æ±‚å°±å¤±è´¥äº†
+			_session_info = make_shared<session_info>();
+			
+			_session_info->raw_req_data = err_data;
+			_display_filter.display(_session_info);
+			_session_info->new_data = make_shared<string>("Request Data Broken");
+		}
+
+		_session_info->raw_rsp_data = make_shared<string>(*result);
+		_display_filter.update_display_error(_session_info);
+		_session_info->failed = true;
+		//cout << *_session_info->new_data << endl;
 		return respond_and_close;
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg, bool with_ssl, bool force_old_conn)
+	awaitable<connection_behaviour> http_proxy_handler::send_message(shared_ptr<string> msg,
+		bool with_ssl, bool force_old_conn,bool request_end)
 	{
-		host.reset(new string(""));
+		
+
+		
+		//ä¸€å®šä¸æ˜¯connect method
 
 
-		//·Çconnect
+		bool _keep_alive = true;
+
+
 		shared_ptr<string> _modified_data(new string(""));
-		bool _keep_alive = _process_header(msg, _modified_data);//ÔÚÆäÖĞhost±»ĞŞ¸Ä
 
-		if (_modified_data->size() == 0) {
-			co_return respond_error;
-		}
+		
 
+		if (!_session_info) {//è¯´æ˜æ˜¯ä¸€æ¬¡å…¨æ–°çš„è¯·æ±‚
+			host.reset(new string(""));
+			_conn_protocol = http;
+			_keep_alive = _process_header(msg, _modified_data);//åœ¨å…¶ä¸­host,_conn_protocolè¢«ä¿®æ”¹
 
-		if (_update_id == -2) {//ËµÃ÷ÊÇÒ»´ÎÈ«ĞÂµÄÇëÇó£¬²»ÊÇÄ³´ÎchunkedµÄºóĞø
-			if (_breakpoint_manager.check(*_modified_data)) {
-				//¶Ïµã
-				//_modified_data ÔÚ´Ë´¦ÊÇ¿ÉÄÜ±»ĞŞ¸ÄµÄ
-				_update_id = co_await _display_filter.display_breakpoint_req(_modified_data);
-				if (_update_id == -1) {//²»¼ÌĞøÖ´ĞĞ
-					_update_id = -2;//reset to default
-					_client->disconnect();
-					co_return connection_behaviour::ignore;
+			if (_modified_data->size() == 0) {
+				co_return respond_error;
+			}
+
+			_session_info = make_shared<session_info>();
+
+			_session_info->new_data = _modified_data;
+			_session_info->raw_req_data = _modified_data;
+			if (_conn_protocol == http) {
+				if (with_ssl) {
+					_session_info->protocol = "https";
+				}
+				else {
+					_session_info->protocol = "http";
 				}
 			}
-			else {//ĞÂÏÔÊ¾ 
-				_update_id = _display_filter.display(_modified_data);
+			else if (_conn_protocol == websocket_handshake) {
+				if (with_ssl) {
+					_session_info->protocol = "wss";
+				}
+				else {
+					_session_info->protocol = "ws";
+				}
+			}
+			
+
+			_session_info->proxy_handler_ptr = shared_from_this();
+			if (force_breakpoint||_breakpoint_manager.check(_session_info,true)) {//é€šè¿‡è¯·æ±‚å¤´æ¥æ‹¦æˆª ä»¥åå†è¯´bodyçš„äº‹å§ TODO
+				//æ–­ç‚¹
+				_session_info->send_behaviour = intercept;
+			}
+			else {//æ–°æ˜¾ç¤º 
+				_session_info->send_behaviour = pass;
+				
+			}
+			_display_filter.display(_session_info);
+		}
+		else {//æ˜¯æŸæ¬¡çš„åç»­ï¼Œå› æ­¤ç›´æ¥æ›´æ–°
+			_session_info->raw_req_data->append(*msg);
+			_modified_data = msg;
+
+			_session_info->new_data = _modified_data;
+
+			_display_filter.update_display_req(_session_info);
+			if (_conn_protocol==websocket) {
+				force_old_conn = true;
 			}
 		}
-		else {//ÊÇÄ³´ÎµÄºóĞø£¬Òò´ËÖ±½Ó¸üĞÂ
-			_display_filter.update_display_req(_update_id, _modified_data);
+
+		
+
+		if (request_end) {
+			_display_filter.complete_req(_session_info);
 		}
 
-		connection_behaviour _behaviour;
-
+		connection_behaviour _behaviour = respond_and_keep_alive;
 
 		shared_ptr<string> _error_msg = make_shared<string>("");
+
+		if (_session_info->send_behaviour == intercept) {
+			if (request_end) {
+				size_t retry_count = 0;
+				auto ex = co_await boost::asio::this_coro::executor;
+				boost::asio::steady_timer timer(ex);
+				while (retry_count < timeout 
+					&& _session_info->send_behaviour == intercept) {
+					timer.expires_after(std::chrono::milliseconds(1000));
+					co_await timer.async_wait(use_awaitable);
+				}
+			}
+		}
 		
-		_behaviour = co_await _client->send_request(*host, *_modified_data,_error_msg, with_ssl, force_old_conn);
+
+		switch (_session_info->send_behaviour) {
+		case pass:
+			_behaviour = co_await _client->send_request(
+				*host, *_modified_data, _error_msg, with_ssl, force_old_conn, _conn_protocol);
+			break;
+		case pass_after_intercept:
+			_behaviour = co_await _client->send_request(
+				*host, *_session_info->raw_req_data, _error_msg, with_ssl, force_old_conn, _conn_protocol);
+			_session_info->send_behaviour = pass;
+			break;
+		case drop:
+			_session_info.reset();
+			_client->disconnect();
+			co_return connection_behaviour::ignore;
+		case intercept://not end of request
+			break;
+			
+		}
+		
 
 		if (_behaviour == respond_error) {
 			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
 			complete_error_msg->append(*_error_msg);
-			_display_filter.update_display_error(_update_id, complete_error_msg);
-			co_return _behaviour;
+			_session_info->new_data = complete_error_msg;
+			_display_filter.update_display_error(_session_info);
+			co_return respond_error;
 		}
 		else {
+			if (_conn_protocol == websocket_handshake)
+				co_return protocol_websocket;
 			if (_keep_alive)
 				co_return respond_and_keep_alive;
 			else
@@ -88,42 +178,96 @@ namespace proxy_server {
 		
 	}
 
-	awaitable<connection_behaviour> http_proxy_handler::receive_message(shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
+	awaitable<connection_behaviour> http_proxy_handler::receive_message(
+		shared_ptr<string>& rsp, bool with_ssl, bool chunked_body)
 	{
-		//±ØÈ»ÓĞupdate_id
-		//assert(update_id>=0)
+		//å¿…ç„¶æœ‰_session_info
+		//assert(!_session_info)
+
 		connection_behaviour _behaviour;
 		_behaviour = co_await _client->receive_response(rsp);
 		if (_behaviour == respond_error) {
-			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::send_message::_client::send_request ERROR : ");
+			shared_ptr<string> complete_error_msg = make_shared<string>("proxy_handler::receive_message::_client::receive_response ERROR : ");
 			complete_error_msg->append(*rsp);
-			_display_filter.update_display_error(_update_id, complete_error_msg);
-			co_return _behaviour;
+			_session_info->new_data = complete_error_msg;
+			_display_filter.update_display_error(_session_info);
+
+			_session_info.reset();
+			_client->disconnect();
+			co_return respond_error;
 		}
 
-		if (!chunked_body && _breakpoint_manager.check(*rsp)) {
-			//¶Ïµã
-			if (-1 == co_await _display_filter.display_breakpoint_rsp(_update_id, rsp)) {//result ÔÚ´Ë´¦ÊÇ¿ÉÄÜ±»ĞŞ¸ÄµÄ
-				//ÇëÇó±»×è¶Ï
-				_update_id = -2;
-				_client->disconnect();
-				co_return connection_behaviour::ignore;//ignore ÒªÇå³ıclientµÄÁ¬½Ó
+		_session_info->new_data = rsp;
+
+		if (_conn_protocol == websocket)
+			chunked_body = true;
+
+		if (!chunked_body) {//response begin
+			
+			
+			_session_info->raw_rsp_data = rsp;
+			
+			if (_breakpoint_manager.check(_session_info,false)) {
+				_session_info->receive_behaviour = intercept;//æ–­ç‚¹
 			}
-			//else ²»ÓÃ×öÈÎºÎÊÂ£¬ÒòÎªdisplay_breakpoint_rsp ÒÑ¾­´¦ÀíºÃÁËºóĞøÏÔÊ¾¹¤×÷
+			else {
+				_session_info->receive_behaviour = pass;
+			}
+			
+			_display_filter.display_rsp(_session_info);
+			if (_conn_protocol == websocket_handshake) {
+				_conn_protocol = websocket;
+			}
 
 		}
-		else {//ÊÖ¶¯¸üĞÂÏÔÊ¾
-			_display_filter.update_display_rsp(_update_id, rsp);
+		else {
+			_session_info->raw_rsp_data->append(*rsp);
+			_display_filter.update_display_rsp(_session_info);
 		}
 
 		
-		if(_behaviour != keep_receiving_data){
-			//reset _update_id
-			_update_id = -2;
+
+		
+		if (_conn_protocol != websocket && _behaviour != keep_receiving_data) {//end of the request
+			_display_filter.complete_rsp(_session_info);
+		}
+
+		if (_session_info->receive_behaviour == intercept) {
+			if (_behaviour != keep_receiving_data) {
+				size_t retry_count = 0;
+				auto ex = co_await boost::asio::this_coro::executor;
+				boost::asio::steady_timer timer(ex);
+				while (retry_count < timeout
+					&& _session_info->receive_behaviour == intercept) {
+					timer.expires_after(std::chrono::milliseconds(1000));
+					co_await timer.async_wait(use_awaitable);
+				}
+			}
+		}
+
+
+		switch (_session_info->receive_behaviour) {
+		case pass:
+			break;
+		case pass_after_intercept:
+			rsp = _session_info->raw_rsp_data;
+			_session_info->receive_behaviour = pass;
+			break;
+		case drop:
+			_session_info.reset();
+			_client->disconnect();
+			co_return connection_behaviour::ignore;
+		case intercept://not end of response
+			rsp.reset(new string(""));
+			break;
+		}
+
+		if((_conn_protocol==http)&&(_behaviour != keep_receiving_data)){
+			
+			_session_info.reset();
 		}
 
 		co_return _behaviour;
-		
 	}
 
 
@@ -136,7 +280,7 @@ namespace proxy_server {
 	//return is keep_alive
 	bool http_proxy_handler::_process_header(shared_ptr<string> data, shared_ptr<string> result) {
 		bool _keep_alive = true;
-
+		_conn_protocol = http;
 		shared_ptr<string> header(new string(""));
 		shared_ptr<string> body(new string(""));
 
@@ -144,13 +288,13 @@ namespace proxy_server {
 			return false;
 
 
-		list<string> to_be_remove_header_list{//Ğ¡Ğ´
+		list<string> to_be_removed_header_list{//å°å†™
 			"proxy-authenticate",
 			"proxy-connection",
 			"connection",
-			//"transfer-encoding","te","trailers"//¿ÉÒÔÔ­Ñù×ª·¢£¬²»ÒªÍ½ÔöÂé·³
-			"upgrade",
-			"accept-encoding"//TODO: ½â¾ögzip, br, deflateºóÔÙ¼Ó»ØÈ¥°É
+			//"upgrade",
+			"accept-encoding"//TODO: è§£å†³gzip, br, deflateåå†åŠ å›å»å§
+			//"transfer-encoding","te","trailers"//å¯ä»¥åŸæ ·è½¬å‘ï¼Œä¸è¦å¾’å¢éº»çƒ¦
 		};
 
 
@@ -167,7 +311,7 @@ namespace proxy_server {
 
 
 		//get to be removed field
-
+		bool websocket_upgrade = false;
 		if (_conn_value.size() != 0) {
 			auto temp_vec_ptr = string_split(_conn_value, ",");
 
@@ -182,8 +326,19 @@ namespace proxy_server {
 				else if (t == "keep-alive") {
 					_keep_alive = true;
 				}
+				else if (t == "upgrade") {
+					if (string("websocket")
+						!= get_header_value(header_vec_ptr, "upgrade")) {
+						transform(t.begin(), t.end(), t.begin(), ::tolower);
+						to_be_removed_header_list.emplace_back(t);
+					}
+					else {
+						websocket_upgrade = true;
+					}
+				}
 				else {
-					to_be_remove_header_list.emplace_back(t);
+					transform(t.begin(), t.end(), t.begin(), ::tolower);
+					to_be_removed_header_list.emplace_back(t);
 				}
 			}
 		}
@@ -196,27 +351,28 @@ namespace proxy_server {
 		string first_line = (*header_vec_ptr)[0];
 
 		size_t pos1 = first_line.find("://");
-		if (pos1 != string::npos) {//·ÇÍ¸Ã÷´úÀí
+		if (pos1 != string::npos) {//éé€æ˜ä»£ç†
 			size_t pos0 = first_line.find(" ");
 			size_t pos2 = first_line.find("/", pos1 + 3);
-			(*header_vec_ptr)[0] = first_line.substr(0, pos0 + 1) +
-				first_line.substr(pos2, first_line.size() - pos2);
+			if(pos0!=string::npos&&pos2!=string::npos)
+				(*header_vec_ptr)[0] = first_line.substr(0, pos0 + 1) +
+					first_line.substr(pos2, first_line.size() - pos2);
 		}
-		//Í¸Ã÷´úÀíÊ²Ã´¶¼²»ÓÃ×ö
+		//é€æ˜ä»£ç†ä»€ä¹ˆéƒ½ä¸ç”¨åš
 
 
 
-		for (auto header : *header_vec_ptr) {//Çå³ıÖğÌøÍ·²¿
+		for (auto header : *header_vec_ptr) {//æ¸…é™¤é€è·³å¤´éƒ¨
 			string temp;
 			temp.resize(header.size());
 			transform(header.begin(), header.end(), temp.begin(), ::tolower);
 			bool skip = false;
-			auto list_iter = to_be_remove_header_list.begin();
-			while (list_iter != to_be_remove_header_list.end()) {
+			auto list_iter = to_be_removed_header_list.begin();
+			while (list_iter != to_be_removed_header_list.end()) {
 				if (temp.find(*list_iter) == 0) {
 					auto temp_iter = list_iter;
 					list_iter++;
-					to_be_remove_header_list.erase(temp_iter);
+					to_be_removed_header_list.erase(temp_iter);
 					skip = true;
 					break;
 				}
@@ -231,17 +387,25 @@ namespace proxy_server {
 
 		}
 
-		//Ìí¼Óµ½ÏÂÒ»ÌøµÄÍ·²¿
+		//æ·»åŠ åˆ°ä¸‹ä¸€è·³çš„å¤´éƒ¨
 
 		if (CLIENT_UNIT_KEEP_ALIVE)
-			result->append("Connection: keep-alive\r\n");//Ä¬ÈÏkeep-alive
+			result->append("Connection: keep-alive");//é»˜è®¤keep-alive
 		else
-			result->append("Connection: close\r\n");
+			result->append("Connection: close");
 
+		if (websocket_upgrade) {
+			result->append(", upgrade");
+			_keep_alive = true;
+			_conn_protocol = websocket_handshake;
+		}
+
+		result->append("\r\n");//header::connection end
 
 		result->append("\r\n");//header end
 		//append body
 		result->append(*body);
+
 		return _keep_alive;
 	}
 

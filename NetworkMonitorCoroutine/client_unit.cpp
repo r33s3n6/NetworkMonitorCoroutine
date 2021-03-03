@@ -39,7 +39,7 @@ X509_STORE* add_windows_root_certs()
 	
 }
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	using boost::asio::co_spawn;
 	using boost::asio::detached;
@@ -68,9 +68,12 @@ client_unit::client_unit(boost::asio::io_context& io_context)
 	_socket(),
 	_current_host(""),
 	_ssl_context(boost::asio::ssl::context::sslv23)
-
+	
+	
 {
-
+	_ssl_context.set_options(
+		boost::asio::ssl::context::default_workarounds
+		| boost::asio::ssl::context::no_sslv2);
 	if (client_unit::server_certificate_verify) {
 
 		if (client_unit::store != nullptr) {
@@ -95,7 +98,7 @@ client_unit::~client_unit()
 	
 	/*
 	if (_ssl_stream_ptr)
-		_socket = nullptr;//±ÜÃâÁ½´ÎÊÍ·Å
+		_socket = nullptr;//é¿å…ä¸¤æ¬¡é‡Šæ”¾
 	else if (_socket)
 		delete _socket;*/
 	
@@ -108,46 +111,68 @@ void client_unit::_error_handler(boost::system::error_code ec) {
 }
 */
 
-//·µ»Ø´íÎóÊ±ÒªÍ¬Ê±·µ»Ø´íÎóĞÅÏ¢
-//host ÊÇ¿ÉÄÜÓĞ¶Ë¿ÚºÅµÄ
-awaitable<connection_behaviour> client_unit::send_request(const string& host, 
-	const string& data, shared_ptr<string> error_msg, bool with_ssl,bool force_old_conn)
+//è¿”å›é”™è¯¯æ—¶è¦åŒæ—¶è¿”å›é”™è¯¯ä¿¡æ¯
+//host æ˜¯å¯èƒ½æœ‰ç«¯å£å·çš„
+awaitable<connection_behaviour> client_unit::send_request(string host, 
+	const string& data, shared_ptr<string> error_msg, bool with_ssl,bool force_old_conn, connection_protocol protocol)
 {
 	if (host.size() == 0) {
 		*error_msg = "host is empty";
 		co_return respond_error;
 	}
 		
-
+	if (!force_old_conn) {//è‹¥ä¸ºæ–°è¿æ¥ï¼Œé‡ç½®protocol
+		this->protocol = protocol;
+	}
 
 	boost::system::error_code ec;
 
-	//try to reuse the old connection
 	shared_ptr<bool> is_connected(new bool(false));
-	if (_current_host == host && _socket) {
-		*is_connected = true;//maybe
 
-		//¶ÁÈ¡Ö±µ½³¬Ê±À´¼ì²âÁ¬½ÓÊÇ·ñÈÔ´æÔÚ£¬³ö´íËµÃ÷Á¬½ÓÖĞ¶Ï
-		boost::asio::steady_timer _deadline(_io_context);
-
-		_deadline.expires_after(std::chrono::milliseconds(100));//µÈ´ı100ms
-
-		_deadline.async_wait(
-			[this, is_connected](boost::system::error_code ec) {
-				if (_socket && (*is_connected))//ËµÃ÷ÈÔÔÚµÈ´ı¶ÁÈ¡
-					_socket->cancel();
-			});
-
-		std::size_t bytes_transferred = co_await _socket->async_read_some(
-			boost::asio::buffer(_buffer),
-			boost::asio::redirect_error(use_awaitable, ec));
-
-		if (ec != boost::asio::error::operation_aborted) {//Ö»Òª²»ÊÇ±»cancel£¬¾Í¿Ï¶¨ÊÇ³ö´íÁË
-			_deadline.cancel();
-			*is_connected = false;
-		}
-
+	string original_host = host;
+	bool use_ssl = with_ssl;
+	if (secondary_proxy.size() != 0) {
+		host = secondary_proxy;
+		use_ssl = false;
 	}
+
+	if (!force_old_conn) {
+
+		//try to reuse the old connection
+		
+		if (_current_host == host && _socket) {
+			*is_connected = true;//maybe
+
+			//è¯»å–ç›´åˆ°è¶…æ—¶æ¥æ£€æµ‹è¿æ¥æ˜¯å¦ä»å­˜åœ¨ï¼Œå‡ºé”™è¯´æ˜è¿æ¥ä¸­æ–­
+			boost::asio::steady_timer _deadline(_io_context);
+
+			_deadline.expires_after(std::chrono::milliseconds(100));//ç­‰å¾…100ms
+
+			_deadline.async_wait(
+				[this, is_connected](boost::system::error_code ec) {
+					if (_socket && (*is_connected))//è¯´æ˜ä»åœ¨ç­‰å¾…è¯»å–
+						_socket->cancel();
+				});
+
+			std::size_t bytes_transferred = co_await _socket->async_read_some(
+				boost::asio::buffer(_buffer),
+				boost::asio::redirect_error(use_awaitable, ec));
+
+			if (ec != boost::asio::error::operation_aborted) {//åªè¦ä¸æ˜¯è¢«cancelï¼Œå°±è‚¯å®šæ˜¯å‡ºé”™äº†
+				_deadline.cancel();
+
+				*is_connected = false;
+				*error_msg += ec.message();
+				*error_msg += "\n";
+			}
+
+
+		}
+	}
+	else {
+		(*is_connected) = true;//force_old_conn ä¸æ£€æŸ¥è¿æ¥ï¼Œç›´æ¥ä½¿ç”¨
+	}
+	
 
 	//clear buffer
 	//_whole_response.reset(new string(""));
@@ -163,10 +188,7 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 			_socket_close();
 		}
 
-		if (force_old_conn) {
-			*error_msg = "old connection closed";
-			co_return respond_error;
-		}
+
 			
 
 		if (with_ssl) {
@@ -192,6 +214,8 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 		string _port = "80";
 		string _host = "";
 
+		
+
 		size_t host_port_pos = host.find(":");
 		if (host_port_pos == string::npos) {
 			if (with_ssl)
@@ -200,14 +224,18 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 		}
 		else {
 			_host = host.substr(0, host_port_pos);
-			_port = host.substr(host_port_pos, host.size() - host_port_pos);
+			_port = host.substr(host_port_pos + 1, host.size() - host_port_pos - 1);
 		}
 
 
 
-		//½âÎö
+		//è§£æ
 		_endpoints = co_await _resolver.async_resolve(_host,
 			_port, redirect_error(use_awaitable, ec));
+		
+		
+
+
 
 		if (ec) {
 
@@ -228,15 +256,54 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 			co_return respond_error;
 		}
 
+		//2nd proxy
+
 
 		boost::asio::socket_base::keep_alive option(true);
 		_socket->set_option(option);
 
+		if (secondary_proxy.size() > 0) {
+			host_port_pos = original_host.find(":");
+			if (host_port_pos == string::npos) {
+				if (with_ssl)
+					_port = "443";
+				_host = original_host;
+			}
+			else {
+				_host = original_host.substr(0, host_port_pos);
+				_port = original_host.substr(host_port_pos + 1, original_host.size() - host_port_pos - 1);
+			}
+			string host_and_port = _host + ":" + _port;
+			string temp_data = 
+				"CONNECT " + host_and_port + " HTTP/1.1\r\n"
+				"Host: " + host_and_port + "\r\n"
+				"Proxy-Connection: Keep-Alive\r\n"
+				//"Proxy-Authorization: Basic *\r\n"
+				"Content-Length: 0\r\n\r\n";
+			//2nd proxy send CONNECT request
+			co_await boost::asio::async_write(*_socket,
+				boost::asio::buffer(temp_data)
+				, redirect_error(use_awaitable, ec));
+			shared_ptr<string> rsp = make_shared<string>();
+			connection_behaviour cb = co_await receive_response(rsp,true);//force not ssl
+			if (cb == respond_error ||
+				rsp->find("200 Connection Established") == string::npos) {
+				*error_msg = "Connect to secondary proxy server failed";
+				co_return respond_error;
+			}//å¦åˆ™ç»§ç»­å‘é€
+
+			
+		}
+		
+
 		if (with_ssl) {
+
+
+			
 			//for ssl connection, disable Nagle's algorithm boost the performance
 			_socket->set_option(tcp::no_delay(true));
 
-			if (client_unit::server_certificate_verify && store) {//Ö»ÓĞ³É¹¦³õÊ¼»¯storeµÄÇé¿öÏÂ²ÅÑéÖ¤
+			if (client_unit::server_certificate_verify && store) {//åªæœ‰æˆåŠŸåˆå§‹åŒ–storeçš„æƒ…å†µä¸‹æ‰éªŒè¯
 				_ssl_stream_ptr->set_verify_mode(boost::asio::ssl::verify_peer);
 				_ssl_stream_ptr->set_verify_callback(boost::asio::ssl::host_name_verification(_host));
 			}
@@ -248,15 +315,19 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 			if (ec) {
 				*error_msg = "Handshake failed: ";
 				*error_msg += ec.message();
-				*error_msg += "Debug info: _host:"+_host;
+				*error_msg += "\nDebug info: _host:"+_host;
 				co_return respond_error;
 			}
+			
+			
+
+			
 		}
 
 
 
 	}
-
+	//connect end
 
 	//now _socket is set up
 
@@ -281,9 +352,11 @@ awaitable<connection_behaviour> client_unit::send_request(const string& host,
 	
 }
 
-//·µ»Ø´íÎóÊ±ÒªÍ¬Ê±·µ»Ø´íÎóĞÅÏ¢
-awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>& result) //²»ĞèÒª¼ì²éÁ¬½ÓĞÔ£¬³ö´íÖ±½Ó·µ»Ø¼´¿É
+//è¿”å›é”™è¯¯æ—¶è¦åŒæ—¶è¿”å›é”™è¯¯ä¿¡æ¯
+awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>& result, bool force_not_ssl) //ä¸éœ€è¦æ£€æŸ¥è¿æ¥æ€§ï¼Œå‡ºé”™ç›´æ¥è¿”å›å³å¯
 {
+	
+
 	boost::system::error_code ec;
 	try
 	{
@@ -292,19 +365,19 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 
 
 
-		while (true) {
+		while (_socket) {
 			integrity_status _status;
 
 
 			
 			if (_remained_response && 
-				_remained_response->size() != 0) {//Ìø¹ı¶ÁÈ¡£¬Ö±½Ó¼ì²éÍêÕûĞÔ
+				_remained_response->size() != 0) {//è·³è¿‡è¯»å–ï¼Œç›´æ¥æ£€æŸ¥å®Œæ•´æ€§
 				_whole_response = _remained_response;
 				_remained_response.reset();
 			}
 			else {
 				size_t bytes_transferred;
-				if (_ssl_stream_ptr) {
+				if (_ssl_stream_ptr && !force_not_ssl) {
 					bytes_transferred = co_await _ssl_stream_ptr->async_read_some(
 						boost::asio::buffer(_buffer),
 						boost::asio::redirect_error(use_awaitable, ec));
@@ -323,7 +396,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 						*result += "\n";
 						throw std::runtime_error("client unit read failed");
 					}
-					else {//Á¬½ÓÒÑ¶Ï¿ª
+					else {//è¿æ¥å·²æ–­å¼€
 						_current_host = "";
 					}
 				}
@@ -338,10 +411,20 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 			
 
 			size_t split_pos = 0;
-			if ((last_status == chunked) || (last_status == wait_chunked))
-				_status = _chunked_integrity_check(_whole_response, split_pos);
-			else
+			if (protocol == websocket_handshake) {
 				_status = _http_integrity_check(_whole_response, split_pos);
+				protocol = websocket;
+			}
+			else if (protocol == websocket) {
+				_status = _websocket_integrity_check(_whole_response, split_pos);
+			}
+			else {
+				if ((last_status == chunked) || (last_status == wait_chunked))
+					_status = _chunked_integrity_check(_whole_response, split_pos);
+				else
+					_status = _http_integrity_check(_whole_response, split_pos);
+			}
+			
 			//appendix:[split_pos,_size)
 
 			connection_behaviour ret = respond_and_keep_alive;
@@ -349,6 +432,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 			last_status = _status;
 
 			switch (_status) {
+			case integrity_status::websocket_intact:
 			case integrity_status::intact:
 				ret = respond_and_keep_alive;//default
 				break;
@@ -362,7 +446,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 
 			case integrity_status::wait_chunked:
 			case integrity_status::wait:
-				//´Ë´¦µÄecÒª²»È»¾ÍÃ»´í£¬Òª²»È»¾ÍÊÇeof£¬ÒòÎªÆäËûµÄÔçÒÑÌø³ö
+				//æ­¤å¤„çš„ecè¦ä¸ç„¶å°±æ²¡é”™ï¼Œè¦ä¸ç„¶å°±æ˜¯eofï¼Œå› ä¸ºå…¶ä»–çš„æ—©å·²è·³å‡º
 				if (ec == boost::asio::error::eof) {
 					
 					throw std::runtime_error("response integrity check failed(wait but eof)");
@@ -379,7 +463,7 @@ awaitable<connection_behaviour> client_unit::receive_response(shared_ptr<string>
 			if (split_pos < _whole_response->size()) {
 				_remained_response.reset(new string(
 					_whole_response->substr(split_pos, _whole_response->size() - split_pos)));
-				_whole_response->resize(split_pos);//Çå³ıÄ©Î²
+				_whole_response->resize(split_pos);//æ¸…é™¤æœ«å°¾
 			
 			}
 
@@ -420,7 +504,7 @@ void client_unit::_socket_close()
 		_socket->shutdown(tcp::socket::shutdown_both, ignored_ec);
 		_socket->close();
 		if (_ssl_stream_ptr) {
-			_socket = nullptr;//±ÜÃâÁ½´ÎÊÍ·Å
+			_socket = nullptr;//é¿å…ä¸¤æ¬¡é‡Šæ”¾
 			_ssl_stream_ptr.reset();
 		}
 		else

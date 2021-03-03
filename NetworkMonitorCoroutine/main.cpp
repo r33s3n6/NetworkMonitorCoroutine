@@ -27,31 +27,28 @@ using boost::asio::ip::tcp;
 //#include "TestServer.h"
 #include "proxy_server.h"
 
-/*Î´Íê³ÉµÄ²¿·Ö:
+/*æœªå®Œæˆçš„éƒ¨åˆ†:
 * 
-* logging Àà
-* 
-* 
-* 
-* client_unit::verify
-* 
-* 
+* logging ç±»
 * 
 * 
 * 
 * certificate_manager::
 create_ca
-
 auto_trust_ca
 * 
 * 
 */
-// client_unit send request ¸Ä³É connection:close Ò»Ö±³¢ÊÔ¶ÁÈ¡£¬¶ÁÒ»µãĞ´Ò»µã£¬Ö±µ½¶Áµ½eof
+
+//TODO: websocket support
+/*
+websocket_integrity_check
+*/
 
 /*
-³ÌĞòÈë¿Úµã
-×÷Îª½çÃæ³ÌĞòµÄºóÌ¨´¦ÀíÏûÏ¢Ñ­»·
-¿ÉÒÔµ¥¶Àµ÷ÊÔ
+ç¨‹åºå…¥å£ç‚¹
+ä½œä¸ºç•Œé¢ç¨‹åºçš„åå°å¤„ç†æ¶ˆæ¯å¾ªç¯
+å¯ä»¥å•ç‹¬è°ƒè¯•
 */
 
 int main(int argc, char* argv[])
@@ -71,7 +68,7 @@ int main(int argc, char* argv[])
         
         // Initialise the server.
         std::size_t num_threads = boost::lexical_cast<std::size_t>(argv[3]);
-        proxy_server::proxy_server srv(argv[1], argv[2], num_threads);
+        proxy_tcp::proxy_server srv(argv[1], argv[2], num_threads);
         printf("listening on %s:%s\n", argv[1], argv[2]);
 
         // Run the server until stopped.

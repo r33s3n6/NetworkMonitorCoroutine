@@ -6,11 +6,11 @@
 
 using namespace std;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 /*
-ÕâÆäÖĞµÄio_context È«²¿ÔËĞĞĞ­³Ì
-½ûÖ¹ÆÕÍ¨µÄÒì²½º¯ÊıÖ±½ÓÔËĞĞÔÚÆäÉÏ
+è¿™å…¶ä¸­çš„io_context å…¨éƒ¨è¿è¡Œåç¨‹
+ç¦æ­¢æ™®é€šçš„å¼‚æ­¥å‡½æ•°ç›´æ¥è¿è¡Œåœ¨å…¶ä¸Š
 */
 class io_context_pool
 {
@@ -36,5 +36,5 @@ private:
 	size_t _next_io_context;
 };
 
-}//namespace proxy_server
+}//namespace proxy_tcp
 

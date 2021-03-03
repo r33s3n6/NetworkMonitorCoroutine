@@ -48,7 +48,7 @@
     <ClCompile Include="connection.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ssl_layer.cpp">
+    <ClCompile Include="..\QTFrontend\config.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,7 +86,7 @@
     <ClInclude Include="certificate_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ssl_layer.h">
+    <ClInclude Include="..\QTFrontend\config.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,15 +1,16 @@
 #pragma once
 
-namespace proxy_server {
+namespace proxy_tcp {
 
 	typedef enum {
-		intact,//ÍêÕû
-		//with_appendix,// ÓĞºó×º£¬ĞèÒª½øĞĞ·Ö¸î
-		broken,//Êı¾İËğ»µ
-		wait, //¼ÌĞø½ÓÊÕ
-		wait_chunked,//´Ëchunked°ü²»ÍêÕû£¬¼ÌĞø½ÓÊÕ
-		chunked,//´ËchunkedÍêÕû£¬ÈÔÓĞºóĞøchunked°ü
-		https_handshake //httpsÎÕÊÖ°ü
+		intact,//å®Œæ•´
+		//with_appendix,// æœ‰åç¼€ï¼Œéœ€è¦è¿›è¡Œåˆ†å‰²
+		broken,//æ•°æ®æŸå
+		wait, //ç»§ç»­æ¥æ”¶
+		wait_chunked,//æ­¤chunkedåŒ…ä¸å®Œæ•´ï¼Œç»§ç»­æ¥æ”¶
+		chunked,//æ­¤chunkedå®Œæ•´ï¼Œä»æœ‰åç»­chunkedåŒ…
+		https_handshake, //httpsæ¡æ‰‹åŒ…
+		websocket_intact//websocket
 	} integrity_status;
 
 	typedef enum {//deprecated
@@ -18,19 +19,23 @@ namespace proxy_server {
 	} handshake_status;
 
 	typedef enum {
-		respond_and_keep_alive,//±£³ÖÁ¬½Ó
+		respond_and_keep_alive,//ä¿æŒè¿æ¥
 		respond_and_close,//
-		keep_receiving_data,//¼ÌĞø´ÓÔ¶¶Ë¶ÁÊı¾İ
+		keep_receiving_data,//ç»§ç»­ä»è¿œç«¯è¯»æ•°æ®
+		protocol_websocket,
 		respond_error,
 		ignore
 	} connection_behaviour;
 
-	typedef enum {//deprecated
+	typedef enum {
 		http,
-		https,
-		error,
-		handshake
-	} request_protocol;
+		//https,
+		websocket,
+		websocket_handshake,
+		//websocket_with_ssl,
+		unknown
+
+	} connection_protocol;
 
 	typedef enum {
 		_OPTIONS,
@@ -40,7 +45,7 @@ namespace proxy_server {
 		_PUT,
 		_DELETE,
 		_TRACE,
-		_CONNECT //https µ¥¶À´¦Àí
+		_CONNECT //https å•ç‹¬å¤„ç†
 	} request_type;
 
 }

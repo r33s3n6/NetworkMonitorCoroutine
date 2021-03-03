@@ -8,7 +8,7 @@ using namespace std;
 #include "client_unit.h"
 #include "io_context_pool.h"
 
-namespace proxy_server{
+namespace proxy_tcp{
 
 class client_manager
 {

@@ -4,12 +4,19 @@
 #include <memory>
 #include <functional>
 
-using namespace std;
+
 
 
 #include <boost/asio.hpp>
 
-namespace proxy_server{
+#ifdef QT_CORE_LIB
+#include <qobject.h>
+#include <mutex>
+#include "../QTFrontend/SessionDataModel.h"
+#endif
+
+using namespace std;
+namespace proxy_tcp{
 
 	using boost::asio::ip::tcp;
 	using boost::asio::awaitable;
@@ -19,31 +26,80 @@ namespace proxy_server{
 	using boost::asio::use_awaitable;
 
 
-
+#ifdef QT_CORE_LIB
+class proxy_handler;
+class display_filter : public QObject
+{
+	Q_OBJECT
+#else
 class display_filter
 {
+
+#endif
+
 public:
+#ifndef QT_CORE_LIB
 	void display(shared_ptr<string> req_data, shared_ptr<string> rsp_data);
+	void _temp_display(shared_ptr<string> data);
+	//åˆå§‹æ˜¾ç¤º
+	int display(shared_ptr<string> req_data);
 
-	void _temp_display(shared_ptr<const string> data);
+	//æ˜¾ç¤ºrequestçš„æ—¶å€™æ˜¯ä¸ä¼šæœ‰é”™çš„
+	void update_display_req(int id, shared_ptr<string> req_data);
+
+	void update_display_rsp(int id, shared_ptr<string> rsp_data);
+	//åªåœ¨æ›´æ–°responseçš„æ—¶å€™é¡ºä¾¿æ˜¾ç¤ºé”™è¯¯
+	void update_display_error(int id, shared_ptr<string> rsp_data);
+
+	//å¯¹äºchunked dataï¼Œåªåœ¨ç¬¬ä¸€æ¬¡è°ƒç”¨breakpoint
+	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//é‡Œé¢è¦æ˜¾ç¤ºå‡ºæ¥
+	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);//é‡Œé¢è¦æ˜¾ç¤ºå‡ºæ¥
+#else
+
+	//shared_ptr<session_info> display(
+	//	shared_ptr<string> req_data, shared_ptr<proxy_handler> _proxy_handler, bool breakpoint);
+
+	void display(shared_ptr<session_info> _session_info);
+	void update_display_req(shared_ptr<session_info> _session_info);
+	void complete_req(shared_ptr<session_info> _session_info);
+
+	void display_rsp(shared_ptr<session_info> _session_info);
+	void update_display_rsp(shared_ptr<session_info> _session_info);
+	void complete_rsp(shared_ptr<session_info> _session_info);
+
+	void update_display_error(shared_ptr<session_info> _session_info);
 
 
-	//³õÊ¼ÏÔÊ¾
-	int display(shared_ptr<const string> req_data);
+#endif
 	
-	//ÏÔÊ¾requestµÄÊ±ºòÊÇ²»»áÓĞ´íµÄ
-	void update_display_req(int id, shared_ptr<const string> req_data);
-	void update_display_rsp(int id, shared_ptr<const string> rsp_data);
-	//Ö»ÔÚ¸üĞÂresponseµÄÊ±ºòË³±ãÏÔÊ¾´íÎó
-	void update_display_error(int id, shared_ptr<const string> rsp_data);
 
-	//¶ÔÓÚchunked data£¬Ö»ÔÚµÚÒ»´Îµ÷ÓÃbreakpoint
-	awaitable<int> display_breakpoint_req(shared_ptr<string> req_data);//ÀïÃæÒªÏÔÊ¾³öÀ´
-	awaitable<int> display_breakpoint_rsp(int update_id, shared_ptr<string> rsp_data);//
+	
+#ifdef QT_CORE_LIB
+private:
+	
 
-	//ÀïÃæÒªÏÔÊ¾³öÀ´
+signals://signal
+	//void filter_updated(string filter);
+
+	void session_created(shared_ptr<session_info> _session_info);
+
+	void session_req_updated(shared_ptr<session_info> _session_info);
+	void session_req_completed(shared_ptr<session_info> _session_info);
+
+	void session_rsp_begin(shared_ptr<session_info> _session_info);
+	void session_rsp_updated(shared_ptr<session_info> _session_info);
+	void session_rsp_completed(shared_ptr<session_info> _session_info);
+
+	void session_error(shared_ptr<session_info> _session_info);
+
+//private slots:
+	//void session_passed(int update_id,bool is_req);//çŠ¶æ€ä¸çŸ¥é“åº”è¯¥ç”¨bitmapè¿˜æ˜¯hashmap
+
+#endif
 };
+
+
 
 }
 
-
+ 

@@ -1,5 +1,7 @@
 #include "display_filter.h"
 
+#ifndef QT_CORE_LIB
+
 #include <cstdio>
 #include <iostream>
 using namespace std;
@@ -7,12 +9,12 @@ using namespace std;
 #include "common_functions.h"
 using namespace common;
 
-namespace proxy_server {
+namespace proxy_tcp {
 
-	//ĞèÒªÁ¢¿Ì·µ»Ø
+	//éœ€è¦ç«‹åˆ»è¿”å›
 	void display_filter::display(shared_ptr<string> req_data, shared_ptr<string> rsp_data)
 	{
-		//½âÎö
+		//è§£æ
 		cout << *req_data << endl;
 		cout << "==============================" << endl;
 		cout << *rsp_data << endl;
@@ -40,7 +42,7 @@ namespace proxy_server {
 		cout << *header << "\n\n[BODY PART]\n";
 		string _content_type = get_header_value(header, "content-type");
 
-		if (_content_type.find("text") == string::npos) {//16½øÖÆ
+		if (_content_type.find("text") == string::npos) {//16è¿›åˆ¶
 			cout << memory2hex_string(body)->substr(0,333)<< "...\n\n";
 		}
 		else {
@@ -88,7 +90,7 @@ namespace proxy_server {
 	}
 
 	awaitable<int> display_filter::display_breakpoint_rsp(int update_id,
-		shared_ptr<string> rsp_data)//¸üĞÂ¾ÉÏÔÊ¾
+		shared_ptr<string> rsp_data)//æ›´æ–°æ—§æ˜¾ç¤º
 	{
 		co_return 0;
 	}
@@ -96,3 +98,4 @@ namespace proxy_server {
 
 
 }
+#endif

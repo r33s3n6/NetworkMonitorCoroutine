@@ -276,7 +276,7 @@ shared_ptr<cert_key> certificate_manager::get_server_certificate(const string& d
 
 shared_ptr<cert_key> certificate_manager::create_server_certificate(const string& domain)
 {
-	/* Generate keypair and then print it byte-by-byte for demo purposes. */
+	/* Generate keypair */
 	EVP_PKEY* key = NULL;
 	X509* crt = NULL;
 

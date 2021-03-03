@@ -1,6 +1,6 @@
 #pragma once
 
-namespace proxy_server {
+namespace proxy_tcp {
 namespace error_response {
 
 	const char error404[] = "HTTP/1.1 404 Not Found\r\n"
