@@ -17,7 +17,11 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Network Monitor Alpha Test</string>
+   <string>Web Application Debugger</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="QTFrontend.qrc">
+    <normaloff>:/QTFrontend/appicon.png</normaloff>:/QTFrontend/appicon.png</iconset>
   </property>
   <property name="toolTipDuration">
    <number>-3</number>
@@ -464,8 +468,8 @@ color: #ffffff;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>181</width>
-                         <height>28</height>
+                         <width>533</width>
+                         <height>279</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">
@@ -553,8 +557,8 @@ color: #ffffff;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>940</width>
-             <height>660</height>
+             <width>974</width>
+             <height>681</height>
             </rect>
            </property>
            <property name="minimumSize">

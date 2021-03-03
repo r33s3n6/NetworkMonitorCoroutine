@@ -1,4 +1,6 @@
 <RCC>
-    <qresource prefix="QTFrontend">
+    <qresource prefix="/QTFrontend">
+        <file>appicon.png</file>
+        <file>appicon.ico</file>
     </qresource>
 </RCC>

@@ -65,10 +65,17 @@
       <PreprocessorDefinitions>_WIN32_WINNT=0x0601;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>libcrypto64MD.lib;libssl64MD.lib;Crypt32.lib;$(Qt_LIBS_);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.12</QtInstall>
@@ -79,6 +86,7 @@
     <QtInstall>5.12</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <QtDeploy>true</QtDeploy>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
     <Import Project="$(QtMsBuild)\qt.props" />
@@ -146,6 +154,7 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\config.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection_enums.h" />
+    <ClInclude Include="resource.h" />
     <QtMoc Include="breakpoint_filter_window.h" />
     <QtMoc Include="QHexEditor\qhexedit.h" />
     <QtMoc Include="QHexEditor\commands.h" />
@@ -155,6 +164,13 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\io_context_pool.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\proxy_handler.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\proxy_server.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="appicon.ico" />
+    <Image Include="appicon.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

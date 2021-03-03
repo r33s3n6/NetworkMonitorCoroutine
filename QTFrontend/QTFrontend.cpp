@@ -449,7 +449,8 @@ void QTFrontend::_display_full_info(size_t display_id)
 	auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
 
 	if (_session_info_ptr->send_behaviour == intercept) {
-		ui.label_intercept->setText("Request has been intercepted");
+		//ui.label_intercept->setText("Request has been intercepted");
+		ui.label_intercept->setText("请求被拦截");
 		_activate_breakpoint_box(true);
 		_activate_editor(_session_info_ptr->req_completed, true);//_activate_editor of request	
 		
@@ -457,7 +458,8 @@ void QTFrontend::_display_full_info(size_t display_id)
 		
 	}
 	else if (_session_info_ptr->receive_behaviour == intercept) {
-		ui.label_intercept->setText("Response has been intercepted");
+		//ui.label_intercept->setText("Response has been intercepted");
+		ui.label_intercept->setText("响应被拦截");
 		_activate_breakpoint_box(true);
 		_activate_editor(_session_info_ptr->rsp_completed, false);//_activate_editor of response
 		is_req_intercepted = false;
