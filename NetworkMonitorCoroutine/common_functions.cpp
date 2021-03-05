@@ -13,6 +13,7 @@ map<string, string> split_header_into_map(const string& header) {
 		if (s_pos == string::npos)
 			continue;
 		string&& key = string_trim(h.substr(0, s_pos));
+		transform(key.begin(), key.end(), key.begin(), ::tolower);
 		string&& value = string_trim(h.substr(s_pos+1, h.size()- s_pos-1));
 		ret[key] = value;
 	}
