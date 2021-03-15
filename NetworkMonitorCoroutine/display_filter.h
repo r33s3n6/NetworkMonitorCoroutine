@@ -27,7 +27,13 @@ namespace proxy_tcp{
 	using boost::asio::use_awaitable;
 
 
+
 #ifdef QT_CORE_LIB
+
+
+
+
+
 class proxy_handler;
 class display_filter : public QObject
 {
@@ -60,6 +66,7 @@ public:
 	//shared_ptr<session_info> display(
 	//	shared_ptr<string> req_data, shared_ptr<proxy_handler> _proxy_handler, bool breakpoint);
 	display_filter() {
+		filter = make_shared<vector<http_header_filter>>();
 		//TEST CODE
 		/*
 		shared_ptr<vector<http_header_filter>> f = make_shared<vector<http_header_filter>>();
@@ -87,13 +94,16 @@ public:
 
 	//void set_filter(const string& filter);
 	bool is_filtered(shared_ptr<session_info> _session_info);
+
+	shared_ptr<vector<http_header_filter>> filter;
+
 #endif
 	
 
 	
 #ifdef QT_CORE_LIB
 private:
-	shared_ptr<const vector<http_header_filter>> filter;
+	
 
 signals://signal
 	//void filter_updated(string filter);

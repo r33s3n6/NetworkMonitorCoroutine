@@ -946,8 +946,8 @@ color: #ffffff;
            <widget class="QPushButton" name="pushButton_set_config">
             <property name="geometry">
              <rect>
-              <x>680</x>
-              <y>340</y>
+              <x>770</x>
+              <y>610</y>
               <width>191</width>
               <height>51</height>
              </rect>
@@ -960,6 +960,112 @@ color: #ffffff;
             <property name="text">
              <string>保存</string>
             </property>
+           </widget>
+           <widget class="QGroupBox" name="groupBox_display_filter">
+            <property name="geometry">
+             <rect>
+              <x>520</x>
+              <y>280</y>
+              <width>381</width>
+              <height>301</height>
+             </rect>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="title">
+             <string>显示筛选器设置</string>
+            </property>
+            <widget class="QLineEdit" name="lineEdit_display_host">
+             <property name="geometry">
+              <rect>
+               <x>70</x>
+               <y>80</y>
+               <width>241</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_5">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>80</y>
+               <width>31</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Host:</string>
+             </property>
+             <property name="buddy">
+              <cstring>lineEdit_breakpoint_host</cstring>
+             </property>
+            </widget>
+            <widget class="QPlainTextEdit" name="plainTextEdit_display_custom">
+             <property name="geometry">
+              <rect>
+               <x>70</x>
+               <y>120</y>
+               <width>241</width>
+               <height>141</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_6">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>180</y>
+               <width>51</width>
+               <height>16</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>自定义头:</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_7">
+             <property name="geometry">
+              <rect>
+               <x>30</x>
+               <y>40</y>
+               <width>21</width>
+               <height>21</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>URL:</string>
+             </property>
+             <property name="buddy">
+              <cstring>lineEdit_breakpoint_host</cstring>
+             </property>
+            </widget>
+            <widget class="QLineEdit" name="lineEdit_display_url">
+             <property name="geometry">
+              <rect>
+               <x>70</x>
+               <y>40</y>
+               <width>241</width>
+               <height>20</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="QCheckBox" name="checkBox_display_reverse">
+             <property name="geometry">
+              <rect>
+               <x>320</x>
+               <y>80</y>
+               <width>54</width>
+               <height>20</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>只看</string>
+             </property>
+            </widget>
            </widget>
           </widget>
          </widget>
@@ -1195,8 +1301,8 @@ color: #ffffff;
    <slot>show()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>803</x>
-     <y>183</y>
+     <x>805</x>
+     <y>181</y>
     </hint>
     <hint type="destinationlabel">
      <x>830</x>

@@ -72,6 +72,10 @@ public:
 	string secondary_proxy;//TODO
 	string port="5559";
 
+	string raw_url_filter;
+	string raw_host_filter;
+	string raw_custom_filter;
+	bool reverse_url_behaviour=false;
 
 	void load_config_from_file(string path = default_config_path);
 	void save_config(string path = default_config_path);
@@ -107,6 +111,10 @@ private:
 
 		ADD_ENTRY(column_width);
 
+		ADD_ENTRY(raw_url_filter);
+		ADD_ENTRY(raw_host_filter);
+		ADD_ENTRY(raw_custom_filter);
+		ADD_ENTRY(reverse_url_behaviour);
 
 		/*
 		conf_entry_vec = vector<conf_entry>({

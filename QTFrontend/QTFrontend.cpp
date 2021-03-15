@@ -83,8 +83,9 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 	ui.scrollArea->setVisible(true);
 
 	_activate_breakpoint_box(false);
-	_set_filter_vec(true);
-	_set_filter_vec(false);
+	_set_breakpoint_filter(true);
+	_set_breakpoint_filter(false);
+	_set_display_filter();
 	ui.statusBar->showMessage("TODO:Status Bar");
 	ui.label_server_restart_required->hide();
 }
@@ -158,7 +159,7 @@ void QTFrontend::_add_bp(bool is_req) {
 		}
 		filter.enable_breakpoint = true;
 	}
-	_set_filter_vec(is_req);
+	_set_breakpoint_filter(is_req);
 	_display_config();
 }
 
@@ -183,7 +184,7 @@ void QTFrontend::_delete_bp(bool is_req) {
 
 		//filter.enable_breakpoint = true;
 	}
-	_set_filter_vec(is_req);
+	_set_breakpoint_filter(is_req);
 	_display_config();
 }
 
@@ -589,12 +590,36 @@ void QTFrontend::_set_enable_config() {
 		ui.checkBox_enable_rsp_breakpoint->isChecked();
 }
 
+
+
+void QTFrontend::_set_breakpoint_filter(bool is_req) {
+	auto& filter = is_req ? _config->req_filter : _config->rsp_filter;
+	string raw_filter = filter.raw_custom_header_filter;
+	if (!filter.raw_host_filter.empty())
+		raw_filter.append("\r\nhost:")
+		.append(filter.raw_host_filter);
+	_set_filter_vec(filter.header_filter_vec, raw_filter);
+}
+
+void QTFrontend::_set_display_filter() {
+
+	string raw_filter = _config->raw_custom_filter;
+	if (!_config->raw_host_filter.empty())
+		raw_filter.append("\r\nhost:")
+		.append(_config->raw_host_filter);
+	_set_filter_vec(*_display_filter.filter,
+		raw_filter, _config->raw_url_filter, _config->reverse_url_behaviour);
+}
+
 //save all config to _config, please call it carefully due to performance
 void QTFrontend::_set_config()
 {
 	_set_enable_config();
 	
 	bool is_req = ui.radioButton_req_settings->isChecked();
+	
+
+
 	auto& filter = is_req ? _config->req_filter : _config->rsp_filter;
 
 	bool update_filter_map = false;
@@ -608,8 +633,41 @@ void QTFrontend::_set_config()
 		filter.raw_host_filter = temp_host;
 		update_filter_map = true;
 	}
-	if(update_filter_map)
-		_set_filter_vec(is_req);
+	if (update_filter_map) {
+		
+		_set_breakpoint_filter(is_req);
+	}
+		
+
+	bool update_display_filter = false;
+	if (_config->reverse_url_behaviour != ui.checkBox_display_reverse->isChecked()) {
+		_config->reverse_url_behaviour = ui.checkBox_display_reverse->isChecked();
+		update_display_filter = true;
+
+	}
+	
+	string&& dis_custom = ui.plainTextEdit_display_custom->toPlainText().toStdString();
+	string&& dis_host = ui.lineEdit_display_host->text().toStdString();
+	string&& dis_url = ui.lineEdit_display_url->text().toStdString();
+	if (_config->raw_custom_filter != dis_custom) {
+		_config->raw_custom_filter = dis_custom;
+		update_display_filter = true;
+	}
+	if (_config->raw_url_filter != dis_url) {
+		_config->raw_url_filter = dis_url;
+		update_display_filter = true;
+	}
+	if (_config->raw_host_filter != dis_host) {
+		_config->raw_host_filter = dis_host;
+		update_display_filter = true;
+	}
+	if (update_display_filter) {
+		
+		_set_display_filter();
+	}
+
+
+
 
 	_config->port = ui.lineEdit_port->text().toStdString();
 
@@ -645,18 +703,32 @@ void QTFrontend::_trust_root_ca()
 	system(string("certutil -addstore -f -enterprise -user root ./cert/CAcert.pem").c_str());
 }
 
-void QTFrontend::_set_filter_vec(bool is_req) {
+void QTFrontend::_set_filter_vec(vector<http_header_filter>& filter_vec,const string& raw_filter, 
+	const string& raw_url_filter,bool reverse_behaviour_url) {
 
-	breakpoint_filter& filter = is_req ? _config->req_filter : _config->rsp_filter;
+
 
 	shared_ptr<vector<string>> header_vec_ptr
-		= string_split(filter.raw_custom_header_filter, "\r\n");
+		= string_split(raw_filter, "\r\n");
 
-	if(filter.raw_host_filter.size()>0)
-		header_vec_ptr->emplace_back("host:"+filter.raw_host_filter);
-	
-	filter.header_filter_vec.clear();
+	filter_vec.clear();
 
+	if (raw_url_filter.size() > 0) {
+		http_header_filter http_header_filter;
+		http_header_filter.key = "::HEAD::";
+		shared_ptr<vector<string>> value_vec_ptr = string_split(raw_url_filter, ";");
+		for (auto v : *value_vec_ptr) {
+
+			filter_base fb;
+			fb.value = string_trim(v);
+
+
+			if (fb.value.size() > 0) {
+				http_header_filter.filter_vec.emplace_back(fb);
+			}
+		}
+		filter_vec.emplace_back(http_header_filter);
+	}
 
 	for (auto header : *header_vec_ptr) {
 		size_t pos = header.find(":");
@@ -664,24 +736,28 @@ void QTFrontend::_set_filter_vec(bool is_req) {
 			continue;
 		http_header_filter http_header_filter;
 		http_header_filter.key = string_trim(header.substr(0, pos));
+		
 		transform(http_header_filter.key.begin(), http_header_filter.key.end(), http_header_filter.key.begin(), ::tolower);
 
-		shared_ptr<vector<string>> value_vec_ptr = string_split(header.substr(pos + 1, header.size() - pos - 1),";");
+		shared_ptr<vector<string>> value_vec_ptr = string_split(header.substr(pos + 1, header.size() - pos - 1), ";");
+		bool reverse = http_header_filter.key == "host" && reverse_behaviour_url;
 		for (auto v : *value_vec_ptr) {
 			filter_base fb;
 			fb.value = string_trim(v);
-			//TODO 可以加入reverse了
+			fb.reverse = reverse;
 			if (fb.value.size() > 0) {
 				http_header_filter.filter_vec.emplace_back(fb);
-				//cout << temp_v << endl;//DEBUG
+
 			}
-				
+
 		}
 
-		filter.header_filter_vec.emplace_back(http_header_filter);
+		filter_vec.emplace_back(http_header_filter);
 
 	}
 }
+
+
 
 void QTFrontend::_toggle_breakpoint_config()
 {
@@ -718,6 +794,14 @@ void QTFrontend::_display_config()
 {
 	ui.checkBox_enable_req_breakpoint->setChecked(_config->req_filter.enable_breakpoint);
 	ui.checkBox_enable_rsp_breakpoint->setChecked(_config->rsp_filter.enable_breakpoint);
+	ui.checkBox_display_reverse->setChecked(_config->reverse_url_behaviour);
+
+	ui.plainTextEdit_display_custom->setPlainText(
+		QString::fromStdString(_config->raw_custom_filter));
+	ui.lineEdit_display_host->setText(
+		QString::fromStdString(_config->raw_host_filter));
+	ui.lineEdit_display_url->setText(
+		QString::fromStdString(_config->raw_url_filter));
 
 	if (ui.radioButton_req_settings->isChecked()) {
 		ui.plainTextEdit_breakpoint_custom->setPlainText(

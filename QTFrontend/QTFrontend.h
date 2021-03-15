@@ -51,6 +51,8 @@ private slots:
     void _restart_backend_server();
     void _trust_root_ca();
 
+    
+
 signals:
     //void session_replayed(const QModelIndex& index,bool with_bp);
 
@@ -139,7 +141,10 @@ private:
     void _toggle_breakpoint_config();
 
     void _set_enable_config();
-    void _set_filter_vec(bool is_req);
+    //void _set_filter_vec(bool is_req);
+    void _set_filter_vec(vector<http_header_filter>& filter_vec, const string& raw_filter, const string& raw_url_filter = "", bool reverse_behaviour_url = false);
+    void _set_breakpoint_filter(bool is_req);
+    void _set_display_filter();
     void _set_config();//write ui's data to _config
     void _display_config();
 

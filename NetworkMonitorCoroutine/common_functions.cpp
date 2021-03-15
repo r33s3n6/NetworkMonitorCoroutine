@@ -33,8 +33,20 @@ bool header_check(const string& header, const vector<http_header_filter>& header
 			bool success = true;
 
 			if (header.key == "::HEAD::") {
-				if (value.find(value_filter) == string::npos)
+				size_t url_start_pos = value.find(" ");
+				size_t url_end_pos = value.find(" HTTP");
+
+				if (url_start_pos != string::npos &&
+					url_end_pos != string::npos) {
+					string url = value.substr(url_start_pos, url_end_pos - url_start_pos);
+					transform(url.begin(), url.end(), url.begin(), ::tolower);
+					if (url.find(value_filter) == string::npos)
+						success = false;
+				}
+				else {
 					success = false;
+				}
+				
 					
 			}
 			else {

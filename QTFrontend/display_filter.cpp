@@ -14,7 +14,8 @@ namespace proxy_tcp {
 	inline bool display_filter::is_filtered(shared_ptr<session_info> _session_info) {
 
 		if (filter && (!filter->empty()))
-			return header_check(*_session_info->raw_req_data, *filter);
+			if(_session_info->raw_req_data)//TODO: 不应该出现这种情况，但是调试的时候发现了
+				return header_check(*_session_info->raw_req_data, *filter);
 		else
 			return false;
 
