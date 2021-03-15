@@ -3,7 +3,7 @@ addons:
   sonarcloud:
     organization: "callfromfuture"
     token:
-      secure: "**************************" # encrypted value of your token
+      secure: "nhgmh3UwQTTmOU3L6OhHtRiG0LyuoyUQM/onN1bdVpu3MyNwQ41O65GKcGLzHPDDldLqCy7FiTwzyxoa1WnD53E+NrLkFiOmeio5TBPETXRu2bJ/oJTs747S177vWbV1EdyvdZbeZTWYLEB0PXE17ekJ3Gid35QF4kzohhEgrIWiEDBiLuENnDrqIuWwo8VRcRx+mBKZody2h7lktf8G4g/vaKGm4PllcIp9lAWqQlXN1/9cc9pmsOJJVfuV9VMOL+jwJd+mm/UCs9ucK0F7FGZhbo7y6SsmH7BwrwBmdc9lQk+Cu4vtTx9nEUOC2soT2XM4ifnFNycQsStztWsbv0VpVgnV13wOhc8aINb9bzt+MpUhdeo/uAJflW1hOgmbnLKCoOZCPrgOuvvm/xtHI+0hbEGU1RjBkqLuGlUrO1ur+Yw95izX4eGtWtG3v0g7AOBlOuG3gZSu5JhJILZNgqaml7rqJMHG7gSaFRx4DiAIjLmRMNaSZ5GLh5LhAmxS3MwYXHRGn0pC4BCyLTJ/e5U2T9JxJTtfSY69CyxdqZw69t4vin9cYGTLKtN0VieMvvTKwSgCgtOESb1rluQZ+DPvTjwLBsS0DrZeYT/WjvPKoCAOcbyuGtdjt9fi0+k8THAWd2Aq5dPZXbquigHX7S5RvnZSdMLUy4FREmnXQ7E=" # encrypted value of your token
 
 script:
   # Wraps the compilation with the Build Wrapper to generate configuration (used
