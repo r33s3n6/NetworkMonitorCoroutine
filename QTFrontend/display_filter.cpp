@@ -9,13 +9,31 @@ using namespace common;
 
 namespace proxy_tcp {
 
-	
+
+
+	inline bool display_filter::is_filtered(shared_ptr<session_info> _session_info) {
+
+		if (filter && (!filter->empty()))
+			return header_check(*_session_info->raw_req_data, *filter);
+		else
+			return false;
+
+
+	}
 
 	void display_filter::display(shared_ptr<session_info> _session_info)
 	{
 
+		if (is_filtered(_session_info)) {
+			_session_info->forever_filtered = true;
+		}
+		else {
+			emit session_created(_session_info);
+		}
+			
 
-		emit session_created(_session_info);
+			
+
 	}
 
 
@@ -23,21 +41,24 @@ namespace proxy_tcp {
 	void display_filter::update_display_req(
 		shared_ptr<session_info> _session_info)
 	{
+		if (!_session_info->forever_filtered)
+			emit session_req_updated(_session_info);
 
-		emit session_req_updated(_session_info);
 	}
 
 	void display_filter::display_filter::complete_req(shared_ptr<session_info> _session_info)
 	{
-		emit session_req_completed(_session_info);
+
+		if (!_session_info->forever_filtered)
+			emit session_req_completed(_session_info);
 	}
 
 	void display_filter::display_rsp(
 		shared_ptr<session_info> _session_info)
 	{
 
-
-		emit session_rsp_begin(_session_info);
+		if (!_session_info->forever_filtered)
+			emit session_rsp_begin(_session_info);
 
 	}
 
@@ -45,20 +66,22 @@ namespace proxy_tcp {
 		shared_ptr<session_info> _session_info)
 	{
 
-
-		emit session_rsp_updated(_session_info);
+		if (!_session_info->forever_filtered)
+			emit session_rsp_updated(_session_info);
 
 	}
 
 	void display_filter::display_filter::complete_rsp(shared_ptr<session_info> _session_info)
 	{
-		emit session_rsp_completed(_session_info);
+		if (!_session_info->forever_filtered)
+			emit session_rsp_completed(_session_info);
 	}
 
 	void display_filter::update_display_error(
 		shared_ptr<session_info> _session_info)
 	{
-		emit session_error(_session_info);
+		if (!_session_info->forever_filtered)
+			emit session_error(_session_info);
 
 	}
 

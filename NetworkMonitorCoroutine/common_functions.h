@@ -6,10 +6,14 @@
 using namespace std;
 
 #include "connection_enums.h"
+#include "config.h"
 
 namespace common {
 
 
+
+
+    bool header_check(const string& header, const vector<http_header>& header_filter_vec);
 
     map<string, string> split_header_into_map(const string& header);
 
@@ -43,8 +47,10 @@ inline string string_trim(const string& original)
 inline string string_trim(const string&& original)
 {
     if (original.size() == 0)
-        return string();
+        return "";
     size_t _begin = original.find_first_not_of(" ");
+    if (_begin == string::npos)//全是空格
+        return "";
     size_t _size = original.find_last_not_of(" ") - _begin + 1;
     return original.substr(_begin, _size);
 }

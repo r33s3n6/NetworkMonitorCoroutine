@@ -13,6 +13,7 @@
 #include <qobject.h>
 #include <mutex>
 #include "../QTFrontend/SessionDataModel.h"
+
 #endif
 
 using namespace std;
@@ -58,7 +59,18 @@ public:
 
 	//shared_ptr<session_info> display(
 	//	shared_ptr<string> req_data, shared_ptr<proxy_handler> _proxy_handler, bool breakpoint);
+	display_filter() {
+		shared_ptr<vector<http_header>> f = make_shared<vector<http_header>>();
+		http_header h;
+		h.key = "::HEAD::";
+		h.value.push_back("css");
+		f->push_back(h);
 
+		h.key = "host";
+		h.value.push_back("www.google.com");
+		f->push_back(h);
+		filter = f;
+	}
 	void display(shared_ptr<session_info> _session_info);
 	void update_display_req(shared_ptr<session_info> _session_info);
 	void complete_req(shared_ptr<session_info> _session_info);
@@ -69,14 +81,15 @@ public:
 
 	void update_display_error(shared_ptr<session_info> _session_info);
 
-
+	//void set_filter(const string& filter);
+	bool is_filtered(shared_ptr<session_info> _session_info);
 #endif
 	
 
 	
 #ifdef QT_CORE_LIB
 private:
-	
+	shared_ptr<const vector<http_header>> filter;
 
 signals://signal
 	//void filter_updated(string filter);

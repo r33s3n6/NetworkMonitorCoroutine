@@ -60,7 +60,8 @@ struct session_info {//应该把req/rsp的数据单独抽象出一个struct 更�
         send_behaviour = undefined;
         receive_behaviour = undefined;
     }
-
+    bool forever_filtered = false;
+    bool temp_filtered = false;
     
     /*
     session_info(string url, string code, string protocol,

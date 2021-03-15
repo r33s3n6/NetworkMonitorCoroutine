@@ -28,12 +28,13 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 	//shared_ptr<vector<string>> header_vec_ptr
 	//	= string_split(*header, "\r\n");
     
-    map<string, string> h_map = split_header_into_map(*_session_info->raw_req_data);
+    
 
     if (filter.header_filter_vec.empty())
         return false;
 
-
+    /*
+    map<string, string> h_map = split_header_into_map(*_session_info->raw_req_data);
     for (auto header : filter.header_filter_vec) {
         
         if (header.value.size() == 0)
@@ -97,4 +98,6 @@ bool breakpoint_manager::check(shared_ptr<const session_info> _session_info, boo
 
 
     return false;
+    */
+    return header_check(*_session_info->raw_req_data, filter.header_filter_vec);
 }

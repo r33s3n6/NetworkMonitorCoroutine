@@ -7,30 +7,7 @@ using namespace std;
 constexpr char default_config_path[] = "./config.dat";
 #define    NAME(name)    (#name)
 
-/*
-template <typename T>
-static string type_name(T x) {
-	if (typeid(x) == typeid(string)) {
-		return "string";
-	}
-	else if(){
 
-	}
-	switch (typeid(x)) {
-	case typeid(string):
-		
-	case typeid(size_t):
-		return "size_t";
-	case typeid(bool):
-		return "bool";
-
-	//case typeid(bool).name():
-	//	return "bool";
-
-
-
-	}
-}*/
 #define	ADD_ENTRY(x) conf_entry_map[NAME(x)]=conf_entry(typeid(x).name(),&x);
 
 
@@ -39,10 +16,20 @@ static const char* _table_header_name[] = {
 	"#", "URL","Code","Protocol","Host","Body","Content-Type"
 };
 
-
+/*
 struct http_header {
     string key;//case insensitive
     vector<string> value;//case sensitive
+};
+*/
+struct filter_base {
+	string value;
+	bool reverse = false;// false: remove those which consists of value
+};
+
+struct http_header_filter {
+	string key;//case insensitive
+	vector<filter_base> filter_vec;//case sensitive
 };
 
 struct breakpoint_filter {

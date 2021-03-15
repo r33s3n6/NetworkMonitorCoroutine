@@ -99,6 +99,8 @@ namespace proxy_tcp {
 				
 			}
 			_display_filter.display(_session_info);
+			if(_session_info->forever_filtered)
+				_session_info->send_behaviour = pass;
 		}
 		else {//是某次的后续，因此直接更新
 			_session_info->raw_req_data->append(*msg);
@@ -207,7 +209,8 @@ namespace proxy_tcp {
 			
 			_session_info->raw_rsp_data = rsp;
 			
-			if (_breakpoint_manager.check(_session_info,false)) {
+			if (!_session_info->forever_filtered &&
+				_breakpoint_manager.check(_session_info,false)) {
 				_session_info->receive_behaviour = intercept;//断点
 			}
 			else {

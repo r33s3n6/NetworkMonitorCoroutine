@@ -5,13 +5,93 @@ using namespace std;
 namespace common {
 using namespace proxy_tcp;
 
+
+bool header_check(const string& header, const vector<http_header>& header_filter_vec) {
+	
+	
+	map<string, string> h_map = split_header_into_map(header);
+
+	for (auto header : header_filter_vec) {
+
+		if (header.value.size() == 0)
+			continue;
+
+		for (auto value_filter : header.value) {//对每一个value_filter都查找，性能有较大消耗
+
+			if (value_filter.size() == 0)
+				continue;
+
+			
+
+			shared_ptr<vector<string>> keywords = string_split(value_filter, "*");
+
+			//string&& value = string_trim(get_header_value(header_vec_ptr, header.key));
+			string value = h_map[header.key];
+
+			bool success = true;
+
+			if (header.key == "::HEAD::") {
+				if(value.find(value_filter) != string::npos)
+					return true;
+				else
+					continue;
+			}
+			
+
+			if (keywords->size() == 1) {//完全匹配
+				if (value.find((*keywords)[0]) != 0)
+					success = false;
+			}
+			else {
+				size_t new_start_pos = 0;
+
+				//TODO:正则表达式
+				for (int i = 0; i < keywords->size(); i++) {//*的简单实现
+					string& key = (*keywords)[i];
+					if (key.size() == 0)
+						continue;
+					size_t pos = value.find(key, new_start_pos);
+
+					if (pos != string::npos) {
+						new_start_pos = pos + key.size();
+						continue;
+					}
+					else {
+						success = false;
+					}
+
+				}
+				if (success && header.key == "host") {
+					if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cn不能匹配*.baidu.com
+						success = true;
+					}
+					else {
+						success = false;
+					}
+				}
+			}
+
+			if (success)
+				return true;
+		}
+
+	}
+
+
+	return false;
+}
+
 map<string, string> split_header_into_map(const string& header) {
 	shared_ptr<vector<string>> vec=string_split(header, "\r\n");
 	map<string, string> ret;
+	ret["::HEAD::"] = vec->at(0);
 	for (auto h : *vec) {
-		size_t s_pos = h.find(":");
-		if (s_pos == string::npos)
+		if (h.size() == 0)
 			continue;
+		size_t s_pos = h.find(":");
+		if (s_pos == string::npos) {
+			continue;
+		}	
 		string&& key = string_trim(h.substr(0, s_pos));
 		transform(key.begin(), key.end(), key.begin(), ::tolower);
 		string&& value = string_trim(h.substr(s_pos+1, h.size()- s_pos-1));
