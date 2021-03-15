@@ -662,21 +662,23 @@ void QTFrontend::_set_filter_vec(bool is_req) {
 		size_t pos = header.find(":");
 		if (pos == string::npos || (pos + 1) == header.size())
 			continue;
-		http_header http_header;
-		http_header.key = string_trim(header.substr(0, pos));
-		transform(http_header.key.begin(), http_header.key.end(), http_header.key.begin(), ::tolower);
+		http_header_filter http_header_filter;
+		http_header_filter.key = string_trim(header.substr(0, pos));
+		transform(http_header_filter.key.begin(), http_header_filter.key.end(), http_header_filter.key.begin(), ::tolower);
 
 		shared_ptr<vector<string>> value_vec_ptr = string_split(header.substr(pos + 1, header.size() - pos - 1),";");
 		for (auto v : *value_vec_ptr) {
-			string&& temp_v = string_trim(v);
-			if (temp_v.size() > 0) {
-				http_header.value.emplace_back(temp_v);
+			filter_base fb;
+			fb.value = string_trim(v);
+			//TODO 可以加入reverse了
+			if (fb.value.size() > 0) {
+				http_header_filter.filter_vec.emplace_back(fb);
 				//cout << temp_v << endl;//DEBUG
 			}
 				
 		}
 
-		filter.header_filter_vec.emplace_back(http_header);
+		filter.header_filter_vec.emplace_back(http_header_filter);
 
 	}
 }

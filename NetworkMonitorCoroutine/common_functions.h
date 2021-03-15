@@ -13,7 +13,7 @@ namespace common {
 
 
 
-    bool header_check(const string& header, const vector<http_header>& header_filter_vec);
+    bool header_check(const string& header, const vector<http_header_filter>& header_filter_vec);
 
     map<string, string> split_header_into_map(const string& header);
 

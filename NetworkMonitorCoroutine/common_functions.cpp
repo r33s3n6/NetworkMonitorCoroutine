@@ -6,17 +6,19 @@ namespace common {
 using namespace proxy_tcp;
 
 
-bool header_check(const string& header, const vector<http_header>& header_filter_vec) {
+bool header_check(const string& header, const vector<http_header_filter>& header_filter_vec) {
 	
 	
 	map<string, string> h_map = split_header_into_map(header);
 
 	for (auto header : header_filter_vec) {
 
-		if (header.value.size() == 0)
+		if (header.filter_vec.size() == 0)
 			continue;
 
-		for (auto value_filter : header.value) {//对每一个value_filter都查找，性能有较大消耗
+		for (auto value_filter_base : header.filter_vec) {//对每一个value_filter都查找，性能有较大消耗
+
+			auto value_filter = value_filter_base.value;
 
 			if (value_filter.size() == 0)
 				continue;
@@ -31,47 +33,49 @@ bool header_check(const string& header, const vector<http_header>& header_filter
 			bool success = true;
 
 			if (header.key == "::HEAD::") {
-				if(value.find(value_filter) != string::npos)
-					return true;
-				else
-					continue;
+				if (value.find(value_filter) == string::npos)
+					success = false;
+					
+			}
+			else {
+				if (keywords->size() == 1) {//完全匹配
+					if (value.find((*keywords)[0]) != 0)
+						success = false;
+				}
+				else {
+					size_t new_start_pos = 0;
+
+					//TODO:正则表达式
+					for (int i = 0; i < keywords->size(); i++) {//*的简单实现
+						string& key = (*keywords)[i];
+						if (key.size() == 0)
+							continue;
+						size_t pos = value.find(key, new_start_pos);
+
+						if (pos != string::npos) {
+							new_start_pos = pos + key.size();
+							continue;
+						}
+						else {
+							success = false;
+						}
+
+					}
+					if (success && header.key == "host") {
+						if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cn不能匹配*.baidu.com
+							success = true;
+						}
+						else {
+							success = false;
+						}
+					}
+				}
 			}
 			
 
-			if (keywords->size() == 1) {//完全匹配
-				if (value.find((*keywords)[0]) != 0)
-					success = false;
-			}
-			else {
-				size_t new_start_pos = 0;
+			
 
-				//TODO:正则表达式
-				for (int i = 0; i < keywords->size(); i++) {//*的简单实现
-					string& key = (*keywords)[i];
-					if (key.size() == 0)
-						continue;
-					size_t pos = value.find(key, new_start_pos);
-
-					if (pos != string::npos) {
-						new_start_pos = pos + key.size();
-						continue;
-					}
-					else {
-						success = false;
-					}
-
-				}
-				if (success && header.key == "host") {
-					if (new_start_pos == value.size() || keywords->rbegin()->size() == 0) {//www.baidu.com.cn不能匹配*.baidu.com
-						success = true;
-					}
-					else {
-						success = false;
-					}
-				}
-			}
-
-			if (success)
+			if (success ^ value_filter_base.reverse)
 				return true;
 		}
 
