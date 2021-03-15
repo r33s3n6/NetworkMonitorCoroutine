@@ -16,12 +16,12 @@ static const char* _table_header_name[] = {
 	"#", "URL","Code","Protocol","Host","Body","Content-Type"
 };
 
-/*
+
 struct http_header {
     string key;//case insensitive
     vector<string> value;//case sensitive
 };
-*/
+
 struct filter_base {
 	string value;
 	bool reverse = false;// false: remove those which consists of value
