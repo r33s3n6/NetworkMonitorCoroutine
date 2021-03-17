@@ -92,6 +92,9 @@
     <ClCompile Include="..\NetworkMonitorCoroutine\config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="session_table_view.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="SessionDataModel.h">
@@ -110,6 +113,9 @@
       <Filter>Dependencies</Filter>
     </QtMoc>
     <QtMoc Include="breakpoint_filter_window.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="session_table_view.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

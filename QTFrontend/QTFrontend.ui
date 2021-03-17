@@ -87,7 +87,7 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
-             <widget class="QTableView" name="table_session">
+             <widget class="SessionTableView" name="table_session">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>1</horstretch>
@@ -468,8 +468,8 @@ color: #ffffff;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>533</width>
-                         <height>279</height>
+                         <width>181</width>
+                         <height>28</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">
@@ -557,8 +557,8 @@ color: #ffffff;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>974</width>
-             <height>681</height>
+             <width>940</width>
+             <height>660</height>
             </rect>
            </property>
            <property name="minimumSize">
@@ -1240,6 +1240,11 @@ color: #ffffff;
    <class>QHexEdit</class>
    <extends>QFrame</extends>
    <header>qhexedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SessionTableView</class>
+   <extends>QTableView</extends>
+   <header>session_table_view.h</header>
   </customwidget>
  </customwidgets>
  <resources>
