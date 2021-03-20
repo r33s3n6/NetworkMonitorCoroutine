@@ -44,6 +44,7 @@ int SessionDataModel::columnCount(const QModelIndex& /*parent*/) const
 
 QVariant SessionDataModel::data(const QModelIndex& index, int role) const
 {
+
     shared_ptr<session_info> temp = _data_vec[index.row()];
     if (role == Qt::DisplayRole) {
         
@@ -51,7 +52,7 @@ QVariant SessionDataModel::data(const QModelIndex& index, int role) const
             return QString("N/A");
         switch (index.column()) {
         case 0://#
-            return index.row();
+            return temp->id;
         case 1://url
             return QString::fromStdString(temp->url);
         case 2://code
@@ -121,6 +122,8 @@ QVariant SessionDataModel::headerData(int section, Qt::Orientation orientation, 
     return QVariant();
 }
 
+
+
 void SessionDataModel::force_refresh(size_t display_id)
 {
     emit dataChanged(createIndex(display_id, 0), createIndex(display_id, columnCount() - 1));
@@ -165,8 +168,10 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
     _session_info->id = id;
     id++;
 
-    beginInsertRows(QModelIndex(), _session_info->id, _session_info->id);
+    beginInsertRows(QModelIndex(), _data_vec.size(), _data_vec.size());
+    data_locker.lock();
     _data_vec.emplace_back(_session_info);
+    data_locker.unlock();
     endInsertRows();
 
     id_locker.unlock();
@@ -294,6 +299,32 @@ void SessionDataModel::session_error(shared_ptr<session_info> _session_info)
 
     _session_info->rsp_data_for_display = make_shared<string>(*(_session_info->new_data));
     emit info_updated(_session_info->id);
+}
+
+bool SessionDataModel::removeRows(const vector<int>& indexes)
+{
+    data_locker.lock();
+    for (int index : indexes) {//index为降序，移除将不对下标产生影响
+        beginRemoveRows(QModelIndex(), index, index);
+        _data_vec.erase(_data_vec.begin() + index);
+        endRemoveRows();
+    }
+    data_locker.unlock();
+    return false;
+}
+
+void SessionDataModel::delete_session(const string& host) {
+    vector<int> to_be_removed;//desc
+    
+    for (int i = _data_vec.size()-1; i >-1; i--) {
+        
+        if (_data_vec[i]->host == host) {
+            to_be_removed.emplace_back(i);
+        }
+    }
+
+    removeRows(to_be_removed);
+   
 }
 
 /*

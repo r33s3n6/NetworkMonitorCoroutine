@@ -46,6 +46,25 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 	connect(ui.pushButton_restart_proxy_server, &QPushButton::clicked, this, &QTFrontend::_restart_backend_server);
 	connect(ui.pushButton_trust_root_ca, &QPushButton::clicked, this, &QTFrontend::_trust_root_ca);
 
+	connect(ui.lineEdit_filter, &QLineEdit::editingFinished, this,
+		[=]() {
+			_proxy_session_data.setFilterWildcard(ui.lineEdit_filter->text());
+		}
+	);
+	connect(ui.lineEdit_filter, &QLineEdit::textChanged, this,
+		[=]() {
+			if(ui.lineEdit_filter->text().size()==0)
+				_proxy_session_data.setFilterWildcard("");
+		}
+	);
+
+
+	_proxy_session_data.setFilterCaseSensitivity(Qt::CaseInsensitive);
+	_proxy_session_data.setFilterKeyColumn(4);
+	
+	//connect(&_session_data, &SessionDataModel::rowsAboutToBeRemoved, this,&QTFrontend::_row_removed);
+
+	/*
 	auto edited_handler = //deprecated
 		[this](bool modified) {
 		auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
@@ -78,7 +97,7 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 	
 	//connect(ui.lineEdit_breakpoint_host, &QLineEdit::editingFinished, this, &QTFrontend::_set_config);
 	//connect(ui.plainTextEdit_breakpoint_custom, &QPlainTextEdit::finish, this, &QTFrontend::_set_config);
-	
+	*/
 
 	ui.scrollArea->setVisible(true);
 
@@ -91,9 +110,13 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 }
 
 
+
+
 void QTFrontend::_setup_table() {
 	_proxy_session_data.setSourceModel(&_session_data);
 
+	ui.table_session->set_original_model(&_session_data);
+	ui.table_session->set_proxy_model(&_proxy_session_data);
 	ui.table_session->setModel(&_proxy_session_data);
 	ui.table_session->sortByColumn(0, Qt::AscendingOrder);
 
@@ -111,30 +134,75 @@ void QTFrontend::_setup_table() {
 
 	table_session_context_menu->addAction(ui.action_edit_and_replay);
 	table_session_context_menu->addAction(ui.action_replay_session);
-	table_session_context_menu->addSeparator();
-	connect(ui.action_edit_and_replay, &QAction::triggered, this, &QTFrontend::_replay_session_with_bp);
-	connect(ui.action_replay_session, &QAction::triggered, this, &QTFrontend::_replay_session);
 
+	table_session_context_menu->addSeparator();
+	table_session_context_menu->addAction(ui.actionhost_name);
+	ui.actionhost_name->setEnabled(false);
+
+	//断点menu
 	table_session_bp_menu = new QMenu(this);
 	table_session_context_menu->addMenu(table_session_bp_menu);
 
-	//table_session_bp_menu->setTitle(QString::fromLocal8Bit("www.example.com 断点设置"));
-	table_session_bp_menu->setTitle("www.example.com 断点设置");
+	table_session_bp_menu->setTitle("断点设置");
 	table_session_bp_menu->addAction(ui.action_req_bp);
 	table_session_bp_menu->addAction(ui.action_rsp_bp);
 	table_session_bp_menu->addAction(ui.action_both_bp);
+
+	//显示筛选器menu
+	auto table_session_filter_menu = new QMenu(this);
+	table_session_context_menu->addMenu(table_session_filter_menu);
+	table_session_filter_menu->setTitle("显示设置");
+
+	table_session_filter_menu->addAction(ui.actiononly_show_host);
+	table_session_filter_menu->addAction(ui.actionfilter_host);
+	table_session_filter_menu->addAction(ui.actiondelete_host);
+
+	table_session_context_menu->addSeparator();
+
+	connect(ui.action_edit_and_replay, &QAction::triggered, this, &QTFrontend::_replay_session_with_bp);
+	connect(ui.action_replay_session, &QAction::triggered, this, &QTFrontend::_replay_session);
 
 	connect(ui.action_req_bp, &QAction::triggered, this, &QTFrontend::_add_req_bp);
 	connect(ui.action_rsp_bp, &QAction::triggered, this, &QTFrontend::_add_rsp_bp);
 	connect(ui.action_both_bp, &QAction::triggered, this, &QTFrontend::_add_both_bp);
 
-	//connect(this, &QTFrontend::session_replayed, &_session_data, &SessionDataModel::session_replayed);
-	//table_session_context_menu->addAction();
-	//table_session_context_menu->addAction();
-	table_session_context_menu->addSeparator();
+	connect(ui.actiononly_show_host, &QAction::triggered, 
+		[=]() {
+			if (_context_menu_session->host.size() > 0) {
+				auto f = QString::fromStdString(_context_menu_session->host);
+				ui.lineEdit_filter->setText(f);
+				_proxy_session_data.setFilterWildcard(f);
+
+			}
+			
+		}
+	);
+
+	connect(ui.actionfilter_host, &QAction::triggered, 
+		[=]() {
+
+		}
+	);
+
+	connect(ui.actiondelete_host, &QAction::triggered,
+		[=]() {
+			if (_context_menu_session->host.size() > 0) {
+				_session_data.delete_session(_context_menu_session->host);
+				
+			}
+		}
+	);
+
+
+
+
+
 	//table settings end
 
+
+
 }
+
 
 
 void QTFrontend::_add_bp(bool is_req) {
@@ -217,7 +285,9 @@ void QTFrontend::_display_table_context_menu(QPoint pos) {
 		ui.action_both_bp->setChecked(ui.action_req_bp->isChecked() && ui.action_rsp_bp->isChecked());
 
 		//table_session_bp_menu->setTitle(QString::fromStdString(_context_menu_session->host) + QString::fromLocal8Bit(" 断点设置"));
-		table_session_bp_menu->setTitle(QString::fromStdString(_context_menu_session->host) + QString(" 断点设置"));
+
+		ui.actionhost_name->setText(QString::fromStdString(_context_menu_session->host));
+		//table_session_bp_menu->setTitle( + QString(" 断点设置"));
 	}
 	
 	table_session_context_menu->popup(ui.table_session->viewport()->mapToGlobal(pos));
@@ -265,41 +335,50 @@ void QTFrontend::_save_data_to_hexeditor(shared_ptr<session_info> _session_info_
 	
 }
 
-void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {
+void QTFrontend::display_full_info(const QModelIndex& index, const QModelIndex& prev) {// maintain _display_id & _display_row
 	
 	if (prev.row() != -1) {
 		ui.table_session->setRowHeight(prev.row(), ui.table_session->rowHeight(index.row()));
 	}
 	ui.table_session->resizeRowToContents(index.row());
 
-	auto _session_info_ptr = _session_data.get_session_info_ptr(_display_id);
+	if (_display_row != -1 && _display_row<_session_data.rowCount()) {//old session exists
+		auto _session_info_ptr = _session_data.get_session_info_ptr(_display_row); //old ptr
+		if (_session_info_ptr->id == _display_id) {
+			if (_session_info_ptr->send_behaviour == intercept || _session_info_ptr->receive_behaviour == intercept) {
+				auto& temp_data = is_req_intercepted ? _session_info_ptr->temp_req_data : _session_info_ptr->temp_rsp_data;
+				auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
+				temp_data = string(hex_editor->data().constData(), hex_editor->data().length());
 
-	
-	//if (_session_info_ptr->edited) {//暂存修改
-	//	_save_data_to_hexeditor(_session_info_ptr);
-		
-	//}
-	if (_session_info_ptr->send_behaviour == intercept || _session_info_ptr->receive_behaviour == intercept) {
-		auto& temp_data = is_req_intercepted ? _session_info_ptr->temp_req_data : _session_info_ptr->temp_rsp_data;
-		auto hex_editor = is_req_intercepted ? ui.hexEdit_req : ui.hexEdit_rsp;
-		temp_data = string(hex_editor->data().constData(), hex_editor->data().length());
-
-		auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
-		display_data = _raw_chunk_to_text(temp_data);
+				auto& display_data = is_req_intercepted ? *_session_info_ptr->req_data_for_display : *_session_info_ptr->rsp_data_for_display;
+				display_data = _raw_chunk_to_text(temp_data);
+			}
+		}
 	}
 	
 
 
+	if (index.row() == -1) {
 
-	_display_id = _proxy_session_data.data(_proxy_session_data.index(index.row(), 0)).toInt();// 获取新的实际位置
+		_display_row = -1;
+		_display_id = -1;
 
-	_display_full_info(_display_id);
+	}
+	else {
+		_display_row = _proxy_session_data.mapToSource(index).row();// 获取新的实际位置
+		auto _session_info_ptr = _session_data.get_session_info_ptr(_display_row);
+		_display_id = _session_info_ptr->id;
+		
+	}
+
+	_display_full_info(_display_row);
 }
 
 void QTFrontend::update_displayed_info(size_t update_id)
 {
 	if (_display_id == update_id) {
-		_display_full_info(_display_id);
+		if(_display_row != -1 && _display_row < _session_data.rowCount())
+			_display_full_info(_display_row);
 	}
 }
 
@@ -441,14 +520,28 @@ void QTFrontend::_activate_editor(bool active,bool is_req) {
 
 
 //TODO: 增加保存文件功能
-void QTFrontend::_display_full_info(size_t display_id)
+void QTFrontend::_display_full_info(size_t display_row)
 {
 	
 
-	
+	if (display_row == -1) {
+		//reset to blank
+		_activate_breakpoint_box(false);
+		_activate_editor(false, true);//_activate_editor of request	
+		_activate_editor(false, true);//_activate_editor of response
+		ui.plaintext_req_text->setPlainText(QString());
+		ui.hexEdit_req->setData(QByteArray());
+		ui.plaintext_rsp_text->setPlainText(QString());
+		ui.hexEdit_rsp->setData(QByteArray());
+		ui.scrollArea->setWidgetResizable(true);
+		ui.label_image->setText("Cannot resolve it as image");
+		return;
+	}
 
-	auto _session_info_ptr = _session_data.get_session_info_ptr(display_id);
-
+	auto _session_info_ptr = _session_data.get_session_info_ptr(display_row);
+	if (_session_info_ptr->id != _display_id) {
+		return;
+	}
 	if (_session_info_ptr->send_behaviour == intercept) {
 		//ui.label_intercept->setText("Request has been intercepted");
 		ui.label_intercept->setText("请求被拦截");
@@ -538,7 +631,7 @@ void QTFrontend::_display_full_info(size_t display_id)
 
 	try
 	{
-		if (_session_data.get_content_type(display_id).find("image") == 0) {//image
+		if (_session_info_ptr->content_type.find("image") == 0) {//image
 			size_t header_end_pos = _session_info_ptr->rsp_data_for_display->find("\r\n\r\n");
 
 			if (header_end_pos != string::npos) {
@@ -614,6 +707,11 @@ void QTFrontend::_set_display_filter() {
 //save all config to _config, please call it carefully due to performance
 void QTFrontend::_set_config()
 {
+	for (int i = 0; i < sizeof(_config->column_width) / sizeof(int); i++) {
+		_config->column_width[i] = ui.table_session->columnWidth(i);
+	}
+	
+
 	_set_enable_config();
 	
 	bool is_req = ui.radioButton_req_settings->isChecked();

@@ -5,10 +5,25 @@ using namespace std;
 namespace common {
 using namespace proxy_tcp;
 
+/*
+template <typename T>
+void vector_erase(vector<T>& vec, const vector<int>& ranks, bool asc) {
+	auto begin = 
+	if (asc) {
+
+	}
+	if(!sorted)
+	
+
+}*/
+
+
+
 
 bool header_check(const string& header, const vector<http_header_filter>& header_filter_vec) {
 	
-	
+	if (header_filter_vec.empty())
+		return false;
 	map<string, string> h_map = split_header_into_map(header);
 
 	for (auto header : header_filter_vec) {

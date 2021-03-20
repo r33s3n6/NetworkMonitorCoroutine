@@ -13,7 +13,7 @@ constexpr int _default_capacity = 256;
 
 #include <qtableview.h>
 #include <mutex>
-
+#include <vector>
 #include "../NetworkMonitorCoroutine/config.h"
 
 //using namespace proxy_tcp;
@@ -101,14 +101,15 @@ public:
     inline string get_content_type(size_t rank) { return _data_vec[rank]->content_type; }
     inline shared_ptr<string> get_raw_req_data(size_t rank) { return _data_vec[rank]->raw_req_data; }
     inline shared_ptr<string> get_raw_rsp_data(size_t rank){ return _data_vec[rank]->raw_rsp_data; }
-
+    bool removeRows(const vector<int>& indexes);
     void force_refresh(size_t display_id);
-
+    void delete_session(const string& host);
 private:
     vector<shared_ptr<session_info>> _data_vec;
     QTableView* _table;
     size_t id = 0;
     mutex id_locker;
+    mutex data_locker;
 
 signals:
     void info_updated(size_t update_id);
@@ -125,6 +126,10 @@ private slots:
     void session_rsp_completed(shared_ptr<session_info> _session_info);
 
     void session_error(shared_ptr<session_info> _session_info);
+
+    
+
+   
 
 public slots:
     //void session_replayed(const QModelIndex& index, bool with_bp);

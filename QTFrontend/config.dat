@@ -1,11 +1,11 @@
 allow_lan_conn=true
-column_width=20,200,35,45,200,40,70,
+column_width=20,286,35,45,159,40,122,
 io_context_pool_size=16
 port=5559
 raw_custom_filter=
-raw_host_filter=*.baidu.com
-raw_url_filter=.css
-req_filter.enable_breakpoint=true
+raw_host_filter=
+raw_url_filter=
+req_filter.enable_breakpoint=false
 req_filter.raw_custom_header_filter=
 req_filter.raw_host_filter=*.baidu.com
 reverse_url_behaviour=false

@@ -72,6 +72,8 @@ private:
     shared_ptr<session_info> _display_session_ptr;
 
     size_t _display_id=0;
+    QModelIndex _display_index;
+    size_t _display_row;
 
     config* _config;
 
@@ -132,7 +134,7 @@ private:
 
     void _display_table_context_menu(QPoint pos);
 
-    void _display_full_info(size_t display_id);
+    void _display_full_info(size_t display_row);
     void _activate_breakpoint_box(bool active);
     void _activate_editor(bool active, bool is_req);
 
@@ -148,6 +150,16 @@ private:
     void _set_config();//write ui's data to _config
     void _display_config();
 
-    
+    void _row_removed(QModelIndex ignore, int first, int last) {
+        if (first <= _display_row && last >= _display_row) {
+            _display_row = -1;
+            _display_id = -1;
+            _display_full_info(_display_row);
+        }
 
+    }
+    void closeEvent(QCloseEvent *event) {
+
+        _set_config();
+    }
 };

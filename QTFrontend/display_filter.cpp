@@ -19,7 +19,7 @@ namespace proxy_tcp {
 		else
 			return false;
 
-
+		return false;
 	}
 
 	void display_filter::display(shared_ptr<session_info> _session_info)
