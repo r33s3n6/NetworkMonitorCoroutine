@@ -53,6 +53,8 @@ void crt_to_pem(X509* crt, uint8_t** crt_bytes, size_t* crt_size)
 	BIO_free_all(bio);
 }
 
+
+
 int generate_signed_key_pair(EVP_PKEY* ca_key, X509* ca_crt, EVP_PKEY** key, X509** crt, const char * SAN_info)
 {
 	X509_REQ* req = NULL;
@@ -265,13 +267,28 @@ certificate_manager::~certificate_manager() {
 
 }
 
-void certificate_manager::create_server_certificate(const string& ca_path, const string& domain, const string& cert_path)
+void certificate_manager::create_root_ca(const string& cert_path, const string& key_path)
 {
+//TODO: https://opensource.apple.com/source/OpenSSL/OpenSSL-22/openssl/demos/x509/mkcert.c
 }
 
-shared_ptr<cert_key> certificate_manager::get_server_certificate(const string& domain) //TODO cache
+void certificate_manager::create_server_certificate(const string& ca_path, const string& domain, const string& cert_path)
 {
-	return create_server_certificate(domain);
+
+}
+
+shared_ptr<cert_key> certificate_manager::get_server_certificate(const string& domain) 
+{
+	if (cached_cert.find(domain) == cached_cert.end()) {
+		auto new_cert = create_server_certificate(domain);
+		cached_cert[domain] = new_cert;
+		return new_cert;
+	}
+	else {
+		return cached_cert[domain];
+	}
+		
+
 }
 
 shared_ptr<cert_key> certificate_manager::create_server_certificate(const string& domain)

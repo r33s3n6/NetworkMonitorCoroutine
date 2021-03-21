@@ -1307,9 +1307,6 @@ color: #ffffff;
    </property>
   </action>
   <action name="actiononly_show_host">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
    <property name="text">
     <string>只显示此host</string>
    </property>

@@ -10,6 +10,7 @@ using namespace std;
 #include <openssl/rand.h>
 #include <openssl/x509v3.h>
 
+#include <unordered_map>
 struct cert_key {
 	string key_bytes;
 	string crt_bytes;
@@ -22,7 +23,7 @@ struct cert_key {
 
 };
 
-//TODO: certificate cache, generate CA certificate
+//TODO: generate CA certificate
 class certificate_manager
 {
 public:
@@ -46,6 +47,8 @@ public:
 	
 
 private:
+	unordered_map<string, shared_ptr<cert_key>> cached_cert;
+
 	EVP_PKEY* ca_key = NULL;
 	X509* ca_crt = NULL;
 	//ca_buffer
