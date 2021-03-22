@@ -40,6 +40,7 @@ static void key_to_pem(EVP_PKEY* key, uint8_t** key_bytes, size_t* key_size);
 static int load_ca(const char* ca_key_path, EVP_PKEY** ca_key, const char* ca_crt_path, X509** ca_crt);
 static void print_bytes(uint8_t* data, size_t size);
 static int add_ext(X509* cert, int nid, const char* value);
+static int make_ca_cert(X509** x509p, EVP_PKEY** pkeyp, int bits, int days);
 
 
 void crt_to_pem(X509* crt, uint8_t** crt_bytes, size_t* crt_size)
@@ -80,6 +81,7 @@ int generate_signed_key_pair(EVP_PKEY* ca_key, X509* ca_crt, EVP_PKEY** key, X50
 			throw runtime_error("generate_set_random_serial failed");
 
 		/* Set issuer to CA's subject. */
+
 		X509_set_issuer_name(*crt, X509_get_subject_name(ca_crt));
 
 		/* Set validity of certificate to 10 years. */
@@ -137,6 +139,8 @@ int generate_key_csr(EVP_PKEY** key, X509_REQ** req,const char * CN_info)
 			throw runtime_error("RSA_generate_key_ex failed");
 		if (!EVP_PKEY_assign_RSA(*key, rsa)) 
 			throw runtime_error("EVP_PKEY_assign_RSA failed");
+
+
 
 		X509_REQ_set_pubkey(*req, *key);
 
@@ -269,6 +273,23 @@ certificate_manager::~certificate_manager() {
 
 void certificate_manager::create_root_ca(const string& cert_path, const string& key_path)
 {
+
+	X509* x509 = NULL;
+	EVP_PKEY* pkey = NULL;
+
+
+	make_ca_cert(&x509, &pkey, RSA_KEY_BITS, 3650);
+
+	FILE* fp_cert = fopen(cert_path.c_str(), "w+");
+	FILE* fp_key = fopen(key_path.c_str(), "w+");
+	PEM_write_PrivateKey(fp_key, pkey, NULL, NULL, 0, NULL, NULL);
+	PEM_write_X509(fp_cert, x509);
+	fclose(fp_cert);
+	fclose(fp_key);
+	X509_free(x509);
+	EVP_PKEY_free(pkey);
+
+
 //TODO: https://opensource.apple.com/source/OpenSSL/OpenSSL-22/openssl/demos/x509/mkcert.c
 }
 
@@ -326,10 +347,87 @@ shared_ptr<cert_key> certificate_manager::create_server_certificate(const string
 bool certificate_manager::read_root_ca(const string& ca_crt_path, const string& ca_key_path)
 {
 	/* Load CA key and cert. */
-	
-	if (!load_ca(ca_key_path.c_str(), &ca_key, ca_crt_path.c_str(), &ca_crt)) {
-		fprintf(stderr, "Failed to load CA certificate and/or key!\n");
-		return false;
+	int retry = 2;
+	while (!load_ca(ca_key_path.c_str(), &ca_key, ca_crt_path.c_str(), &ca_crt)) {
+		create_root_ca(ca_crt_path, ca_key_path);
+		retry--;
+		if (retry < 0) {
+			fprintf(stderr, "Failed to load CA certificate and/or key!\n");
+			return false;
+		}
 	}
 	return true;
+}
+
+int make_ca_cert(X509** x509p, EVP_PKEY** key, int bits, int days)
+{
+	X509* x;
+	//EVP_PKEY* pk;
+	RSA* rsa;
+	X509_NAME* name = NULL;
+	BIGNUM* e = NULL;
+	try {
+		*key = EVP_PKEY_new();
+		if (!*key) throw runtime_error("EVP_PKEY_new failed");
+		x = X509_new();
+		if (!x) throw runtime_error("X509_new failed");
+		rsa = RSA_new();
+		if (!rsa) throw runtime_error("RSA_new failed");
+		e = BN_new();
+		if (!e) throw runtime_error("BN_new failed");
+
+		BN_set_word(e, 65537);
+		if (!RSA_generate_key_ex(rsa, RSA_KEY_BITS, e, NULL))
+			throw runtime_error("RSA_generate_key_ex failed");
+		if (!EVP_PKEY_assign_RSA(*key, rsa))
+			throw runtime_error("EVP_PKEY_assign_RSA failed");
+
+		X509_set_pubkey(x, *key);
+
+		name = X509_get_subject_name(x);
+
+		/* This function creates and adds the entry, working out the
+		 * correct string type and performing checks on its length.
+		 * Normally we'd check the return value for errors...
+		 */
+
+		X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (const unsigned char*)REQ_DN_C, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(name, "ST", MBSTRING_ASC, (const unsigned char*)REQ_DN_ST, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(name, "L", MBSTRING_ASC, (const unsigned char*)REQ_DN_L, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (const unsigned char*)REQ_DN_O, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC, (const unsigned char*)REQ_DN_OU, -1, -1, 0);
+		X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (const unsigned char*)REQ_DN_O, -1, -1, 0);
+
+		BN_free(e);
+
+		X509_set_version(x, 2);
+
+		if (!generate_set_random_serial(x))
+			throw runtime_error("generate_set_random_serial failed");
+
+		X509_set_issuer_name(x, name);
+
+		X509_gmtime_adj(X509_get_notBefore(x), 0);
+		X509_gmtime_adj(X509_get_notAfter(x), (long)60 * 60 * 24 * days);
+
+		
+		add_ext(x, NID_basic_constraints, "critical,CA:TRUE");
+
+		if (!X509_sign(x, *key, EVP_sha256()))
+			throw runtime_error("X509_sign failed");
+
+	}
+	catch (const std::exception& _e)
+	{
+		cerr << _e.what() << endl;
+		EVP_PKEY_free(*key);
+		X509_free(x);
+		RSA_free(rsa);
+		BN_free(e);
+		return 0;
+	}
+
+	*x509p = x;
+
+	return 1;
 }
