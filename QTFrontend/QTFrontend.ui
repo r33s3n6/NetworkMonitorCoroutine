@@ -57,7 +57,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_session">
        <attribute name="title">
@@ -541,8 +541,8 @@ color: #ffffff;
                         <rect>
                          <x>0</x>
                          <y>0</y>
-                         <width>532</width>
-                         <height>279</height>
+                         <width>181</width>
+                         <height>25</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">
@@ -1019,10 +1019,10 @@ color: #ffffff;
            <widget class="QPushButton" name="pushButton_set_config">
             <property name="geometry">
              <rect>
-              <x>770</x>
-              <y>610</y>
-              <width>191</width>
-              <height>51</height>
+              <x>660</x>
+              <y>620</y>
+              <width>121</width>
+              <height>31</height>
              </rect>
             </property>
             <property name="font">

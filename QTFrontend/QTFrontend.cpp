@@ -20,6 +20,8 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 
 	if (!debug) {
 		ui.menuDebug->setEnabled(false);
+		ui.checkBox_https_decrypt->hide();
+		ui.checkBox_system_proxy->hide();
 	}
 
 	_setup_table();
