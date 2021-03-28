@@ -130,6 +130,7 @@
     <ClCompile Include="..\NetworkMonitorCoroutine\proxy_server.cpp" />
     <ClCompile Include="breakpoint_filter_window.cpp" />
     <ClCompile Include="display_filter.cpp" />
+    <ClCompile Include="LicenseWindow.cpp" />
     <ClCompile Include="QHexEditor\chunks.cpp" />
     <ClCompile Include="QHexEditor\commands.cpp" />
     <ClCompile Include="QHexEditor\qhexedit.cpp" />
@@ -137,6 +138,7 @@
     <ClCompile Include="session_table_view.cpp" />
     <QtRcc Include="QTFrontend.qrc" />
     <QtUic Include="breakpoint_filter_window.ui" />
+    <QtUic Include="LicenseWindow.ui" />
     <QtUic Include="QTFrontend.ui" />
     <QtMoc Include="QTFrontend.h" />
     <ClCompile Include="QTFrontend.cpp" />
@@ -155,6 +157,7 @@
     <ClInclude Include="..\NetworkMonitorCoroutine\config.h" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection.hpp" />
     <ClInclude Include="..\NetworkMonitorCoroutine\connection_enums.h" />
+    <QtMoc Include="LicenseWindow.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="session_table_view.h" />
     <QtMoc Include="breakpoint_filter_window.h" />

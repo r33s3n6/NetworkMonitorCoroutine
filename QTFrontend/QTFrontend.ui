@@ -1145,14 +1145,6 @@ color: #ffffff;
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <attribute name="title">
-        <string>自定义请求</string>
-       </attribute>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -1166,23 +1158,11 @@ color: #ffffff;
      <height>18</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
-    <property name="title">
-     <string>文件</string>
-    </property>
-    <addaction name="actionSave_all_sessions"/>
-   </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
      <string>关于</string>
     </property>
     <addaction name="actionLicense"/>
-   </widget>
-   <widget class="QMenu" name="menu_4">
-    <property name="title">
-     <string>工具</string>
-    </property>
-    <addaction name="actionRequest"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="enabled">
@@ -1199,8 +1179,6 @@ color: #ffffff;
     <addaction name="actionShow_Hide_breakpoint_button"/>
     <addaction name="menutest_group"/>
    </widget>
-   <addaction name="menu"/>
-   <addaction name="menu_4"/>
    <addaction name="menu_3"/>
    <addaction name="menuDebug"/>
   </widget>
@@ -1222,7 +1200,7 @@ color: #ffffff;
   </widget>
   <action name="actionLicense">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>License</string>
@@ -1323,7 +1301,7 @@ color: #ffffff;
   </action>
   <action name="actiondelete_host">
    <property name="text">
-    <string>删除此host</string>
+    <string>删除此host相关的session</string>
    </property>
   </action>
  </widget>
@@ -1361,54 +1339,6 @@ color: #ffffff;
    </hints>
   </connection>
   <connection>
-   <sender>lineEdit_2nd_proxy</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>label_server_restart_required</receiver>
-   <slot>show()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>652</x>
-     <y>152</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>818</x>
-     <y>296</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_allow_lan</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>label_server_restart_required</receiver>
-   <slot>show()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>786</x>
-     <y>156</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>839</x>
-     <y>292</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBox_verify_certificate</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>label_server_restart_required</receiver>
-   <slot>show()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>805</x>
-     <y>181</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>830</x>
-     <y>294</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>checkBox_system_proxy</sender>
    <signal>toggled(bool)</signal>
    <receiver>label_server_restart_required</receiver>
@@ -1437,6 +1367,54 @@ color: #ffffff;
     <hint type="destinationlabel">
      <x>851</x>
      <y>295</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_allow_lan</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>786</x>
+     <y>156</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>839</x>
+     <y>292</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_2nd_proxy</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>652</x>
+     <y>152</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>818</x>
+     <y>296</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox_verify_certificate</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_server_restart_required</receiver>
+   <slot>show()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>805</x>
+     <y>181</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>830</x>
+     <y>294</y>
     </hint>
    </hints>
   </connection>

@@ -95,6 +95,9 @@
     <ClCompile Include="session_table_view.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LicenseWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="SessionDataModel.h">
@@ -116,6 +119,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="session_table_view.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="LicenseWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -165,6 +171,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="breakpoint_filter_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="LicenseWindow.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

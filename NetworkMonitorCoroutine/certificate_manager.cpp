@@ -1,6 +1,3 @@
-#include "certificate_manager.h"
-
-
 /*
 Copyright (c) 2017, 2018, 2019 Linus Karlsson
 
@@ -17,11 +14,31 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+/*
+Copyright (c) 2021 Fu Zixuan
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
+#include "certificate_manager.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdexcept>
 #include <iostream>
 using namespace std;
+
+
 
 #define RSA_KEY_BITS (2048)
 
@@ -349,6 +366,11 @@ bool certificate_manager::read_root_ca(const string& ca_crt_path, const string& 
 	/* Load CA key and cert. */
 	int retry = 2;
 	while (!load_ca(ca_key_path.c_str(), &ca_key, ca_crt_path.c_str(), &ca_crt)) {
+		size_t dir_end_pos = ca_crt_path.find_last_of("/");
+		string folderPath = ca_crt_path.substr(0,dir_end_pos);
+		string cmd = "mkdir cert";
+		system(cmd.c_str());
+
 		create_root_ca(ca_crt_path, ca_key_path);
 		retry--;
 		if (retry < 0) {

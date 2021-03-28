@@ -2,5 +2,6 @@
     <qresource prefix="/QTFrontend">
         <file>appicon.png</file>
         <file>appicon.ico</file>
+        <file>License.txt</file>
     </qresource>
 </RCC>

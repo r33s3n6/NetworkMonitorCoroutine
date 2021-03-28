@@ -68,6 +68,7 @@ void config::load_config_from_file(string path)//TODO:可以使用其他库重�
 void config::save_config(string path)
 {
 	ofstream conf_file(path);
+	conf_file << "# DO NOT MODIFY THIS FILE EXCEPT YOU KNOW WHAT YOU ARE DOING" << endl;
 	for (auto map_entry:conf_entry_map) {
 		conf_file << map_entry.first << "=";
 

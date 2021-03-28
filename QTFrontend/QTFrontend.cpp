@@ -24,7 +24,10 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 
 	_setup_table();
 	//table settings start
- 
+
+	connect(ui.actionLicense, &QAction::triggered, this, [=]() {
+		license_window.show();
+	});
 
 	connect(ui.table_session->selectionModel(), &QItemSelectionModel::currentRowChanged, this, &QTFrontend::display_full_info);
 	connect(&_session_data, &SessionDataModel::info_updated, this, &QTFrontend::update_displayed_info);
@@ -154,7 +157,7 @@ void QTFrontend::_setup_table() {
 	table_session_filter_menu->setTitle("显示设置");
 
 	table_session_filter_menu->addAction(ui.actiononly_show_host);
-	table_session_filter_menu->addAction(ui.actionfilter_host);
+	//table_session_filter_menu->addAction(ui.actionfilter_host);
 	table_session_filter_menu->addAction(ui.actiondelete_host);
 
 	table_session_context_menu->addSeparator();

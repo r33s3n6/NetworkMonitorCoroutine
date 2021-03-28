@@ -101,6 +101,13 @@ IDB_PNG1                PNG                     "appicon.png"
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "appicon.ico"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+
 #endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 

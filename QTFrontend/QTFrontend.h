@@ -21,7 +21,7 @@ using namespace std;
 
 #include <boost/thread.hpp>
 
-
+#include "LicenseWindow.h"
 
 
 
@@ -36,6 +36,7 @@ public:
     ~QTFrontend() {
         _config->save_config();
         delete table_session_context_menu;
+
     }
 
 
@@ -84,6 +85,7 @@ private:
 
     bool is_req_intercepted = true;
     
+    LicenseWindow license_window;
     
     void _setup_table();
     shared_ptr<session_info> _context_menu_session;

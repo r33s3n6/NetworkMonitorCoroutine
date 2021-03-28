@@ -31,11 +31,8 @@ using boost::asio::ip::tcp;
 * 
 * logging 类
 * 
-* 
-* 
-* certificate_manager::
-create_ca
-auto_trust_ca
+
+
 * 
 * 
 */
