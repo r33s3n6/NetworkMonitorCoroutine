@@ -52,15 +52,48 @@ proxy_server::proxy_server(display_filter* df,const string& config_path)
 
 	tcp::resolver resolver(_acceptor.get_executor());
 
+	
+	boost::system::error_code ec;
+
 	//TODO: 0.0.0.0 may accept connection from internet
-	tcp::endpoint endpoint =
-		*resolver.resolve(_config.allow_lan_conn? "0.0.0.0":"127.0.0.1", _config.port).begin(); //iterator of result_type
+	auto endpoints = resolver.resolve(_config.allow_lan_conn ? "0.0.0.0" : "127.0.0.1", _config.port,ec);
+	if (ec) {
+		cout << "resolve local endpoint failed" << endl;
+		error_msg = "resolve local endpoint failed";
+		return;
+	}
 
-	_acceptor.open(endpoint.protocol());//return ipv4/ipv6
-	_acceptor.set_option(tcp::acceptor::reuse_address(true));
-	_acceptor.bind(endpoint);
-	_acceptor.listen();
+	tcp::endpoint endpoint = *endpoints.begin(); //iterator of result_type
 
+	_acceptor.open(endpoint.protocol(), ec);//return ipv4/ipv6
+
+	if (ec) {
+		cout << "acceptor open endpoint failed" << endl;
+		error_msg = "acceptor open endpoint failed";
+		return;
+	}
+
+	_acceptor.set_option(tcp::acceptor::reuse_address(true), ec);
+
+	if (ec) {
+		cout << "acceptor set_option failed" << endl;
+		error_msg = "acceptor set_option failed";
+		return;
+	}
+
+	_acceptor.bind(endpoint, ec);
+	if (ec) {
+		cout << "acceptor bind failed" << endl;
+		error_msg = "acceptor bind failed";
+		return;
+	}
+
+	_acceptor.listen(2147483647, ec);
+	if (ec) {
+		cout << "acceptor listen failed" << endl;
+		error_msg = "acceptor listen failed";
+		return;
+	}
 
 
 
@@ -80,6 +113,7 @@ awaitable<void> proxy_server::_listener()
 	shared_ptr<certificate_manager> cert_mgr =
 		make_shared<certificate_manager>("./cert/CAcert.pem", "./cert/CAkey.pem");//TODO
 	
+	running = true;
 	try
 	{
 
@@ -122,6 +156,7 @@ awaitable<void> proxy_server::_listener()
 	}
 	catch (const std::exception& e)
 	{
+		running = false;
 		cout << e.what() << endl;
 	}
 

@@ -113,6 +113,7 @@ int generate_signed_key_pair(EVP_PKEY* ca_key, X509* ca_crt, EVP_PKEY** key, X50
 		EVP_PKEY_free(req_pubkey);
 		string temp("DNS:");
 		temp.append(SAN_info);
+
 		add_ext(*crt, NID_subject_alt_name, temp.c_str());
 		/* Now perform the actual signing with the CA. */
 		if (X509_sign(*crt, ca_key, EVP_sha256()) == 0) 

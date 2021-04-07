@@ -57,7 +57,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_session">
        <attribute name="title">
@@ -542,7 +542,7 @@ color: #ffffff;
                          <x>0</x>
                          <y>0</y>
                          <width>181</width>
-                         <height>25</height>
+                         <height>28</height>
                         </rect>
                        </property>
                        <layout class="QGridLayout" name="gridLayout_7">

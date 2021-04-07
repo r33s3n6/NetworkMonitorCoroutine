@@ -114,6 +114,7 @@ private:
 signals:
     void info_updated(size_t update_id);
     void session_intercepted(shared_ptr<session_info> _session_info,bool is_req);
+    void status_updated(string msg);
 
 private slots:
     void session_created(shared_ptr<session_info> _session_info);

@@ -49,6 +49,8 @@ public:
 
 	config* get_config_ptr() { return &_config; }
 
+	bool is_running() { return running; }
+	string get_error_msg() { return error_msg; }
 	
 	void stop() { _stop(); }
 	void start();//异步运行
@@ -84,7 +86,9 @@ private:
 
 	display_filter* _display_filter;
 
-	
+	bool running = false;
+
+	string error_msg;
 };
 
 }

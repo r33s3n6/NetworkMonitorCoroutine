@@ -183,7 +183,11 @@ void SessionDataModel::session_created(shared_ptr<session_info> _session_info)
 
 
     std::cout << _session_info->id << ":session_created\n";
-    
+    stringstream ss;
+    ss << _session_info->id << ":session_created";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
 
 
 }
@@ -194,7 +198,11 @@ void SessionDataModel::session_req_updated(shared_ptr<session_info> _session_inf
         return;
 
     std::cout << _session_info->id << ":session_request_updated\n";
-
+    stringstream ss;
+    ss << _session_info->id << ":session_request_updated";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
 
     size_t body_start_pos = _session_info->new_data->find("\r\n") + 2;
     
@@ -209,6 +217,11 @@ void SessionDataModel::session_req_updated(shared_ptr<session_info> _session_inf
 void SessionDataModel::session_req_completed(shared_ptr<session_info> _session_info)
 {
     std::cout << _session_info->id << ":session_request_completed\n";
+    stringstream ss;
+    ss << _session_info->id << ":session_request_completed";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
     _session_info->req_completed = true;
     emit info_updated(_session_info->id);
 }
@@ -222,6 +235,11 @@ void SessionDataModel::session_rsp_begin(shared_ptr<session_info> _session_info)
         return;
 
     std::cout << _session_info->id << ":session_response_begin\n";
+    stringstream ss;
+    ss << _session_info->id << ":session_response_begin";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
 
     _session_info->rsp_data_for_display = make_shared<string>(*(_session_info->new_data));
 
@@ -267,7 +285,11 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
         return;
 
     std::cout << _session_info->id << ":session_response_updated\n";
-
+    stringstream ss;
+    ss << _session_info->id << ":session_response_updated";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
 
 
     size_t body_start_pos = _session_info->new_data->find("\r\n") + 2;
@@ -288,6 +310,11 @@ void SessionDataModel::session_rsp_updated(shared_ptr<session_info> _session_inf
 void SessionDataModel::session_rsp_completed(shared_ptr<session_info> _session_info)
 {
     std::cout << _session_info->id << ":session_response_completed\n";
+    stringstream ss;
+    ss << _session_info->id << ":session_response_completed";
+    string msg;
+    ss >> msg;
+    emit status_updated(msg);
     _session_info->rsp_completed = true;
     emit info_updated(_session_info->id);
 }

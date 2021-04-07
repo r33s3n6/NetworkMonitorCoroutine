@@ -110,8 +110,25 @@ QTFrontend::QTFrontend(QWidget *parent,bool debug)
 	_set_breakpoint_filter(true);
 	_set_breakpoint_filter(false);
 	_set_display_filter();
-	ui.statusBar->showMessage("TODO:Status Bar");
+	
 	ui.label_server_restart_required->hide();
+
+	connect(&_session_data, &SessionDataModel::status_updated,
+		[=](string msg) {
+			ui.statusBar->showMessage(QString::fromStdString(msg));
+		});
+
+	if (!_backend_server->is_running()) {
+		ui.label_server_restart_required->show();
+		string error_msg = _backend_server->get_error_msg();
+		ui.statusBar->showMessage(QString::fromStdString("Need to restart backend server (error)"+ error_msg));
+	}
+	else {
+		ui.statusBar->showMessage("Init complete");
+	}
+		
+
+	
 }
 
 
