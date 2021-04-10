@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 constexpr int _default_capacity = 256;
@@ -62,7 +63,9 @@ struct session_info {//应该把req/rsp的数据单独抽象出一个struct 更�
     }
     bool forever_filtered = false;
     bool temp_filtered = false;
-    
+    ~session_info() {
+        cout << id << ":destoryed" << endl;
+    }
     /*
     session_info(string url, string code, string protocol,
         string host, int body_length, string content_type,
@@ -110,6 +113,8 @@ private:
     size_t id = 0;
     mutex id_locker;
     mutex data_locker;
+
+    void log(int id, string msg);
 
 signals:
     void info_updated(size_t update_id);

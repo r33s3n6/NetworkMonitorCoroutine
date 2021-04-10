@@ -145,6 +145,8 @@ void QTFrontend::_setup_table() {
 	for (int i = 0; i < sizeof(_config->column_width) / sizeof(int); i++) {
 		ui.table_session->setColumnWidth(i, _config->column_width[i]);
 	}
+
+
 	ui.table_session->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 	ui.table_session->setTextElideMode(Qt::ElideMiddle);
 	ui.table_session->setWordWrap(true);
